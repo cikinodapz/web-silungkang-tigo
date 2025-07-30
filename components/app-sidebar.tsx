@@ -95,12 +95,12 @@ const data = {
       items: [
         {
           title: "Lahir/Masuk",
-          url: "/mutasi-penduduk",
+          url: "/lahir-masuk",
           icon: UserPlus,
         },
         {
           title: "Meninggal",
-          url: "/mutasi-penduduk",
+          url: "/meninggal",
           icon: UserMinus,
         },
         {

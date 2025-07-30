@@ -131,14 +131,14 @@ export default function TambahKepalaKeluargaPage() {
     try {
       const response = await fetchData("/kelola-kepala-keluarga/createKepalaKeluarga", {
         method: "POST",
-        body: form,
+        data: formData,
       });
       Swal.fire({
         icon: "success",
         title: "Berhasil",
         text: "Kepala Keluarga berhasil ditambahkan!",
       });
-      router.push("/data-kepala-keluarga");
+      router.push("/kepala-keluarga");
     } catch (err: any) {
       console.log("Error Details:", err.response?.data || err);
       const errorMessage = err.response?.data?.message || err.message || "Terjadi kesalahan";
