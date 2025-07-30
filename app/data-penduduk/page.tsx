@@ -1,345 +1,425 @@
-"use client"
+"use client";
 
-import { AppSidebar } from "@/components/app-sidebar"
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, Home, UserCheck, Search, Plus, Eye, Edit, Trash2 } from "lucide-react"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { AppSidebar } from "@/components/app-sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Home,
+  UserCheck,
+  Users,
+  Search,
+  Plus,
+  Edit,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { fetchData } from "@/lib/api";
+import Swal from "sweetalert2";
+
+interface FamilyCard {
+  id: string;
+  no_kk: string;
+  provinsi: string;
+  kabupaten: string;
+  kecamatan: string;
+  kelurahan: string;
+  dusun: string;
+  rw: string;
+  rt: string;
+  kode_pos: string;
+  kepalaKeluargaId: string | null;
+  kepalaKeluarga: {
+    id: string;
+    nik: string;
+    nama: string;
+    no_akta_kelahiran: string;
+    jenis_kelamin: string;
+    tempat_lahir: string;
+    tanggal_lahir: string;
+    golongan_darah: string;
+    agama: string;
+    status_perkawinan: string;
+    pendidikan_akhir: string;
+    pekerjaan: string;
+    nama_ayah: string;
+    nama_ibu: string;
+  } | null;
+  AnggotaKeluarga: {
+    id: string;
+    nik: string;
+    nama: string;
+    no_akta_kelahiran: string;
+    jenis_kelamin: string;
+    tempat_lahir: string;
+    tanggal_lahir: string;
+    golongan_darah: string;
+    agama: string;
+    status_hubungan: string;
+    status_perkawinan: string;
+    pendidikan_akhir: string;
+    pekerjaan: string;
+    nama_ayah: string;
+    nama_ibu: string;
+  }[];
+}
 
 export default function DataPendudukPage() {
-  const kartuKeluarga = [
-    {
-      id: "3201012345678901",
-      kepalaKeluarga: "Budi Santoso",
-      alamat: "Jl. Merdeka No. 123",
-      rt: "001",
-      rw: "002",
-      jumlahAnggota: 4,
-      status: "aktif",
-    },
-    {
-      id: "3201012345678902",
-      kepalaKeluarga: "Siti Rahayu",
-      alamat: "Jl. Sudirman No. 456",
-      rt: "002",
-      rw: "003",
-      jumlahAnggota: 3,
-      status: "aktif",
-    },
-    {
-      id: "3201012345678903",
-      kepalaKeluarga: "Ahmad Wijaya",
-      alamat: "Jl. Diponegoro No. 789",
-      rt: "003",
-      rw: "001",
-      jumlahAnggota: 5,
-      status: "pindah",
-    },
-  ]
+  const [familyCards, setFamilyCards] = useState<FamilyCard[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+  const router = useRouter();
 
-  const penduduk = [
-    {
-      id: "3201011234567890",
-      nama: "Budi Santoso",
-      nik: "3201011234567890",
-      jenisKelamin: "L",
-      tempatLahir: "Jakarta",
-      tanggalLahir: "15/08/1980",
-      agama: "Islam",
-      pekerjaan: "Wiraswasta",
-      status: "Kepala Keluarga",
-    },
-    {
-      id: "3201011234567891",
-      nama: "Sari Santoso",
-      nik: "3201011234567891",
-      jenisKelamin: "P",
-      tempatLahir: "Bandung",
-      tanggalLahir: "20/03/1985",
-      agama: "Islam",
-      pekerjaan: "Ibu Rumah Tangga",
-      status: "Istri",
-    },
-    {
-      id: "3201011234567892",
-      nama: "Andi Santoso",
-      nik: "3201011234567892",
-      jenisKelamin: "L",
-      tempatLahir: "Jakarta",
-      tanggalLahir: "10/05/2010",
-      agama: "Islam",
-      pekerjaan: "Pelajar",
-      status: "Anak",
-    },
-  ]
+  // Fetch family cards on component mount
+  useEffect(() => {
+    const loadFamilyCards = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetchData("/kelola-kk/getAllKK");
+        setFamilyCards(
+          Array.isArray(response) ? response : response.data || []
+        );
+      } catch (err) {
+        setError(`Gagal memuat data: ${err.message || "Terjadi kesalahan"}`);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadFamilyCards();
+  }, []);
+
+  // Handle delete family card
+  const handleDeleteKK = async (id: string) => {
+    const result = await Swal.fire({
+      icon: "warning",
+      title: "Konfirmasi",
+      text: "Apakah Anda yakin ingin menghapus Kartu Keluarga ini?",
+      showCancelButton: true,
+      confirmButtonText: "Ya, Hapus",
+      cancelButtonText: "Batal",
+      confirmButtonColor: "#d33",
+    });
+
+    if (!result.isConfirmed) return;
+
+    setIsLoading(true);
+    try {
+      await fetchData(`/kelola-kk/deleteKK/${id}`, { method: "DELETE" });
+      setFamilyCards(familyCards.filter((kk) => kk.id !== id));
+      if (
+        familyCards.length - 1 <= (currentPage - 1) * itemsPerPage &&
+        currentPage > 1
+      ) {
+        setCurrentPage(currentPage - 1);
+      }
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil",
+        text: "Kartu Keluarga berhasil dihapus!",
+      });
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: `Gagal menghapus Kartu Keluarga: ${
+          err.message || "Terjadi kesalahan"
+        }`,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Filter family cards based on search query
+  const filteredFamilyCards = familyCards.filter(
+    (kk) =>
+      kk.no_kk.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (kk.kepalaKeluarga?.nama || "")
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      kk.kelurahan.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredFamilyCards.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+  const totalPages = Math.ceil(filteredFamilyCards.length / itemsPerPage);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-cyan-50/50">
-          <header className="sticky top-0 z-40 border-b border-slate-200/60 bg-white/80 backdrop-blur-xl">
-            <div className="flex h-16 items-center gap-4 px-6">
-              <SidebarTrigger className="text-[#073046] hover:bg-[#073046]/10" />
-              <div className="flex-1">
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-[#073046] to-[#0a4a66] bg-clip-text text-transparent">
-                  Data Penduduk
-                </h1>
-                <p className="text-sm text-slate-600">Kelola data Kartu Keluarga dan penduduk desa</p>
-              </div>
-              <div className="flex gap-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
-                  <Input placeholder="Cari penduduk..." className="pl-10 w-64" />
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+          <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/70 backdrop-blur-xl shadow-sm">
+            <div className="flex h-20 items-center justify-between px-6 md:px-10">
+              <div className="flex items-center gap-4">
+                <SidebarTrigger className="text-blue-900 hover:bg-blue-100 transition-colors p-2 rounded-md" />
+                <div>
+                  <h1 className="text-2xl font-semibold text-blue-900">
+                    Data Kartu Keluarga
+                  </h1>
+                  <p className="text-sm text-gray-600">
+                    Kelola data Kartu Keluarga desa
+                  </p>
                 </div>
-                <Button className="bg-gradient-to-r from-[#073046] to-[#0a4a66] hover:from-[#0a4a66] to-[#0d5a7a]">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Tambah Data
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Cari No. KK, nama kepala keluarga, atau kelurahan..."
+                    className="pl-10 w-64 border border-gray-300 rounded-md focus:border-blue-500 focus:ring-blue-500"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <Button
+                  className="flex items-center bg-gradient-to-r from-blue-900 to-cyan-700 hover:from-blue-800 hover:to-cyan-600 text-white px-4 py-2 rounded-md transition-colors"
+                  onClick={() => router.push("/data-penduduk/tambah-kk")}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Tambah KK
                 </Button>
               </div>
             </div>
           </header>
 
-          <main className="p-6">
-            <Tabs defaultValue="kk" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-3 bg-white/50 backdrop-blur-sm">
-                <TabsTrigger value="kk" className="data-[state=active]:bg-[#073046] data-[state=active]:text-white">
-                  <Home className="h-4 w-4 mr-2" />
-                  Kartu Keluarga
-                </TabsTrigger>
-                <TabsTrigger value="kepala" className="data-[state=active]:bg-[#073046] data-[state=active]:text-white">
-                  <UserCheck className="h-4 w-4 mr-2" />
-                  Kepala Keluarga
-                </TabsTrigger>
-                <TabsTrigger
-                  value="anggota"
-                  className="data-[state=active]:bg-[#073046] data-[state=active]:text-white"
-                >
-                  <Users className="h-4 w-4 mr-2" />
-                  Anggota Keluarga
-                </TabsTrigger>
-              </TabsList>
+          <main className="p-6 space-y-6">
+            {error && (
+              <div className="bg-red-50 text-red-600 text-sm p-4 rounded-lg text-center animate-in fade-in">
+                {error}
+              </div>
+            )}
+            {isLoading && (
+              <div className="text-center text-gray-600 animate-pulse">
+                Memuat...
+              </div>
+            )}
+            {!isLoading && filteredFamilyCards.length === 0 && !error && (
+              <div className="text-center text-gray-600">
+                Tidak ada data Kartu Keluarga.
+              </div>
+            )}
 
-              <TabsContent value="kk" className="space-y-6">
-                {/* Stats KK */}
-                <div className="grid gap-6 md:grid-cols-4">
-                  <Card className="border-0 bg-gradient-to-br from-white to-blue-50/50 shadow-lg">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium text-slate-600">Total KK</CardTitle>
-                      <Home className="h-5 w-5 text-[#073046]" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold text-[#073046]">892</div>
-                      <p className="text-xs text-slate-500">Kartu Keluarga terdaftar</p>
-                    </CardContent>
-                  </Card>
+            <div className="grid gap-6 md:grid-cols-4">
+              <Card className="border-0 bg-white/80 shadow-lg hover:shadow-xl transition-shadow">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">
+                    Total KK
+                  </CardTitle>
+                  <Home className="h-5 w-5 text-blue-900" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-blue-900">
+                    {familyCards.length}
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Kartu Keluarga terdaftar
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-0 bg-white/80 shadow-lg hover:shadow-xl transition-shadow">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">
+                    KK Aktif
+                  </CardTitle>
+                  <UserCheck className="h-5 w-5 text-blue-900" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-blue-900">
+                    {familyCards.filter((kk) => kk.kepalaKeluargaId).length}
+                  </div>
+                  <p className="text-xs text-gray-500">Masih berdomisili</p>
+                </CardContent>
+              </Card>
+              <Card className="border-0 bg-white/80 shadow-lg hover:shadow-xl transition-shadow">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">
+                    KK Tanpa Kepala
+                  </CardTitle>
+                  <Users className="h-5 w-5 text-blue-900" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-blue-900">
+                    {familyCards.filter((kk) => !kk.kepalaKeluargaId).length}
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Tanpa kepala keluarga
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-0 bg-white/80 shadow-lg hover:shadow-xl transition-shadow">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">
+                    Rata-rata Anggota
+                  </CardTitle>
+                  <Users className="h-5 w-5 text-blue-900" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-blue-900">
+                    {familyCards.length > 0
+                      ? (
+                          familyCards.reduce(
+                            (sum, kk) => sum + kk.AnggotaKeluarga.length,
+                            0
+                          ) / familyCards.length
+                        ).toFixed(1)
+                      : 0}
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Per Kartu Keluarga
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
 
-                  <Card className="border-0 bg-gradient-to-br from-white to-emerald-50/50 shadow-lg">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium text-slate-600">KK Aktif</CardTitle>
-                      <UserCheck className="h-5 w-5 text-emerald-600" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold text-[#073046]">875</div>
-                      <p className="text-xs text-emerald-600">Masih berdomisili</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-0 bg-gradient-to-br from-white to-orange-50/50 shadow-lg">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium text-slate-600">KK Pindah</CardTitle>
-                      <Users className="h-5 w-5 text-orange-600" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold text-[#073046]">17</div>
-                      <p className="text-xs text-orange-600">Pindah domisili</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-0 bg-gradient-to-br from-white to-purple-50/50 shadow-lg">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium text-slate-600">Rata-rata Anggota</CardTitle>
-                      <Users className="h-5 w-5 text-purple-600" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold text-[#073046]">3.2</div>
-                      <p className="text-xs text-purple-600">Per Kartu Keluarga</p>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Daftar KK */}
-                <Card className="border-0 bg-gradient-to-r from-white to-slate-50/50 shadow-lg">
-                  <CardHeader>
-                    <CardTitle className="text-[#073046]">Daftar Kartu Keluarga</CardTitle>
-                    <CardDescription>Data Kartu Keluarga yang terdaftar di desa</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {kartuKeluarga.map((kk) => (
-                        <div
+            <Card className="border-0 bg-white/80 shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-blue-900">
+                  Daftar Kartu Keluarga
+                </CardTitle>
+                <CardDescription>Kelola data Kartu Keluarga</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm text-gray-600">
+                    <thead className="bg-blue-50 text-blue-900">
+                      <tr>
+                        <th className="px-4 py-3 font-semibold">No. KK</th>
+                        <th className="px-4 py-3 font-semibold">Kepala Keluarga</th>
+                        <th className="px-4 py-3 font-semibold">Dusun</th>
+                        <th className="px-4 py-3 font-semibold">Kelurahan</th>
+                        <th className="px-4 py-3 font-semibold">Kecamatan</th>
+                        <th className="px-4 py-3 font-semibold">Kabupaten</th>
+                        <th className="px-4 py-3 font-semibold">Provinsi</th>
+                        <th className="px-4 py-3 font-semibold">RT/RW</th>
+                        <th className="px-4 py-3 font-semibold">Jumlah Anggota</th>
+                        <th className="px-4 py-3 font-semibold">Status</th>
+                        <th className="px-4 py-3 font-semibold text-right">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {currentItems.map((kk) => (
+                        <tr
                           key={kk.id}
-                          className="flex items-center justify-between p-4 rounded-lg border border-slate-200/60 bg-white/50 hover:bg-white/80 transition-all"
+                          className="border-b border-gray-100 hover:bg-blue-50/50 transition-all"
                         >
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-3">
-                              <h3 className="font-semibold text-[#073046]">No. KK: {kk.id}</h3>
-                              <Badge
-                                variant={kk.status === "aktif" ? "default" : "secondary"}
-                                className={
-                                  kk.status === "aktif"
-                                    ? "bg-emerald-100 text-emerald-700"
-                                    : "bg-orange-100 text-orange-700"
+                          <td className="px-4 py-3">{kk.no_kk}</td>
+                          <td className="px-4 py-3">
+                            {kk.kepalaKeluarga?.nama || "Belum ditentukan"}
+                          </td>
+                          <td className="px-4 py-3">{kk.dusun}</td>
+                          <td className="px-4 py-3">{kk.kelurahan}</td>
+                          <td className="px-4 py-3">{kk.kecamatan}</td>
+                          <td className="px-4 py-3">{kk.kabupaten}</td>
+                          <td className="px-4 py-3">{kk.provinsi}</td>
+                          <td className="px-4 py-3">{kk.rt}/{kk.rw}</td>
+                          <td className="px-4 py-3">{kk.AnggotaKeluarga.length}</td>
+                          <td className="px-4 py-3">
+                            <Badge
+                              variant={kk.kepalaKeluargaId ? "default" : "secondary"}
+                              className={
+                                kk.kepalaKeluargaId
+                                  ? "bg-blue-100 text-blue-700"
+                                  : "bg-orange-100 text-orange-700"
+                              }
+                            >
+                              {kk.kepalaKeluargaId ? "Aktif" : "Tanpa Kepala"}
+                            </Badge>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="hover:bg-blue-100 text-blue-900 border-blue-200"
+                                onClick={() =>
+                                  router.push(`/data-penduduk/edit-kk/${kk.id}`)
                                 }
                               >
-                                {kk.status === "aktif" ? "Aktif" : "Pindah"}
-                              </Badge>
-                            </div>
-                            <div className="text-sm text-slate-600">
-                              <p>
-                                <strong>Kepala Keluarga:</strong> {kk.kepalaKeluarga}
-                              </p>
-                              <p>
-                                <strong>Alamat:</strong> {kk.alamat}, RT {kk.rt}/RW {kk.rw}
-                              </p>
-                              <p>
-                                <strong>Jumlah Anggota:</strong> {kk.jumlahAnggota} orang
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm" className="hover:bg-[#073046]/10 bg-transparent">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button variant="outline" size="sm" className="hover:bg-[#073046]/10 bg-transparent">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="hover:bg-red-50 hover:text-red-600 bg-transparent"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="kepala" className="space-y-6">
-                <Card className="border-0 bg-gradient-to-r from-white to-slate-50/50 shadow-lg">
-                  <CardHeader>
-                    <CardTitle className="text-[#073046]">Daftar Kepala Keluarga</CardTitle>
-                    <CardDescription>Data kepala keluarga yang terdaftar</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {penduduk
-                        .filter((p) => p.status === "Kepala Keluarga")
-                        .map((kepala) => (
-                          <div
-                            key={kepala.id}
-                            className="flex items-center justify-between p-4 rounded-lg border border-slate-200/60 bg-white/50 hover:bg-white/80 transition-all"
-                          >
-                            <div className="space-y-2">
-                              <h3 className="font-semibold text-[#073046]">{kepala.nama}</h3>
-                              <div className="text-sm text-slate-600 grid grid-cols-2 gap-4">
-                                <p>
-                                  <strong>NIK:</strong> {kepala.nik}
-                                </p>
-                                <p>
-                                  <strong>Jenis Kelamin:</strong>{" "}
-                                  {kepala.jenisKelamin === "L" ? "Laki-laki" : "Perempuan"}
-                                </p>
-                                <p>
-                                  <strong>Tempat/Tgl Lahir:</strong> {kepala.tempatLahir}, {kepala.tanggalLahir}
-                                </p>
-                                <p>
-                                  <strong>Pekerjaan:</strong> {kepala.pekerjaan}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Button variant="outline" size="sm" className="hover:bg-[#073046]/10 bg-transparent">
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button variant="outline" size="sm" className="hover:bg-[#073046]/10 bg-transparent">
                                 <Edit className="h-4 w-4" />
                               </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="hover:bg-red-100 text-red-600 border-red-200"
+                                onClick={() => handleDeleteKK(kk.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
-                          </div>
-                        ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="anggota" className="space-y-6">
-                <Card className="border-0 bg-gradient-to-r from-white to-slate-50/50 shadow-lg">
-                  <CardHeader>
-                    <CardTitle className="text-[#073046]">Daftar Anggota Keluarga</CardTitle>
-                    <CardDescription>Semua anggota keluarga yang terdaftar</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {penduduk.map((anggota) => (
-                        <div
-                          key={anggota.id}
-                          className="flex items-center justify-between p-4 rounded-lg border border-slate-200/60 bg-white/50 hover:bg-white/80 transition-all"
-                        >
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-3">
-                              <h3 className="font-semibold text-[#073046]">{anggota.nama}</h3>
-                              <Badge variant="outline" className="text-xs">
-                                {anggota.status}
-                              </Badge>
-                            </div>
-                            <div className="text-sm text-slate-600 grid grid-cols-3 gap-4">
-                              <p>
-                                <strong>NIK:</strong> {anggota.nik}
-                              </p>
-                              <p>
-                                <strong>Jenis Kelamin:</strong>{" "}
-                                {anggota.jenisKelamin === "L" ? "Laki-laki" : "Perempuan"}
-                              </p>
-                              <p>
-                                <strong>Tempat/Tgl Lahir:</strong> {anggota.tempatLahir}, {anggota.tanggalLahir}
-                              </p>
-                              <p>
-                                <strong>Agama:</strong> {anggota.agama}
-                              </p>
-                              <p>
-                                <strong>Pekerjaan:</strong> {anggota.pekerjaan}
-                              </p>
-                              <p>
-                                <strong>Status dalam KK:</strong> {anggota.status}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm" className="hover:bg-[#073046]/10 bg-transparent">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button variant="outline" size="sm" className="hover:bg-[#073046]/10 bg-transparent">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
+                          </td>
+                        </tr>
                       ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+                    </tbody>
+                  </table>
+                </div>
+                {totalPages > 1 && (
+                  <div className="flex justify-between items-center mt-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePrevPage}
+                      disabled={currentPage === 1}
+                      className="border-gray-200 text-gray-600 hover:bg-gray-100"
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-2" />
+                      Sebelumnya
+                    </Button>
+                    <span className="text-sm text-gray-600">
+                      Halaman {currentPage} dari {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages}
+                      className="border-gray-200 text-gray-600 hover:bg-gray-100"
+                    >
+                      Berikutnya
+                      <ChevronRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </main>
         </div>
       </SidebarInset>
     </SidebarProvider>
-  )
+  );
 }

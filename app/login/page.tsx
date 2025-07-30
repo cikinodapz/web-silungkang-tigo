@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -9,20 +9,46 @@ import { Label } from "@/components/ui/label"
 import { Mountain, User, Lock, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { fetchData } from "@/lib/api"
 
 export default function LoginPage() {
   const router = useRouter()
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Simulate login - in real app, validate credentials
-    router.push("/admin")
+    setIsLoading(true)
+    setError("")
+
+    try {
+      const response = await fetchData("/auth/login", {
+        method: "POST",
+        data: {
+          email,
+          password,
+        },
+      })
+
+      localStorage.setItem("token", response.token)
+      router.push("/admin")
+    } catch (err) {
+      const errorMessage =
+        err && typeof err === "object" && "message" in err
+          ? (err as { message?: string }).message
+          : undefined
+      setError(`Login gagal: ${errorMessage || 'Email atau password salah'}`)
+      console.error(err)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-cyan-50/50 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
-        {/* Back to Home */}
         <div className="mb-6">
           <Button variant="ghost" asChild className="text-slate-600 hover:text-[#073046]">
             <Link href="/">
@@ -49,17 +75,22 @@ export default function LoginPage() {
 
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-6">
+              {error && (
+                <div className="text-red-500 text-sm text-center">{error}</div>
+              )}
               <div className="space-y-2">
-                <Label htmlFor="username" className="text-slate-700">
-                  Username
+                <Label htmlFor="email" className="text-slate-700">
+                  Email
                 </Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
                   <Input
-                    id="username"
-                    type="text"
-                    placeholder="Masukkan username"
+                    id="email"
+                    type="email"
+                    placeholder="Masukkan email"
                     className="pl-10 border-slate-200 focus:border-[#073046] focus:ring-[#073046]"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
@@ -76,6 +107,8 @@ export default function LoginPage() {
                     type="password"
                     placeholder="Masukkan password"
                     className="pl-10 border-slate-200 focus:border-[#073046] focus:ring-[#073046]"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     required
                   />
                 </div>
@@ -94,8 +127,9 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 className="w-full bg-gradient-to-r from-[#073046] to-[#0a4a66] hover:from-[#0a4a66] to-[#0d5a7a] text-white py-3"
+                disabled={isLoading}
               >
-                Masuk ke Dashboard
+                {isLoading ? "Memproses..." : "Masuk ke Dashboard"}
               </Button>
             </form>
 
@@ -104,19 +138,6 @@ export default function LoginPage() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Info */}
-        <div className="mt-6 text-center">
-          <Card className="border-0 bg-blue-50/50 backdrop-blur-sm">
-            <CardContent className="p-4">
-              <p className="text-sm text-slate-600">
-                <strong>Demo Login:</strong>
-                <br />
-                Username: admin | Password: admin123
-              </p>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </div>
   )

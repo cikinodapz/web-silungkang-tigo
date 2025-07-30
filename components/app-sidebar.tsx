@@ -16,6 +16,7 @@ import {
   UserPlus,
   UserMinus,
   ArrowUpDown,
+  ChevronDown,
 } from "lucide-react"
 
 import {
@@ -35,6 +36,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { cn } from "@/lib/utils"
 
 // Menu data
 const data = {
@@ -64,13 +66,25 @@ const data = {
         },
         {
           title: "Kepala Keluarga",
-          url: "/data-penduduk",
+          url: "/kepala-keluarga",
           icon: UserCheck,
         },
         {
           title: "Anggota Keluarga",
           url: "/data-penduduk",
           icon: Users,
+          items: [
+            {
+              title: "Tambah Anggota",
+              url: "/data-penduduk/tambah",
+              icon: UserPlus,
+            },
+            {
+              title: "Edit Anggota",
+              url: "/data-penduduk/edit",
+              icon: UserMinus,
+            },
+          ],
         },
       ],
     },
@@ -126,58 +140,123 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar {...props} className="border-r-0">
-      <SidebarHeader className="border-b border-slate-200/60 bg-gradient-to-r from-[#073046] to-[#0a4a66] text-white">
-        <div className="flex items-center gap-3 px-3 py-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm">
-            <Home className="h-5 w-5" />
+    <Sidebar {...props} className="border-r border-gray-100 bg-white/80 shadow-lg">
+      {/* Header with gradient matching buttons */}
+      <SidebarHeader className="border-b border-gray-200/50 bg-gradient-to-r from-blue-900 to-cyan-700">
+        <div className="flex items-center gap-3 px-4 py-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 shadow-inner">
+            <Home className="h-5 w-5 text-white" />
           </div>
           <div className="flex flex-col">
-            <span className="text-lg font-bold">Desa Digital</span>
-            <span className="text-xs text-blue-100">Sistem Terpadu</span>
+            <span className="text-lg font-bold text-white tracking-tight">Desa Digital</span>
+            <span className="text-xs text-white/80 font-medium">Sistem Informasi Terpadu</span>
           </div>
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="bg-gradient-to-b from-white to-slate-50/50">
+      {/* Content Area */}
+      <SidebarContent className="bg-white/80">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[#073046] font-semibold">Menu Utama</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-gray-600 px-4 pt-4 pb-2">
+            Menu Utama
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {data.navMain.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   {item.items ? (
-                    <Collapsible defaultOpen={item.isActive} className="group/collapsible">
+                    <Collapsible defaultOpen={item.isActive}>
                       <CollapsibleTrigger asChild>
                         <SidebarMenuButton
-                          className="hover:bg-[#073046]/10 data-[active=true]:bg-gradient-to-r data-[active=true]:from-[#073046]/20 data-[active=true]:to-[#0a4a66]/10 data-[active=true]:text-[#073046] data-[active=true]:font-semibold"
+                          className={cn(
+                            "group hover:bg-blue-50/50 transition-colors",
+                            "data-[active=true]:bg-blue-50 data-[active=true]:text-blue-900",
+                            "px-4 py-2.5 my-0.5 mx-2 rounded-lg"
+                          )}
                           isActive={item.isActive}
                         >
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
-                          <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                          <div className="flex items-center gap-3">
+                            <item.icon className="h-4 w-4 text-gray-500 group-data-[active=true]:text-blue-900" />
+                            <span className="text-sm font-medium text-gray-600 group-data-[active=true]:text-blue-900">{item.title}</span>
+                            <ChevronDown className="ml-auto h-4 w-4 text-gray-400 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                          </div>
                         </SidebarMenuButton>
                       </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <SidebarMenuSub>
+                      <CollapsibleContent className="CollapsibleContent">
+                        <SidebarMenuSub className="pl-2 py-1">
                           {item.items.map((subItem) => (
                             <SidebarMenuSubItem key={subItem.title}>
-                              <SidebarMenuSubButton asChild className="hover:bg-[#073046]/5 hover:text-[#073046] pl-8">
-                                <a href={subItem.url} className="flex items-center gap-2">
-                                  <subItem.icon className="h-3 w-3" />
-                                  <span>{subItem.title}</span>
-                                </a>
-                              </SidebarMenuSubButton>
+                              {subItem.items ? (
+                                <Collapsible>
+                                  <CollapsibleTrigger asChild>
+                                    <SidebarMenuSubButton
+                                      className={cn(
+                                        "hover:bg-blue-50/50 hover:text-blue-900",
+                                        "px-3 py-2 rounded-md text-gray-600",
+                                        "transition-colors duration-150"
+                                      )}
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <subItem.icon className="h-3.5 w-3.5 text-gray-500" />
+                                        <span className="text-sm">{subItem.title}</span>
+                                        <ChevronDown className="ml-auto h-4 w-4 text-gray-400 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                                      </div>
+                                    </SidebarMenuSubButton>
+                                  </CollapsibleTrigger>
+                                  <CollapsibleContent>
+                                    <SidebarMenuSub className="pl-4 py-1">
+                                      {subItem.items.map((subSubItem) => (
+                                        <SidebarMenuSubItem key={subSubItem.title}>
+                                          <SidebarMenuSubButton
+                                            asChild
+                                            className={cn(
+                                              "hover:bg-blue-50/50 hover:text-blue-900",
+                                              "px-3 py-2 rounded-md text-gray-600",
+                                              "transition-colors duration-150"
+                                            )}
+                                          >
+                                            <a href={subSubItem.url} className="flex items-center gap-2">
+                                              <subSubItem.icon className="h-3.5 w-3.5 text-gray-500" />
+                                              <span className="text-sm">{subSubItem.title}</span>
+                                            </a>
+                                          </SidebarMenuSubButton>
+                                        </SidebarMenuSubItem>
+                                      ))}
+                                    </SidebarMenuSub>
+                                  </CollapsibleContent>
+                                </Collapsible>
+                              ) : (
+                                <SidebarMenuSubButton
+                                  asChild
+                                  className={cn(
+                                    "hover:bg-blue-50/50 hover:text-blue-900",
+                                    "px-3 py-2 rounded-md text-gray-600",
+                                    "transition-colors duration-150"
+                                  )}
+                                >
+                                  <a href={subItem.url} className="flex items-center gap-2">
+                                    <subItem.icon className="h-3.5 w-3.5 text-gray-500" />
+                                    <span className="text-sm">{subItem.title}</span>
+                                  </a>
+                                </SidebarMenuSubButton>
+                              )}
                             </SidebarMenuSubItem>
                           ))}
                         </SidebarMenuSub>
                       </CollapsibleContent>
                     </Collapsible>
                   ) : (
-                    <SidebarMenuButton asChild className="hover:bg-[#073046]/10 hover:text-[#073046]">
-                      <a href={item.url} className="flex items-center gap-2">
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
+                    <SidebarMenuButton
+                      asChild
+                      className={cn(
+                        "group hover:bg-blue-50/50 transition-colors",
+                        "data-[active=true]:bg-blue-50 data-[active=true]:text-blue-900",
+                        "px-4 py-2.5 my-0.5 mx-2 rounded-lg"
+                      )}
+                    >
+                      <a href={item.url} className="flex items-center gap-3">
+                        <item.icon className="h-4 w-4 text-gray-500 group-data-[active=true]:text-blue-900" />
+                        <span className="text-sm font-medium text-gray-600 group-data-[active=true]:text-blue-900">{item.title}</span>
                       </a>
                     </SidebarMenuButton>
                   )}
@@ -188,15 +267,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-slate-200/60 bg-gradient-to-r from-slate-50 to-blue-50/30">
-        <div className="p-4">
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-[#073046]/5 to-[#0a4a66]/5 border border-[#073046]/10">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-r from-[#073046] to-[#0a4a66] flex items-center justify-center text-white text-sm font-semibold">
-              A
+      {/* Footer with user profile card */}
+      <SidebarFooter className="border-t border-gray-200/50 bg-white/80">
+        <div className="p-3">
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50/50 border border-gray-200/50 transition-all hover:bg-blue-50/50 cursor-pointer">
+            <div className="h-9 w-9 rounded-full bg-gradient-to-r from-blue-900 to-cyan-700 flex items-center justify-center text-white text-sm font-semibold shadow-sm">
+              AD
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-[#073046] truncate">Admin Desa</p>
-              <p className="text-xs text-slate-500 truncate">admin@desa.id</p>
+              <p className="text-sm font-medium text-blue-900 truncate">Admin Desa</p>
+              <p className="text-xs text-gray-600 truncate">admin@desa.id</p>
+            </div>
+            <div className="text-gray-400">
+              <Settings className="h-4 w-4" />
             </div>
           </div>
         </div>
