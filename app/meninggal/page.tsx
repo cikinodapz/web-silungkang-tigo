@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   Search,
   Plus,
@@ -29,6 +28,11 @@ import {
 import { fetchData } from "@/lib/api";
 import Swal from "sweetalert2";
 
+interface KepalaKeluarga {
+  id: string;
+  nama: string;
+}
+
 interface Meninggal {
   id: string;
   nama: string;
@@ -38,7 +42,7 @@ interface Meninggal {
   kkId: string;
   kk: {
     no_kk: string;
-    kepalaKeluarga: { nama: string } | null;
+    kepalaKeluarga: KepalaKeluarga | null;
   } | null;
 }
 
@@ -56,11 +60,12 @@ export default function MeninggalPage() {
       setIsLoading(true);
       try {
         const response = await fetchData("/mutasi/getAllMeninggal");
-        setMeninggalRecords(
-          Array.isArray(response) ? response : response.data || []
-        );
+        const data = Array.isArray(response) ? response : response.data || [];
+        console.log("Fetched data:", data); // Debug log to inspect data
+        setMeninggalRecords(data);
       } catch (err) {
         setError(`Gagal memuat data: ${err.message || "Terjadi kesalahan"}`);
+        console.error("Fetch error:", err);
       } finally {
         setIsLoading(false);
       }

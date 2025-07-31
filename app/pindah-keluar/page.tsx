@@ -33,21 +33,21 @@ interface KepalaKeluarga {
   nama: string;
 }
 
-interface LahirMasuk {
+interface PindahKeluar {
   id: string;
   nama: string;
   nik: string;
-  tanggal_lahir_masuk: string;
-  alamat_sebelumnya: string | null;
+  tanggal_pindah: string;
+  alamat_tujuan: string | null;
   kkId: string;
   kk: {
     no_kk: string;
-    kepalaKeluarga: KepalaKeluarga | null; // Explicitly define the structure
+    kepalaKeluarga: KepalaKeluarga | null;
   } | null;
 }
 
-export default function LahirMasukPage() {
-  const [lahirMasukRecords, setLahirMasukRecords] = useState<LahirMasuk[]>([]);
+export default function PindahKeluarPage() {
+  const [pindahKeluarRecords, setPindahKeluarRecords] = useState<PindahKeluar[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -55,15 +55,14 @@ export default function LahirMasukPage() {
   const itemsPerPage = 5;
   const router = useRouter();
 
-  // Fetch Lahir Masuk records on component mount
   useEffect(() => {
-    const loadLahirMasuk = async () => {
+    const loadPindahKeluar = async () => {
       setIsLoading(true);
       try {
-        const response = await fetchData("/mutasi/getAllLahirMasuk");
+        const response = await fetchData("/mutasi/getAllPindahKeluar");
         const data = Array.isArray(response) ? response : response.data || [];
         console.log("Fetched data:", data); // Debug log to inspect data
-        setLahirMasukRecords(data);
+        setPindahKeluarRecords(data);
       } catch (err) {
         setError(`Gagal memuat data: ${err.message || "Terjadi kesalahan"}`);
         console.error("Fetch error:", err);
@@ -71,15 +70,14 @@ export default function LahirMasukPage() {
         setIsLoading(false);
       }
     };
-    loadLahirMasuk();
+    loadPindahKeluar();
   }, []);
 
-  // Handle delete Lahir Masuk record
-  const handleDeleteLahirMasuk = async (id: string) => {
+  const handleDeletePindahKeluar = async (id: string) => {
     const result = await Swal.fire({
       icon: "warning",
       title: "Konfirmasi",
-      text: "Apakah Anda yakin ingin menghapus data Lahir/Masuk ini?",
+      text: "Apakah Anda yakin ingin menghapus data pindah keluar ini?",
       showCancelButton: true,
       confirmButtonText: "Ya, Hapus",
       cancelButtonText: "Batal",
@@ -90,10 +88,10 @@ export default function LahirMasukPage() {
 
     setIsLoading(true);
     try {
-      await fetchData(`/mutasi/deleteLahirMasuk/${id}`, { method: "DELETE" });
-      setLahirMasukRecords(lahirMasukRecords.filter((record) => record.id !== id));
+      await fetchData(`/mutasi/deletePindahKeluar/${id}`, { method: "DELETE" });
+      setPindahKeluarRecords(pindahKeluarRecords.filter((record) => record.id !== id));
       if (
-        lahirMasukRecords.length - 1 <= (currentPage - 1) * itemsPerPage &&
+        pindahKeluarRecords.length - 1 <= (currentPage - 1) * itemsPerPage &&
         currentPage > 1
       ) {
         setCurrentPage(currentPage - 1);
@@ -101,7 +99,7 @@ export default function LahirMasukPage() {
       Swal.fire({
         icon: "success",
         title: "Berhasil",
-        text: "Data Lahir/Masuk berhasil dihapus!",
+        text: "Data pindah keluar berhasil dihapus!",
       });
     } catch (err) {
       Swal.fire({
@@ -114,30 +112,24 @@ export default function LahirMasukPage() {
     }
   };
 
-  // Filter records based on search query
-  const filteredRecords = lahirMasukRecords.filter(
+  const filteredRecords = pindahKeluarRecords.filter(
     (record) =>
       record.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
       record.nik.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (record.kk?.no_kk || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredRecords.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
 
   const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
 
   const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
 
   return (
@@ -151,10 +143,10 @@ export default function LahirMasukPage() {
                 <SidebarTrigger className="text-blue-900 hover:bg-blue-100 transition-colors p-2 rounded-md" />
                 <div>
                   <h1 className="text-2xl font-semibold text-blue-900">
-                    Data Lahir/Masuk
+                    Data Pindah Keluar
                   </h1>
                   <p className="text-sm text-gray-600">
-                    Kelola data kelahiran dan pendatang desa
+                    Kelola data pindah keluar desa
                   </p>
                 </div>
               </div>
@@ -170,7 +162,7 @@ export default function LahirMasukPage() {
                 </div>
                 <Button
                   className="flex items-center bg-gradient-to-r from-blue-900 to-cyan-700 hover:from-blue-800 hover:to-cyan-600 text-white px-4 py-2 rounded-md transition-colors"
-                  onClick={() => router.push("/lahir-masuk/tambah-lahir-masuk")}
+                  onClick={() => router.push("/pindah-keluar/tambah-pindah-keluar")}
                 >
                   <Plus className="h-4 w-4 mr-1" />
                   Tambah Data
@@ -192,16 +184,16 @@ export default function LahirMasukPage() {
             )}
             {!isLoading && filteredRecords.length === 0 && !error && (
               <div className="text-center text-gray-600">
-                Tidak ada data Lahir/Masuk.
+                Tidak ada data pindah keluar.
               </div>
             )}
 
             <Card className="border-0 bg-white/80 shadow-lg">
               <CardHeader>
                 <CardTitle className="text-blue-900">
-                  Daftar Lahir/Masuk
+                  Daftar Data Pindah Keluar
                 </CardTitle>
-                <CardDescription>Kelola data kelahiran dan pendatang</CardDescription>
+                <CardDescription>Kelola data pindah keluar</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
@@ -210,8 +202,8 @@ export default function LahirMasukPage() {
                       <tr>
                         <th className="px-4 py-3 font-semibold">Nama</th>
                         <th className="px-4 py-3 font-semibold">NIK</th>
-                        <th className="px-4 py-3 font-semibold">Tanggal Lahir/Masuk</th>
-                        <th className="px-4 py-3 font-semibold">Alamat Sebelumnya</th>
+                        <th className="px-4 py-3 font-semibold">Tanggal Pindah</th>
+                        <th className="px-4 py-3 font-semibold">Alamat Tujuan</th>
                         <th className="px-4 py-3 font-semibold">No. KK</th>
                         <th className="px-4 py-3 font-semibold">Kepala Keluarga</th>
                         <th className="px-4 py-3 font-semibold text-right">Aksi</th>
@@ -226,9 +218,9 @@ export default function LahirMasukPage() {
                           <td className="px-4 py-3">{record.nama}</td>
                           <td className="px-4 py-3">{record.nik}</td>
                           <td className="px-4 py-3">
-                            {new Date(record.tanggal_lahir_masuk).toLocaleDateString()}
+                            {new Date(record.tanggal_pindah).toLocaleDateString()}
                           </td>
-                          <td className="px-4 py-3">{record.alamat_sebelumnya || "-"}</td>
+                          <td className="px-4 py-3">{record.alamat_tujuan || "-"}</td>
                           <td className="px-4 py-3">{record.kk?.no_kk || "-"}</td>
                           <td className="px-4 py-3">
                             {record.kk?.kepalaKeluarga?.nama || "Belum ditentukan"}
@@ -240,7 +232,7 @@ export default function LahirMasukPage() {
                                 size="sm"
                                 className="hover:bg-blue-100 text-blue-900 border-blue-200"
                                 onClick={() =>
-                                  router.push(`/lahir-masuk/edit-lahir-masuk/${record.id}`)
+                                  router.push(`/pindah-keluar/edit-pindah-keluar/${record.id}`)
                                 }
                               >
                                 <Edit className="h-4 w-4" />
@@ -249,7 +241,7 @@ export default function LahirMasukPage() {
                                 variant="outline"
                                 size="sm"
                                 className="hover:bg-red-100 text-red-600 border-red-200"
-                                onClick={() => handleDeleteLahirMasuk(record.id)}
+                                onClick={() => handleDeletePindahKeluar(record.id)}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>

@@ -105,7 +105,7 @@ const data = {
         },
         {
           title: "Pindah/Keluar",
-          url: "/mutasi-penduduk",
+          url: "/pindah-keluar",
           icon: ArrowUpDown,
         },
       ],
