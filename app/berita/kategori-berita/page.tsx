@@ -11,9 +11,9 @@ import {
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,33 +28,28 @@ import {
 import { fetchData } from "@/lib/api";
 import Swal from "sweetalert2";
 
-interface Berita {
+interface KategoriBerita {
   id: string;
-  judul: string;
-  konten: string;
-  kategoriId: string;
-  kategori: { kategori: string };
-  sampul?: string;
-  createdAt?: string;
+  kategori: string;
 }
 
-export default function BeritaListPage() {
-  const [beritaList, setBeritaList] = useState<Berita[]>([]);
+export default function KategoriBeritaListPage() {
+  const [kategoriBeritaList, setKategoriBeritaList] = useState<KategoriBerita[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 4;
+  const itemsPerPage = 5;
   const router = useRouter();
 
   useEffect(() => {
-    const loadBerita = async () => {
+    const loadKategoriBerita = async () => {
       setIsLoading(true);
       try {
-        const response = await fetchData("/berita/getAllBerita");
+        const response = await fetchData("/berita/getAllKategoriBerita");
         const data = Array.isArray(response) ? response : response.data || [];
         console.log("Fetched data:", data); // Debug log to inspect data
-        setBeritaList(data);
+        setKategoriBeritaList(data);
       } catch (err) {
         setError(`Gagal memuat data: ${err.message || "Terjadi kesalahan"}`);
         console.error("Fetch error:", err);
@@ -62,14 +57,14 @@ export default function BeritaListPage() {
         setIsLoading(false);
       }
     };
-    loadBerita();
+    loadKategoriBerita();
   }, []);
 
-  const handleDeleteBerita = async (id: string) => {
+  const handleDeleteKategoriBerita = async (id: string) => {
     const result = await Swal.fire({
       icon: "warning",
       title: "Konfirmasi",
-      text: "Apakah Anda yakin ingin menghapus berita ini?",
+      text: "Apakah Anda yakin ingin menghapus kategori berita ini?",
       showCancelButton: true,
       confirmButtonText: "Ya, Hapus",
       cancelButtonText: "Batal",
@@ -80,10 +75,10 @@ export default function BeritaListPage() {
 
     setIsLoading(true);
     try {
-      await fetchData(`/berita/deleteBerita/${id}`, { method: "DELETE" });
-      setBeritaList(beritaList.filter((record) => record.id !== id));
+      await fetchData(`/berita/deleteKategoriBerita/${id}`, { method: "DELETE" });
+      setKategoriBeritaList(kategoriBeritaList.filter((record) => record.id !== id));
       if (
-        beritaList.length - 1 <= (currentPage - 1) * itemsPerPage &&
+        kategoriBeritaList.length - 1 <= (currentPage - 1) * itemsPerPage &&
         currentPage > 1
       ) {
         setCurrentPage(currentPage - 1);
@@ -91,7 +86,7 @@ export default function BeritaListPage() {
       Swal.fire({
         icon: "success",
         title: "Berhasil",
-        text: "Berita berhasil dihapus!",
+        text: "Kategori berita berhasil dihapus!",
       });
     } catch (err) {
       Swal.fire({
@@ -104,11 +99,8 @@ export default function BeritaListPage() {
     }
   };
 
-  const filteredRecords = beritaList.filter(
-    (record) =>
-      record.judul.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.konten.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.kategori.kategori.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredRecords = kategoriBeritaList.filter((record) =>
+    record.kategori.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -124,13 +116,6 @@ export default function BeritaListPage() {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
 
-  // Base URL for the image API
-  const getSampulUrl = (sampul: string) => {
-    // Ekstrak hanya nama file dari path yang disimpan di database
-    const filename = sampul.split("/").pop();
-    return `http://localhost:3000/berita/getSampul/berita/${filename}`;
-  };
-
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -142,16 +127,18 @@ export default function BeritaListPage() {
                 <SidebarTrigger className="text-blue-900 hover:bg-blue-100 transition-colors p-2 rounded-md" />
                 <div>
                   <h1 className="text-2xl font-semibold text-blue-900">
-                    Data Berita
+                    Data Kategori Berita
                   </h1>
-                  <p className="text-sm text-gray-600">Kelola berita desa</p>
+                  <p className="text-sm text-gray-600">
+                    Kelola kategori berita desa
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <Input
-                    placeholder="Cari judul, konten, atau kategori..."
+                    placeholder="Cari kategori..."
                     className="pl-10 w-64 border border-gray-300 rounded-md focus:border-blue-500 focus:ring-blue-500"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -159,7 +146,7 @@ export default function BeritaListPage() {
                 </div>
                 <Button
                   className="flex items-center bg-gradient-to-r from-blue-900 to-cyan-700 hover:from-blue-800 hover:to-cyan-600 text-white px-4 py-2 rounded-md transition-colors"
-                  onClick={() => router.push("/berita/tambah")}
+                  onClick={() => router.push("/berita/kategori-berita/tambah")}
                 >
                   <Plus className="h-4 w-4 mr-1" />
                   Tambah Data
@@ -181,35 +168,24 @@ export default function BeritaListPage() {
             )}
             {!isLoading && filteredRecords.length === 0 && !error && (
               <div className="text-center text-gray-600">
-                Tidak ada data berita.
+                Tidak ada data kategori berita.
               </div>
             )}
 
             <Card className="border-0 bg-white/80 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-blue-900">Daftar Berita</CardTitle>
-                <CardDescription>Kelola berita desa</CardDescription>
+                <CardTitle className="text-blue-900">
+                  Daftar Kategori Berita
+                </CardTitle>
+                <CardDescription>Kelola kategori berita</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm text-gray-600 table-auto">
+                  <table className="w-full text-left text-sm text-gray-600">
                     <thead className="bg-blue-50 text-blue-900">
                       <tr>
-                        <th className="px-6 py-4 font-semibold min-w-[150px]">
-                          Sampul
-                        </th>
-                        <th className="px-6 py-4 font-semibold min-w-[250px]">
-                          Judul
-                        </th>
-                        <th className="px-6 py-4 font-semibold min-w-[150px]">
-                          Kategori
-                        </th>
-                        <th className="px-6 py-4 font-semibold min-w-[150px]">
-                          Tanggal Dibuat
-                        </th>
-                        <th className="px-6 py-4 font-semibold text-right min-w-[120px]">
-                          Aksi
-                        </th>
+                        <th className="px-4 py-3 font-semibold">Kategori</th>
+                        <th className="px-4 py-3 font-semibold text-right">Aksi</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -218,38 +194,15 @@ export default function BeritaListPage() {
                           key={record.id}
                           className="border-b border-gray-100 hover:bg-blue-50/50 transition-all"
                         >
-                          <td className="px-6 py-4">
-                            {record.sampul ? (
-                              <img
-                                src={getSampulUrl(record.sampul)}
-                                alt={record.judul}
-                                className="w-24 h-24 object-cover rounded-md" // Increased from w-16 h-16 to w-24 h-24
-                                onError={(e) => {
-                                  e.currentTarget.src =
-                                    "/placeholder-image.jpg"; // Fallback image
-                                }}
-                              />
-                            ) : (
-                              <span className="text-gray-400">
-                                Tidak ada sampul
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4">{record.judul}</td>
-                          <td className="px-6 py-4">
-                            {record.kategori.kategori}
-                          </td>
-                          <td className="px-6 py-4">
-                            {new Date(record.createdAt!).toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4 text-right">
+                          <td className="px-4 py-3">{record.kategori}</td>
+                          <td className="px-4 py-3 text-right">
                             <div className="flex justify-end gap-2">
                               <Button
                                 variant="outline"
                                 size="sm"
                                 className="hover:bg-blue-100 text-blue-900 border-blue-200"
                                 onClick={() =>
-                                  router.push(`/berita/edit/${record.id}`)
+                                  router.push(`/berita/kategori-berita/edit/${record.id}`)
                                 }
                               >
                                 <Edit className="h-4 w-4" />
@@ -258,7 +211,7 @@ export default function BeritaListPage() {
                                 variant="outline"
                                 size="sm"
                                 className="hover:bg-red-100 text-red-600 border-red-200"
-                                onClick={() => handleDeleteBerita(record.id)}
+                                onClick={() => handleDeleteKategoriBerita(record.id)}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>

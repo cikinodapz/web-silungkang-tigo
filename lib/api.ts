@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -25,21 +25,51 @@ api.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
-export async function fetchData(endpoint: string, options: { method?: string; data?: any } = {}) {
+export async function fetchData(
+  endpoint: string, 
+  options: { 
+    method?: string; 
+    data?: any;
+    headers?: Record<string, string>;
+  } = {}
+) {
   console.log("Request URL:", `${API_URL}${endpoint}`);
   console.log("Request Data:", options.data);
+  
   try {
-    const response = await api.request({
+    const config: AxiosRequestConfig = {
       url: endpoint,
       method: options.method || 'GET',
-      data: options.data,
-    });
+    };
+
+    // Handle FormData differently
+    if (options.data instanceof FormData) {
+      config.data = options.data;
+      // Jangan set Content-Type untuk FormData
+      config.headers = {
+        ...options.headers,
+        'Content-Type': undefined, // Biarkan browser set boundary
+      };
+    } else {
+      // Untuk data biasa (JSON)
+      config.data = options.data;
+      config.headers = {
+        ...options.headers,
+        'Content-Type': 'application/json',
+      };
+    }
+
+    const response = await api.request(config);
     console.log("Response Data:", response.data);
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response) {
       console.error("Axios Error:", error.response?.status, error.response?.data);
-      throw new Error(`API error: ${error.response?.status} - ${error.response?.data?.message || error.message}`);
+      throw new Error(
+        `API error: ${error.response?.status} - ${
+          error.response?.data?.message || error.message
+        }`
+      );
     }
     console.error("Network Error:", error);
     throw new Error('API error: Network or unknown error');

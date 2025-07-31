@@ -17,6 +17,7 @@ import {
   UserMinus,
   ArrowUpDown,
   ChevronDown,
+  Tags,
 } from "lucide-react"
 
 import {
@@ -119,7 +120,18 @@ const data = {
       title: "Pengelolaan Berita",
       url: "/berita",
       icon: Newspaper,
-    },
+      items : [
+        {title: "Kategori Berita",
+          url: "/berita/kategori-berita",
+          icon: Tags,
+        },
+        {
+          title: "Berita Desa",
+          url: "/berita",
+          icon: Newspaper,
+        },
+      ],
+    },  
     {
       title: "Pengelolaan Potensi",
       url: "/potensi",
