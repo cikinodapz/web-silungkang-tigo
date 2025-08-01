@@ -134,7 +134,7 @@ const data = {
     },  
     {
       title: "Pengelolaan Potensi",
-      url: "/potensi",
+      url: "/potensi-desa",
       icon: Zap,
     },
     {
