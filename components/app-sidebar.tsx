@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import type * as React from "react"
+import type * as React from "react";
 import {
   LayoutDashboard,
   Users,
@@ -18,7 +18,8 @@ import {
   ArrowUpDown,
   ChevronDown,
   Tags,
-} from "lucide-react"
+  Package,
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -35,9 +36,13 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarRail,
-} from "@/components/ui/sidebar"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/sidebar";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { cn } from "@/lib/utils";
 
 // Menu data
 const data = {
@@ -112,16 +117,17 @@ const data = {
       ],
     },
     {
-      title: "Pengelolaan APBDes",
+      title: "APBDes",
       url: "/apbdes",
       icon: DollarSign,
     },
     {
-      title: "Pengelolaan Berita",
+      title: "Berita",
       url: "/berita",
       icon: Newspaper,
-      items : [
-        {title: "Kategori Berita",
+      items: [
+        {
+          title: "Kategori Berita",
           url: "/berita/kategori-berita",
           icon: Tags,
         },
@@ -131,16 +137,28 @@ const data = {
           icon: Newspaper,
         },
       ],
-    },  
+    },
     {
-      title: "Pengelolaan Potensi",
+      title: "Potensi Desa",
       url: "/potensi-desa",
       icon: Zap,
     },
     {
-      title: "Pengelolaan Lapak Desa",
+      title: "Lapak Desa",
       url: "/lapak-desa",
       icon: Store,
+      items: [
+        {
+          title: "UMKM",
+          url: "/lapak-desa/umkm",
+          icon: Users, // kamu bisa ganti dengan ikon lain yang lebih relevan seperti Briefcase atau Building
+        },
+        {
+          title: "Produk",
+          url: "/lapak-desa/produk",
+          icon: Package, // kamu juga bisa ganti jika ingin ikon berbeda
+        },
+      ],
     },
     {
       title: "Produk Hukum",
@@ -148,11 +166,14 @@ const data = {
       icon: FileText,
     },
   ],
-}
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar {...props} className="border-r border-gray-100 bg-white/80 shadow-lg">
+    <Sidebar
+      {...props}
+      className="border-r border-gray-100 bg-white/80 shadow-lg"
+    >
       {/* Header with gradient matching buttons */}
       <SidebarHeader className="border-b border-gray-200/50 bg-gradient-to-r from-blue-900 to-cyan-700">
         <div className="flex items-center gap-3 px-4 py-4">
@@ -160,8 +181,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <Home className="h-5 w-5 text-white" />
           </div>
           <div className="flex flex-col">
-            <span className="text-lg font-bold text-white tracking-tight">Desa Digital</span>
-            <span className="text-xs text-white/80 font-medium">Sistem Informasi Terpadu</span>
+            <span className="text-lg font-bold text-white tracking-tight">
+              Desa Digital
+            </span>
+            <span className="text-xs text-white/80 font-medium">
+              Sistem Informasi Terpadu
+            </span>
           </div>
         </div>
       </SidebarHeader>
@@ -189,7 +214,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         >
                           <div className="flex items-center gap-3">
                             <item.icon className="h-4 w-4 text-gray-500 group-data-[active=true]:text-blue-900" />
-                            <span className="text-sm font-medium text-gray-600 group-data-[active=true]:text-blue-900">{item.title}</span>
+                            <span className="text-sm font-medium text-gray-600 group-data-[active=true]:text-blue-900">
+                              {item.title}
+                            </span>
                             <ChevronDown className="ml-auto h-4 w-4 text-gray-400 transition-transform duration-200 group-data-[state=open]:rotate-180" />
                           </div>
                         </SidebarMenuButton>
@@ -210,7 +237,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     >
                                       <div className="flex items-center gap-2">
                                         <subItem.icon className="h-3.5 w-3.5 text-gray-500" />
-                                        <span className="text-sm">{subItem.title}</span>
+                                        <span className="text-sm">
+                                          {subItem.title}
+                                        </span>
                                         <ChevronDown className="ml-auto h-4 w-4 text-gray-400 transition-transform duration-200 group-data-[state=open]:rotate-180" />
                                       </div>
                                     </SidebarMenuSubButton>
@@ -218,7 +247,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                   <CollapsibleContent>
                                     <SidebarMenuSub className="pl-4 py-1">
                                       {subItem.items.map((subSubItem) => (
-                                        <SidebarMenuSubItem key={subSubItem.title}>
+                                        <SidebarMenuSubItem
+                                          key={subSubItem.title}
+                                        >
                                           <SidebarMenuSubButton
                                             asChild
                                             className={cn(
@@ -227,9 +258,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                               "transition-colors duration-150"
                                             )}
                                           >
-                                            <a href={subSubItem.url} className="flex items-center gap-2">
+                                            <a
+                                              href={subSubItem.url}
+                                              className="flex items-center gap-2"
+                                            >
                                               <subSubItem.icon className="h-3.5 w-3.5 text-gray-500" />
-                                              <span className="text-sm">{subSubItem.title}</span>
+                                              <span className="text-sm">
+                                                {subSubItem.title}
+                                              </span>
                                             </a>
                                           </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
@@ -246,9 +282,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     "transition-colors duration-150"
                                   )}
                                 >
-                                  <a href={subItem.url} className="flex items-center gap-2">
+                                  <a
+                                    href={subItem.url}
+                                    className="flex items-center gap-2"
+                                  >
                                     <subItem.icon className="h-3.5 w-3.5 text-gray-500" />
-                                    <span className="text-sm">{subItem.title}</span>
+                                    <span className="text-sm">
+                                      {subItem.title}
+                                    </span>
                                   </a>
                                 </SidebarMenuSubButton>
                               )}
@@ -268,7 +309,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     >
                       <a href={item.url} className="flex items-center gap-3">
                         <item.icon className="h-4 w-4 text-gray-500 group-data-[active=true]:text-blue-900" />
-                        <span className="text-sm font-medium text-gray-600 group-data-[active=true]:text-blue-900">{item.title}</span>
+                        <span className="text-sm font-medium text-gray-600 group-data-[active=true]:text-blue-900">
+                          {item.title}
+                        </span>
                       </a>
                     </SidebarMenuButton>
                   )}
@@ -287,7 +330,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               AD
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-blue-900 truncate">Admin Desa</p>
+              <p className="text-sm font-medium text-blue-900 truncate">
+                Admin Desa
+              </p>
               <p className="text-xs text-gray-600 truncate">admin@desa.id</p>
             </div>
             <div className="text-gray-400">
@@ -299,5 +344,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }
