@@ -25,6 +25,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { Upload } from "lucide-react";
 import { fetchData } from "@/lib/api";
 import Swal from "sweetalert2";
@@ -42,9 +49,16 @@ export default function EditProdukHukumPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [kategoriList, setKategoriList] = useState<KategoriProdukHukum[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [fileLoading, setFileLoading] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
+
+  // Base URL for the API
+  const API_BASE_URL = "http://localhost:3000";
 
   useEffect(() => {
     const loadData = async () => {
@@ -60,7 +74,14 @@ export default function EditProdukHukumPage() {
           : kategoriResponse.data || [];
         setNamaProdukHukum(produkHukum.nama_produk_hukum || "");
         setKategoriId(produkHukum.kategori?.id || "");
-        setExistingFile(produkHukum.file_pendukung || null);
+        setExistingFile(
+          produkHukum.file_pendukung
+            ? `${API_BASE_URL}/produk-hukum/getFileProdukHukum${produkHukum.file_pendukung.replace(
+                /^\/uploads/,
+                ""
+              )}`
+            : null
+        );
         setKategoriList(kategoriData);
       } catch (err) {
         setError(`Gagal memuat data: ${err.message || "Terjadi kesalahan"}`);
@@ -70,6 +91,35 @@ export default function EditProdukHukumPage() {
     };
     loadData();
   }, [id]);
+
+  // Handle opening the modal with the file
+  const handleOpenModal = async (fileUrl: string) => {
+    setFileLoading(true);
+    setFileError(null);
+    setSelectedFile(fileUrl);
+    setIsModalOpen(true);
+
+    try {
+      const response = await fetch(fileUrl, { method: "HEAD" });
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+    } catch (err) {
+      setFileError(
+        `Gagal memuat file: ${err.message}. URL: ${fileUrl}. Coba buka di tab baru.`
+      );
+    } finally {
+      setFileLoading(false);
+    }
+  };
+
+  // Handle closing the modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedFile(null);
+    setFileError(null);
+    setFileLoading(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,6 +154,11 @@ export default function EditProdukHukumPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Determine if the file is an image or PDF
+  const isImageFile = (url: string) => {
+    return /\.(jpg|jpeg|png|gif)$/i.test(url);
   };
 
   return (
@@ -188,6 +243,7 @@ export default function EditProdukHukumPage() {
                         <Input
                           id="file_pendukung"
                           type="file"
+                          accept="image/*,.pdf"
                           onChange={(e) =>
                             setFilePendukung(e.target.files?.[0] || null)
                           }
@@ -198,14 +254,12 @@ export default function EditProdukHukumPage() {
                       {existingFile && (
                         <div className="mt-2 text-sm text-gray-600">
                           File saat ini:{" "}
-                          <a
-                            href={existingFile}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            onClick={() => handleOpenModal(existingFile)}
                             className="text-blue-600 hover:underline"
                           >
                             Lihat File
-                          </a>
+                          </button>
                         </div>
                       )}
                     </div>
@@ -231,6 +285,66 @@ export default function EditProdukHukumPage() {
               </CardContent>
             </Card>
           </main>
+
+          {/* Modal for displaying file (image or PDF) */}
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogContent className="max-w-4xl">
+              <DialogHeader>
+                <DialogTitle>Pratinjau File Pendukung</DialogTitle>
+                <DialogClose onClick={handleCloseModal} />
+              </DialogHeader>
+              {fileLoading && (
+                <div className="flex justify-center items-center h-[70vh]">
+                  <div className="text-gray-600 animate-pulse">
+                    Memuat file...
+                  </div>
+                </div>
+              )}
+              {fileError && (
+                <div className="flex justify-center items-center h-[70vh]">
+                  <div className="text-red-600 text-center">
+                    {fileError}
+                    <br />
+                    <a
+                      href={selectedFile || "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline mt-2 inline-block"
+                    >
+                      Coba buka di tab baru
+                    </a>
+                  </div>
+                </div>
+              )}
+              {!fileLoading && !fileError && selectedFile && (
+                <div className="w-full h-[70vh]">
+                  {isImageFile(selectedFile) ? (
+                    <img
+                      src={selectedFile}
+                      alt="File Pendukung"
+                      className="w-full h-full object-contain"
+                      onError={() =>
+                        setFileError(
+                          `Gagal memuat gambar: File tidak ditemukan. URL: ${selectedFile}`
+                        )
+                      }
+                    />
+                  ) : (
+                    <iframe
+                      src={selectedFile}
+                      className="w-full h-full border-0"
+                      title="PDF Preview"
+                      onError={() =>
+                        setFileError(
+                          `Gagal memuat PDF: File tidak ditemukan. URL: ${selectedFile}`
+                        )
+                      }
+                    />
+                  )}
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </div>
       </SidebarInset>
     </SidebarProvider>

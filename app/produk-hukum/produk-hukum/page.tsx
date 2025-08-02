@@ -18,6 +18,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
+import {
   Search,
   Plus,
   Edit,
@@ -46,8 +53,14 @@ export default function ProdukHukumListPage() {
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
   const itemsPerPage = 5;
   const router = useRouter();
+
+  // Base URL for the API
 
   // Fetch Produk Hukum data
   useEffect(() => {
@@ -56,7 +69,17 @@ export default function ProdukHukumListPage() {
       try {
         const response = await fetchData("/produk-hukum/getAllProdukHukum");
         const data = Array.isArray(response) ? response : response.data || [];
-        setProdukHukumList(data);
+        // Fix the file_pendukung URL by removing /uploads if present
+        const updatedData = data.map((item: ProdukHukum) => ({
+          ...item,
+          file_pendukung: item.file_pendukung
+            ? `${process.env.NEXT_PUBLIC_API_URL}/produk-hukum/getFileProdukHukum${item.file_pendukung.replace(
+                /^\/uploads/,
+                ""
+              )}`
+            : null,
+        }));
+        setProdukHukumList(updatedData);
       } catch (err) {
         setError(`Gagal memuat data: ${err.message || "Terjadi kesalahan"}`);
         console.error("Fetch error:", err);
@@ -83,7 +106,9 @@ export default function ProdukHukumListPage() {
 
     setIsLoading(true);
     try {
-      await fetchData(`/produk-hukum/deleteProdukHukum/${id}`, { method: "DELETE" });
+      await fetchData(`/produk-hukum/deleteProdukHukum/${id}`, {
+        method: "DELETE",
+      });
       setProdukHukumList(produkHukumList.filter((record) => record.id !== id));
       if (
         produkHukumList.length - 1 <= (currentPage - 1) * itemsPerPage &&
@@ -105,6 +130,35 @@ export default function ProdukHukumListPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Handle opening the modal with the PDF
+  const handleOpenModal = async (fileUrl: string) => {
+    setPdfLoading(true);
+    setPdfError(null);
+    setSelectedFile(fileUrl);
+    setIsModalOpen(true);
+
+    try {
+      const response = await fetch(fileUrl, { method: "HEAD" });
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+    } catch (err) {
+      setPdfError(
+        `Gagal memuat file PDF: ${err.message}. URL: ${fileUrl}. Coba buka di tab baru.`
+      );
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
+  // Handle closing the modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedFile(null);
+    setPdfError(null);
+    setPdfLoading(false);
   };
 
   // Pagination and Search
@@ -193,10 +247,16 @@ export default function ProdukHukumListPage() {
                   <table className="w-full text-left text-sm text-gray-600">
                     <thead className="bg-blue-50 text-blue-900">
                       <tr>
-                        <th className="px-4 py-3 font-semibold">Nama Produk Hukum</th>
+                        <th className="px-4 py-3 font-semibold">
+                          Nama Produk Hukum
+                        </th>
                         <th className="px-4 py-3 font-semibold">Kategori</th>
-                        <th className="px-4 py-3 font-semibold">File Pendukung</th>
-                        <th className="px-4 py-3 font-semibold text-right">Aksi</th>
+                        <th className="px-4 py-3 font-semibold">
+                          File Pendukung
+                        </th>
+                        <th className="px-4 py-3 font-semibold text-right">
+                          Aksi
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -205,18 +265,24 @@ export default function ProdukHukumListPage() {
                           key={record.id}
                           className="border-b border-gray-100 hover:bg-blue-50/50 transition-all"
                         >
-                          <td className="px-4 py-3">{record.nama_produk_hukum}</td>
-                          <td className="px-4 py-3">{record.kategori.kategori}</td>
+                          <td className="px-4 py-3">
+                            {record.nama_produk_hukum}
+                          </td>
+                          <td className="px-4 py-3">
+                            {record.kategori.kategori}
+                          </td>
                           <td className="px-4 py-3">
                             {record.file_pendukung ? (
-                              <a
-                                href={record.file_pendukung}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                              <button
+                                onClick={() => {
+                                  if (record.file_pendukung) {
+                                    handleOpenModal(record.file_pendukung);
+                                  }
+                                }}
                                 className="text-blue-600 hover:underline"
                               >
                                 Lihat File
-                              </a>
+                              </button>
                             ) : (
                               "Tidak ada file"
                             )}
@@ -228,7 +294,9 @@ export default function ProdukHukumListPage() {
                                 size="sm"
                                 className="hover:bg-blue-100 text-blue-900 border-blue-200"
                                 onClick={() =>
-                                  router.push(`/produk-hukum/produk-hukum/edit/${record.id}`)
+                                  router.push(
+                                    `/produk-hukum/produk-hukum/edit/${record.id}`
+                                  )
                                 }
                               >
                                 <Edit className="h-4 w-4" />
@@ -277,6 +345,53 @@ export default function ProdukHukumListPage() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Modal for displaying PDF */}
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+              <DialogContent className="max-w-4xl">
+                <DialogHeader>
+                  <DialogTitle>Pratinjau File Pendukung</DialogTitle>
+                  <DialogClose onClick={handleCloseModal} />
+                </DialogHeader>
+                {pdfLoading && (
+                  <div className="flex justify-center items-center h-[70vh]">
+                    <div className="text-gray-600 animate-pulse">
+                      Memuat PDF...
+                    </div>
+                  </div>
+                )}
+                {pdfError && (
+                  <div className="flex justify-center items-center h-[70vh]">
+                    <div className="text-red-600 text-center">
+                      {pdfError}
+                      <br />
+                      <a
+                        href={selectedFile || "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline mt-2 inline-block"
+                      >
+                        Coba buka di tab baru
+                      </a>
+                    </div>
+                  </div>
+                )}
+                {!pdfLoading && !pdfError && selectedFile && (
+                  <div className="w-full h-[70vh]">
+                    <iframe
+                      src={selectedFile}
+                      className="w-full h-full border-0"
+                      title="PDF Preview"
+                      onError={() =>
+                        setPdfError(
+                          `Gagal memuat PDF: File tidak ditemukan. URL: ${selectedFile}`
+                        )
+                      }
+                    />
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
           </main>
         </div>
       </SidebarInset>
