@@ -19,6 +19,7 @@ import {
   ChevronDown,
   Tags,
   Package,
+  FolderOpen,
 } from "lucide-react";
 
 import {
@@ -164,6 +165,18 @@ const data = {
       title: "Produk Hukum",
       url: "/produk-hukum",
       icon: FileText,
+      items: [
+        {
+          title: "Kategori",
+          url: "/produk-hukum/kategori",
+          icon: FolderOpen,
+        },
+        {
+          title: "Produk Hukum",
+          url: "/produk-hukum/produk-hukum",
+          icon: FileText,
+        },
+      ],
     },
   ],
 };
