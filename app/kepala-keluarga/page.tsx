@@ -19,13 +19,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight, User } from "lucide-react";
+  Search,
+  Plus,
+  Edit,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  User,
+  Eye,
+} from "lucide-react";
 import { fetchData } from "@/lib/api";
 import Swal from "sweetalert2";
 
@@ -75,14 +77,43 @@ export default function KepalaKeluargaPage() {
           fetchData("/kelola-kepala-keluarga/getAllKepalaKeluarga"),
           fetchData("/kelola-kk/getKKWithoutKepalaKeluarga"),
         ]);
-        setKepalaKeluargas(
-          Array.isArray(kepalaResponse) ? kepalaResponse : kepalaResponse.data || []
-        );
+        const kepalaData = Array.isArray(kepalaResponse)
+          ? kepalaResponse
+          : kepalaResponse.data || [];
+        // Fix document URLs by prepending base URL and ensuring correct path
+        const updatedKepalaData = kepalaData.map((item: KepalaKeluarga) => {
+          const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+          return {
+            ...item,
+            scan_ktp: item.scan_ktp
+              ? `${baseUrl}/kelola-kepala-keluarga/getScan/ktp/${
+                  item.scan_ktp.split("/").pop() || ""
+                }`
+              : null,
+            scan_kk: item.scan_kk
+              ? `${baseUrl}/kelola-kepala-keluarga/getScan/kk/${
+                  item.scan_kk.split("/").pop() || ""
+                }`
+              : null,
+            scan_akta_lahir: item.scan_akta_lahir
+              ? `${baseUrl}/kelola-kepala-keluarga/getScan/akta_lahir/${
+                  item.scan_akta_lahir.split("/").pop() || ""
+                }`
+              : null,
+            scan_buku_nikah: item.scan_buku_nikah
+              ? `${baseUrl}/kelola-kepala-keluarga/getScan/buku_nikah/${
+                  item.scan_buku_nikah.split("/").pop() || ""
+                }`
+              : null,
+          };
+        });
+        setKepalaKeluargas(updatedKepalaData);
         setFamilyCards(
           Array.isArray(kkResponse) ? kkResponse : kkResponse.data || []
         );
       } catch (err) {
         setError(`Gagal memuat data: ${err.message || "Terjadi kesalahan"}`);
+        console.error("Fetch error:", err);
       } finally {
         setIsLoading(false);
       }
@@ -126,6 +157,101 @@ export default function KepalaKeluargaPage() {
         icon: "error",
         title: "Gagal",
         text: `Gagal menghapus Kepala Keluarga: ${
+          err.message || "Terjadi kesalahan"
+        }`,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle view kepala keluarga details
+  const handleViewDetails = async (id: string) => {
+    setIsLoading(true);
+    try {
+      const response = await fetchData(`/kelola-kepala-keluarga/getDetailKepalaKeluarga/${id}`);
+      const { kepalaKeluarga } = response;
+      const kkData = kepalaKeluarga.kk[0] || {};
+
+      await Swal.fire({
+        title: "Detail Kepala Keluarga",
+        html: `
+          <div style="text-align: left; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.6;">
+            <h3 style="color: #1e3a8a; margin-bottom: 15px;">Informasi Pribadi</h3>
+            <p><strong>NIK:</strong> ${kepalaKeluarga.nik}</p>
+            <p><strong>Nama:</strong> ${kepalaKeluarga.nama}</p>
+            <p><strong>Jenis Kelamin:</strong> ${kepalaKeluarga.jenis_kelamin}</p>
+            <p><strong>Tempat Lahir:</strong> ${kepalaKeluarga.tempat_lahir}</p>
+            <p><strong>Tanggal Lahir:</strong> ${new Date(kepalaKeluarga.tanggal_lahir).toLocaleDateString()}</p>
+            <p><strong>Golongan Darah:</strong> ${kepalaKeluarga.golongan_darah}</p>
+            <p><strong>Agama:</strong> ${kepalaKeluarga.agama}</p>
+            <p><strong>Status Perkawinan:</strong> ${kepalaKeluarga.status_perkawinan}</p>
+            <p><strong>Pendidikan Terakhir:</strong> ${kepalaKeluarga.pendidikan_akhir}</p>
+            <p><strong>Pekerjaan:</strong> ${kepalaKeluarga.pekerjaan}</p>
+            <p><strong>Nama Ayah:</strong> ${kepalaKeluarga.nama_ayah}</p>
+            <p><strong>Nama Ibu:</strong> ${kepalaKeluarga.nama_ibu}</p>
+            <h3 style="color: #1e3a8a; margin-top: 20px; margin-bottom: 15px;">Informasi Kartu Keluarga</h3>
+            <p><strong>No. KK:</strong> ${kkData.no_kk || 'Tidak ada'}</p>
+            <p><strong>Provinsi:</strong> ${kkData.provinsi || 'Tidak ada'}</p>
+            <p><strong>Kabupaten:</strong> ${kkData.kabupaten || 'Tidak ada'}</p>
+            <p><strong>Kecamatan:</strong> ${kkData.kecamatan || 'Tidak ada'}</p>
+            <p><strong>Kelurahan:</strong> ${kkData.kelurahan || 'Tidak ada'}</p>
+            <p><strong>Dusun:</strong> ${kkData.dusun || 'Tidak ada'}</p>
+            <p><strong>RT/RW:</strong> ${kkData.rt && kkData.rw ? `${kkData.rt}/${kkData.rw}` : 'Tidak ada'}</p>
+            <p><strong>Kode Pos:</strong> ${kkData.kode_pos || 'Tidak ada'}</p>
+            <h3 style="color: #1e3a8a; margin-top: 20px; margin-bottom: 15px;">Dokumen Pendukung</h3>
+            <p><strong>Scan KTP:</strong> ${
+              kepalaKeluarga.scan_ktp
+                ? `<a href="${kepalaKeluarga.scan_ktp}" target="_blank" style="color: #2563eb;">Lihat Dokumen</a>`
+                : 'Tidak tersedia'
+            }</p>
+            <p><strong>Scan KK:</strong> ${
+              kepalaKeluarga.scan_kk
+                ? `<a href="${kepalaKeluarga.scan_kk}" target="_blank" style="color: #2563eb;">Lihat Dokumen</a>`
+                : 'Tidak tersedia'
+            }</p>
+            <p><strong>Scan Akta Lahir:</strong> ${
+              kepalaKeluarga.scan_akta_lahir
+                ? `<a href="${kepalaKeluarga.scan_akta_lahir}" target="_blank" style="color: #2563eb;">Lihat Dokumen</a>`
+                : 'Tidak tersedia'
+            }</p>
+            <p><strong>Scan Buku Nikah:</strong> ${
+              kepalaKeluarga.scan_buku_nikah
+                ? `<a href="${kepalaKeluarga.scan_buku_nikah}" target="_blank" style="color: #2563eb;">Lihat Dokumen</a>`
+                : 'Tidak tersedia'
+            }</p>
+          </div>
+        `,
+        icon: "info",
+        confirmButtonText: "Tutup",
+        confirmButtonColor: "#1e3a8a",
+        width: "700px",
+        padding: "2em",
+        customClass: {
+          popup: 'swal2-popup-custom',
+          title: 'swal2-title-custom',
+          content: 'swal2-content-custom',
+        },
+        didOpen: () => {
+          const popup = Swal.getPopup();
+          if (popup) {
+            popup.style.backgroundColor = '#f8fafc';
+            popup.style.borderRadius = '12px';
+            popup.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.1)';
+          }
+          const title = Swal.getTitle();
+          if (title) {
+            title.style.fontSize = '1.5em';
+            title.style.color = '#1e3a8a';
+            title.style.marginBottom = '1em';
+          }
+        },
+      });
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: `Gagal memuat detail Kepala Keluarga: ${
           err.message || "Terjadi kesalahan"
         }`,
       });
@@ -268,7 +394,6 @@ export default function KepalaKeluargaPage() {
                       <tr>
                         <th className="px-4 py-3 font-semibold">NIK</th>
                         <th className="px-4 py-3 font-semibold">Nama</th>
-                        {/* <th className="px-4 py-3 font-semibold">No. KK</th> */}
                         <th className="px-4 py-3 font-semibold">Jenis Kelamin</th>
                         <th className="px-4 py-3 font-semibold">Tanggal Lahir</th>
                         <th className="px-4 py-3 font-semibold">Agama</th>
@@ -284,7 +409,6 @@ export default function KepalaKeluargaPage() {
                         >
                           <td className="px-4 py-3">{kepala.nik}</td>
                           <td className="px-4 py-3">{kepala.nama}</td>
-                          {/* <td className="px-4 py-3">{kepala.KK}</td> */}
                           <td className="px-4 py-3">{kepala.jenis_kelamin}</td>
                           <td className="px-4 py-3">
                             {new Date(kepala.tanggal_lahir).toLocaleDateString()}
@@ -293,6 +417,14 @@ export default function KepalaKeluargaPage() {
                           <td className="px-4 py-3">{kepala.pekerjaan}</td>
                           <td className="px-4 py-3 text-right">
                             <div className="flex justify-end gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="hover:bg-blue-100 text-blue-900 border-blue-200"
+                                onClick={() => handleViewDetails(kepala.id)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
                               <Button
                                 variant="outline"
                                 size="sm"

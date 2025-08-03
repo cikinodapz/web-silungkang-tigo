@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft } from "lucide-react";
 import { fetchData } from "@/lib/api";
 import Swal from "sweetalert2";
@@ -71,6 +72,28 @@ export default function EditKepalaKeluargaPage() {
   const [error, setError] = useState("");
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
 
+  const agamaOptions = [
+    "Islam",
+    "Kristen",
+    "Katolik",
+    "Hindu",
+    "Buddha",
+    "Konghucu"
+  ];
+
+  const pendidikanOptions = [
+    "Tidak Sekolah",
+    "SD",
+    "SMP",
+    "SMA",
+    "D1",
+    "D2",
+    "D3",
+    "S1",
+    "S2",
+    "S3"
+  ];
+
   useEffect(() => {
     const loadKepalaKeluarga = async () => {
       setIsLoading(true);
@@ -113,9 +136,9 @@ export default function EditKepalaKeluargaPage() {
     if (!formData.jenis_kelamin) errors.jenis_kelamin = "Jenis Kelamin harus dipilih";
     if (!formData.tempat_lahir) errors.tempat_lahir = "Tempat Lahir harus diisi";
     if (!formData.tanggal_lahir) errors.tanggal_lahir = "Tanggal Lahir harus diisi";
-    if (!formData.agama) errors.agama = "Agama harus diisi";
+    if (!formData.agama) errors.agama = "Agama harus dipilih";
     if (!formData.status_perkawinan) errors.status_perkawinan = "Status Perkawinan harus dipilih";
-    if (!formData.pendidikan_akhir) errors.pendidikan_akhir = "Pendidikan Terakhir harus diisi";
+    if (!formData.pendidikan_akhir) errors.pendidikan_akhir = "Pendidikan Terakhir harus dipilih";
     if (!formData.pekerjaan) errors.pekerjaan = "Pekerjaan harus diisi";
     if (!formData.nama_ayah) errors.nama_ayah = "Nama Ayah harus diisi";
     if (!formData.nama_ibu) errors.nama_ibu = "Nama Ibu harus diisi";
@@ -128,6 +151,15 @@ export default function EditKepalaKeluargaPage() {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
+    // Allow only numbers for nik and no_akta_kelahiran
+    if ((name === "nik" || name === "no_akta_kelahiran") && value !== "" && !/^\d*$/.test(value)) {
+      return;
+    }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     setFormErrors((prev) => ({ ...prev, [name]: "" }));
   };
@@ -237,6 +269,8 @@ export default function EditKepalaKeluargaPage() {
                         <Input
                           id="nik"
                           name="nik"
+                          type="number"
+                          pattern="\d*"
                           value={formData.nik}
                           onChange={handleInputChange}
                           className={formErrors.nik ? "border-red-500" : ""}
@@ -265,26 +299,27 @@ export default function EditKepalaKeluargaPage() {
                         <Input
                           id="no_akta_kelahiran"
                           name="no_akta_kelahiran"
+                          type="number"
+                          pattern="\d*"
                           value={formData.no_akta_kelahiran}
                           onChange={handleInputChange}
                         />
                       </div>
                       <div>
                         <Label htmlFor="jenis_kelamin">Jenis Kelamin</Label>
-                        <select
-                          id="jenis_kelamin"
-                          name="jenis_kelamin"
+                        <Select
                           value={formData.jenis_kelamin}
-                          onChange={handleInputChange}
-                          className={`w-full border border-gray-300 rounded-md p-2 ${
-                            formErrors.jenis_kelamin ? "border-red-500" : ""
-                          }`}
-                          required
+                          onValueChange={(value) => handleSelectChange("jenis_kelamin", value)}
+                          disabled={isLoading}
                         >
-                          <option value="">Pilih Jenis Kelamin</option>
-                          <option value="Laki Laki">Laki Laki</option>
-                          <option value="Perempuan">Perempuan</option>
-                        </select>
+                          <SelectTrigger className={`border-gray-300 ${formErrors.jenis_kelamin ? "border-red-500" : ""}`}>
+                            <SelectValue placeholder="Pilih Jenis Kelamin" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Laki Laki">Laki Laki</SelectItem>
+                            <SelectItem value="Perempuan">Perempuan</SelectItem>
+                          </SelectContent>
+                        </Select>
                         {formErrors.jenis_kelamin && (
                           <p className="text-red-500 text-xs mt-1">{formErrors.jenis_kelamin}</p>
                         )}
@@ -320,66 +355,83 @@ export default function EditKepalaKeluargaPage() {
                       </div>
                       <div>
                         <Label htmlFor="golongan_darah">Golongan Darah</Label>
-                        <select
-                          id="golongan_darah"
-                          name="golongan_darah"
+                        <Select
                           value={formData.golongan_darah}
-                          onChange={handleInputChange}
-                          className="w-full border border-gray-300 rounded-md p-2"
+                          onValueChange={(value) => handleSelectChange("golongan_darah", value)}
+                          disabled={isLoading}
                         >
-                          <option value="">Pilih Golongan Darah</option>
-                          <option value="A">A</option>
-                          <option value="B">B</option>
-                          <option value="AB">AB</option>
-                          <option value="O">O</option>
-                        </select>
+                          <SelectTrigger className="border-gray-300">
+                            <SelectValue placeholder="Pilih Golongan Darah" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="A">A</SelectItem>
+                            <SelectItem value="B">B</SelectItem>
+                            <SelectItem value="AB">AB</SelectItem>
+                            <SelectItem value="O">O</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
                         <Label htmlFor="agama">Agama</Label>
-                        <Input
-                          id="agama"
-                          name="agama"
+                        <Select
                           value={formData.agama}
-                          onChange={handleInputChange}
-                          className={formErrors.agama ? "border-red-500" : ""}
-                          required
-                        />
+                          onValueChange={(value) => handleSelectChange("agama", value)}
+                          disabled={isLoading}
+                        >
+                          <SelectTrigger className={`border-gray-300 ${formErrors.agama ? "border-red-500" : ""}`}>
+                            <SelectValue placeholder="Pilih Agama" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {agamaOptions.map((agama) => (
+                              <SelectItem key={agama} value={agama}>
+                                {agama}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         {formErrors.agama && (
                           <p className="text-red-500 text-xs mt-1">{formErrors.agama}</p>
                         )}
                       </div>
                       <div>
                         <Label htmlFor="status_perkawinan">Status Perkawinan</Label>
-                        <select
-                          id="status_perkawinan"
-                          name="status_perkawinan"
+                        <Select
                           value={formData.status_perkawinan}
-                          onChange={handleInputChange}
-                          className={`w-full border border-gray-300 rounded-md p-2 ${
-                            formErrors.status_perkawinan ? "border-red-500" : ""
-                          }`}
-                          required
+                          onValueChange={(value) => handleSelectChange("status_perkawinan", value)}
+                          disabled={isLoading}
                         >
-                          <option value="">Pilih Status</option>
-                          <option value="Belum Kawin">Belum Kawin</option>
-                          <option value="Kawin">Kawin</option>
-                          <option value="Cerai Hidup">Cerai Hidup</option>
-                          <option value="Cerai Mati">Cerai Mati</option>
-                        </select>
+                          <SelectTrigger className={`border-gray-300 ${formErrors.status_perkawinan ? "border-red-500" : ""}`}>
+                            <SelectValue placeholder="Pilih Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Belum Kawin">Belum Kawin</SelectItem>
+                            <SelectItem value="Kawin">Kawin</SelectItem>
+                            <SelectItem value="Cerai Hidup">Cerai Hidup</SelectItem>
+                            <SelectItem value="Cerai Mati">Cerai Mati</SelectItem>
+                          </SelectContent>
+                        </Select>
                         {formErrors.status_perkawinan && (
                           <p className="text-red-500 text-xs mt-1">{formErrors.status_perkawinan}</p>
                         )}
                       </div>
                       <div>
                         <Label htmlFor="pendidikan_akhir">Pendidikan Terakhir</Label>
-                        <Input
-                          id="pendidikan_akhir"
-                          name="pendidikan_akhir"
+                        <Select
                           value={formData.pendidikan_akhir}
-                          onChange={handleInputChange}
-                          className={formErrors.pendidikan_akhir ? "border-red-500" : ""}
-                          required
-                        />
+                          onValueChange={(value) => handleSelectChange("pendidikan_akhir", value)}
+                          disabled={isLoading}
+                        >
+                          <SelectTrigger className={`border-gray-300 ${formErrors.pendidikan_akhir ? "border-red-500" : ""}`}>
+                            <SelectValue placeholder="Pilih Pendidikan Terakhir" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {pendidikanOptions.map((pendidikan) => (
+                              <SelectItem key={pendidikan} value={pendidikan}>
+                                {pendidikan}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         {formErrors.pendidikan_akhir && (
                           <p className="text-red-500 text-xs mt-1">{formErrors.pendidikan_akhir}</p>
                         )}

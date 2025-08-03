@@ -321,11 +321,11 @@ export default function DataPendudukPage() {
                       <tr>
                         <th className="px-4 py-3 font-semibold">No. KK</th>
                         <th className="px-4 py-3 font-semibold">Kepala Keluarga</th>
-                        <th className="px-4 py-3 font-semibold">Dusun</th>
-                        <th className="px-4 py-3 font-semibold">Kelurahan</th>
-                        <th className="px-4 py-3 font-semibold">Kecamatan</th>
-                        <th className="px-4 py-3 font-semibold">Kabupaten</th>
                         <th className="px-4 py-3 font-semibold">Provinsi</th>
+                        <th className="px-4 py-3 font-semibold">Kabupaten</th>
+                        <th className="px-4 py-3 font-semibold">Kecamatan</th>
+                        <th className="px-4 py-3 font-semibold">Kelurahan</th>
+                        <th className="px-4 py-3 font-semibold">Dusun</th>
                         <th className="px-4 py-3 font-semibold">RT/RW</th>
                         <th className="px-4 py-3 font-semibold">Jumlah Anggota</th>
                         <th className="px-4 py-3 font-semibold">Status</th>
@@ -342,11 +342,11 @@ export default function DataPendudukPage() {
                           <td className="px-4 py-3">
                             {kk.kepalaKeluarga?.nama || "Belum ditentukan"}
                           </td>
-                          <td className="px-4 py-3">{kk.dusun}</td>
-                          <td className="px-4 py-3">{kk.kelurahan}</td>
-                          <td className="px-4 py-3">{kk.kecamatan}</td>
-                          <td className="px-4 py-3">{kk.kabupaten}</td>
                           <td className="px-4 py-3">{kk.provinsi}</td>
+                          <td className="px-4 py-3">{kk.kabupaten}</td>
+                          <td className="px-4 py-3">{kk.kecamatan}</td>
+                          <td className="px-4 py-3">{kk.kelurahan}</td>
+                          <td className="px-4 py-3">{kk.dusun}</td>
                           <td className="px-4 py-3">{kk.rt}/{kk.rw}</td>
                           <td className="px-4 py-3">{kk.AnggotaKeluarga.length}</td>
                           <td className="px-4 py-3">
