@@ -268,7 +268,7 @@ export default function KepalaKeluargaPage() {
                       <tr>
                         <th className="px-4 py-3 font-semibold">NIK</th>
                         <th className="px-4 py-3 font-semibold">Nama</th>
-                        <th className="px-4 py-3 font-semibold">No. KK</th>
+                        {/* <th className="px-4 py-3 font-semibold">No. KK</th> */}
                         <th className="px-4 py-3 font-semibold">Jenis Kelamin</th>
                         <th className="px-4 py-3 font-semibold">Tanggal Lahir</th>
                         <th className="px-4 py-3 font-semibold">Agama</th>
@@ -284,7 +284,7 @@ export default function KepalaKeluargaPage() {
                         >
                           <td className="px-4 py-3">{kepala.nik}</td>
                           <td className="px-4 py-3">{kepala.nama}</td>
-                          <td className="px-4 py-3">{kepala.KK}</td>
+                          {/* <td className="px-4 py-3">{kepala.KK}</td> */}
                           <td className="px-4 py-3">{kepala.jenis_kelamin}</td>
                           <td className="px-4 py-3">
                             {new Date(kepala.tanggal_lahir).toLocaleDateString()}

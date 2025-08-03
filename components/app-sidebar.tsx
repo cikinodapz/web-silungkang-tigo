@@ -53,18 +53,18 @@ const data = {
       url: "/",
       icon: LayoutDashboard,
       isActive: true,
-      items: [
-        {
-          title: "Kelola Akun Admin",
-          url: "/admin",
-          icon: Settings,
-        },
-      ],
+    },
+    {
+      title: "Kelola Akun Admin",
+      url: "/admin",
+      icon: Settings,
+      isActive: false,
     },
     {
       title: "Data Penduduk",
       url: "/data-penduduk",
       icon: Users,
+      isActive: false,
       items: [
         {
           title: "Kartu Keluarga (KK)",
@@ -152,12 +152,12 @@ const data = {
         {
           title: "UMKM",
           url: "/lapak-desa/umkm",
-          icon: Users, // kamu bisa ganti dengan ikon lain yang lebih relevan seperti Briefcase atau Building
+          icon: Users,
         },
         {
           title: "Produk",
           url: "/lapak-desa/produk",
-          icon: Package, // kamu juga bisa ganti jika ingin ikon berbeda
+          icon: Package,
         },
       ],
     },
@@ -219,18 +219,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       <CollapsibleTrigger asChild>
                         <SidebarMenuButton
                           className={cn(
-                            "group hover:bg-blue-50/50 transition-colors",
-                            "data-[active=true]:bg-blue-50 data-[active=true]:text-blue-900",
+                            "group hover:bg-gradient-to-r hover:from-blue-100 hover:to-cyan-100 hover:scale-[1.02] transition-all duration-200",
+                            "data-[active=true]:bg-gradient-to-r data-[active=true]:from-blue-200 data-[active=true]:to-cyan-200 data-[active=true]:text-blue-900 data-[active=true]:font-semibold",
                             "px-4 py-2.5 my-0.5 mx-2 rounded-lg"
                           )}
                           isActive={item.isActive}
                         >
                           <div className="flex items-center gap-3">
-                            <item.icon className="h-4 w-4 text-gray-500 group-data-[active=true]:text-blue-900" />
-                            <span className="text-sm font-medium text-gray-600 group-data-[active=true]:text-blue-900">
+                            <item.icon className="h-4 w-4 text-gray-500 group-data-[active=true]:text-blue-900 group-hover:text-blue-900" />
+                            <span className="text-sm font-medium text-gray-600 group-data-[active=true]:text-blue-900 group-hover:text-blue-900">
                               {item.title}
                             </span>
-                            <ChevronDown className="ml-auto h-4 w-4 text-gray-400 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                            <ChevronDown className="ml-auto h-4 w-4 text-gray-400 transition-transform duration-200 group-data-[state=open]:rotate-180 group-hover:text-blue-900" />
                           </div>
                         </SidebarMenuButton>
                       </CollapsibleTrigger>
@@ -243,17 +243,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                   <CollapsibleTrigger asChild>
                                     <SidebarMenuSubButton
                                       className={cn(
-                                        "hover:bg-blue-50/50 hover:text-blue-900",
+                                        "hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:scale-[1.01] hover:text-blue-900",
                                         "px-3 py-2 rounded-md text-gray-600",
-                                        "transition-colors duration-150"
+                                        "transition-all duration-150"
                                       )}
                                     >
                                       <div className="flex items-center gap-2">
-                                        <subItem.icon className="h-3.5 w-3.5 text-gray-500" />
+                                        <subItem.icon className="h-3.5 w-3.5 text-gray-500 group-hover:text-blue-900" />
                                         <span className="text-sm">
                                           {subItem.title}
                                         </span>
-                                        <ChevronDown className="ml-auto h-4 w-4 text-gray-400 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                                        <ChevronDown className="ml-auto h-4 w-4 text-gray-400 transition-transform duration-200 group-data-[state=open]:rotate-180 group-hover:text-blue-900" />
                                       </div>
                                     </SidebarMenuSubButton>
                                   </CollapsibleTrigger>
@@ -266,16 +266,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                           <SidebarMenuSubButton
                                             asChild
                                             className={cn(
-                                              "hover:bg-blue-50/50 hover:text-blue-900",
+                                              "hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:scale-[1.01] hover:text-blue-900",
                                               "px-3 py-2 rounded-md text-gray-600",
-                                              "transition-colors duration-150"
+                                              "transition-all duration-150"
                                             )}
                                           >
                                             <a
                                               href={subSubItem.url}
                                               className="flex items-center gap-2"
                                             >
-                                              <subSubItem.icon className="h-3.5 w-3.5 text-gray-500" />
+                                              <subSubItem.icon className="h-3.5 w-3.5 text-gray-500 group-hover:text-blue-900" />
                                               <span className="text-sm">
                                                 {subSubItem.title}
                                               </span>
@@ -290,16 +290,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                 <SidebarMenuSubButton
                                   asChild
                                   className={cn(
-                                    "hover:bg-blue-50/50 hover:text-blue-900",
+                                    "hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:scale-[1.01] hover:text-blue-900",
                                     "px-3 py-2 rounded-md text-gray-600",
-                                    "transition-colors duration-150"
+                                    "transition-all duration-150"
                                   )}
                                 >
                                   <a
                                     href={subItem.url}
                                     className="flex items-center gap-2"
                                   >
-                                    <subItem.icon className="h-3.5 w-3.5 text-gray-500" />
+                                    <subItem.icon className="h-3.5 w-3.5 text-gray-500 group-hover:text-blue-900" />
                                     <span className="text-sm">
                                       {subItem.title}
                                     </span>
@@ -315,14 +315,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <SidebarMenuButton
                       asChild
                       className={cn(
-                        "group hover:bg-blue-50/50 transition-colors",
-                        "data-[active=true]:bg-blue-50 data-[active=true]:text-blue-900",
+                        "group hover:bg-gradient-to-r hover:from-blue-100 hover:to-cyan-100 hover:scale-[1.02] transition-all duration-200",
+                        "data-[active=true]:bg-gradient-to-r data-[active=true]:from-blue-200 data-[active=true]:to-cyan-200 data-[active=true]:text-blue-900 data-[active=true]:font-semibold",
                         "px-4 py-2.5 my-0.5 mx-2 rounded-lg"
                       )}
                     >
                       <a href={item.url} className="flex items-center gap-3">
-                        <item.icon className="h-4 w-4 text-gray-500 group-data-[active=true]:text-blue-900" />
-                        <span className="text-sm font-medium text-gray-600 group-data-[active=true]:text-blue-900">
+                        <item.icon className="h-4 w-4 text-gray-500 group-data-[active=true]:text-blue-900 group-hover:text-blue-900" />
+                        <span className="text-sm font-medium text-gray-600 group-data-[active=true]:text-blue-900 group-hover:text-blue-900">
                           {item.title}
                         </span>
                       </a>
@@ -338,7 +338,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {/* Footer with user profile card */}
       <SidebarFooter className="border-t border-gray-200/50 bg-white/80">
         <div className="p-3">
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50/50 border border-gray-200/50 transition-all hover:bg-blue-50/50 cursor-pointer">
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50/50 border border-gray-200/50 transition-all hover:bg-gradient-to-r hover:from-blue-100 hover:to-cyan-100 hover:scale-[1.02] cursor-pointer">
             <div className="h-9 w-9 rounded-full bg-gradient-to-r from-blue-900 to-cyan-700 flex items-center justify-center text-white text-sm font-semibold shadow-sm">
               AD
             </div>
@@ -348,7 +348,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </p>
               <p className="text-xs text-gray-600 truncate">admin@desa.id</p>
             </div>
-            <div className="text-gray-400">
+            <div className="text-gray-400 group-hover:text-blue-900">
               <Settings className="h-4 w-4" />
             </div>
           </div>

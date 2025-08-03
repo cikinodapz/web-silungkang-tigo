@@ -255,6 +255,7 @@ export default function EditProdukHukumPage() {
                         <div className="mt-2 text-sm text-gray-600">
                           File saat ini:{" "}
                           <button
+                            type="button"
                             onClick={() => handleOpenModal(existingFile)}
                             className="text-blue-600 hover:underline"
                           >
@@ -287,62 +288,84 @@ export default function EditProdukHukumPage() {
           </main>
 
           {/* Modal for displaying file (image or PDF) */}
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogContent className="max-w-4xl">
-              <DialogHeader>
-                <DialogTitle>Pratinjau File Pendukung</DialogTitle>
-                <DialogClose onClick={handleCloseModal} />
+          <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
+            <DialogContent className="max-w-4xl p-6 bg-white rounded-lg shadow-xl">
+              <DialogHeader className="flex flex-row items-center justify-between">
+                <DialogTitle className="text-lg font-semibold text-blue-900">
+                  Pratinjau File Pendukung
+                </DialogTitle>
+                <Button
+                  variant="ghost"
+                  className="text-gray-600 hover:text-gray-900"
+                  onClick={handleCloseModal}
+                >
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </Button>
               </DialogHeader>
-              {fileLoading && (
-                <div className="flex justify-center items-center h-[70vh]">
-                  <div className="text-gray-600 animate-pulse">
-                    Memuat file...
+              <div className="mt-4">
+                {fileLoading && (
+                  <div className="flex justify-center items-center h-[60vh]">
+                    <div className="text-gray-600 animate-pulse text-lg">
+                      Memuat file...
+                    </div>
                   </div>
-                </div>
-              )}
-              {fileError && (
-                <div className="flex justify-center items-center h-[70vh]">
-                  <div className="text-red-600 text-center">
-                    {fileError}
-                    <br />
+                )}
+                {fileError && (
+                  <div className="flex justify-center items-center h-[60vh] flex-col gap-4">
+                    <div className="text-red-600 text-center text-sm">
+                      {fileError}
+                    </div>
                     <a
                       href={selectedFile || "#"}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline mt-2 inline-block"
+                      className="text-blue-600 hover:underline text-sm"
                     >
                       Coba buka di tab baru
                     </a>
                   </div>
-                </div>
-              )}
-              {!fileLoading && !fileError && selectedFile && (
-                <div className="w-full h-[70vh]">
-                  {isImageFile(selectedFile) ? (
-                    <img
-                      src={selectedFile}
-                      alt="File Pendukung"
-                      className="w-full h-full object-contain"
-                      onError={() =>
-                        setFileError(
-                          `Gagal memuat gambar: File tidak ditemukan. URL: ${selectedFile}`
-                        )
-                      }
-                    />
-                  ) : (
-                    <iframe
-                      src={selectedFile}
-                      className="w-full h-full border-0"
-                      title="PDF Preview"
-                      onError={() =>
-                        setFileError(
-                          `Gagal memuat PDF: File tidak ditemukan. URL: ${selectedFile}`
-                        )
-                      }
-                    />
-                  )}
-                </div>
-              )}
+                )}
+                {!fileLoading && !fileError && selectedFile && (
+                  <div className="w-full h-[60vh] overflow-auto">
+                    {isImageFile(selectedFile) ? (
+                      <img
+                        src={selectedFile}
+                        alt="File Pendukung"
+                        className="w-full h-full object-contain rounded-md"
+                        onError={() =>
+                          setFileError(
+                            `Gagal memuat gambar: File tidak ditemukan. URL: ${selectedFile}`
+                          )
+                        }
+                      />
+                    ) : (
+                      <iframe
+                        src={selectedFile}
+                        className="w-full h-full border-0 rounded-md"
+                        title="PDF Preview"
+                        onError={() =>
+                          setFileError(
+                            `Gagal memuat PDF: File tidak ditemukan. URL: ${selectedFile}`
+                          )
+                        }
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
             </DialogContent>
           </Dialog>
         </div>
