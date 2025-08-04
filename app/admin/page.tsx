@@ -274,6 +274,33 @@ export default function AdminPage() {
       <AppSidebar />
       <SidebarInset>
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+          <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/70 backdrop-blur-xl shadow-sm">
+            <div className="flex h-20 items-center justify-between px-6 md:px-10">
+              <div className="flex items-center gap-4">
+                <SidebarTrigger className="text-blue-900 hover:bg-blue-100 transition-colors p-2 rounded-md" />
+                <div>
+                  <h1 className="text-2xl font-semibold text-blue-900">
+                    Kelola Admin
+                  </h1>
+                  <p className="text-sm text-gray-600">
+                    Kelola akun admin dan hak akses mereka
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  className="flex items-center bg-gradient-to-r from-blue-900 to-cyan-700 hover:from-blue-800 hover:to-cyan-600 text-white px-4 py-2 rounded-md transition-colors"
+                  onClick={() => {
+                    resetForm();
+                    setIsAddModalOpen(true);
+                  }}
+                >
+                  <UserPlus className="h-4 w-4 mr-1" />
+                  Tambah Admin
+                </Button>
+              </div>
+            </div>
+          </header>
           <main className="p-6 space-y-6">
             {error && (
               <div className="bg-red-50 text-red-600 text-sm p-4 rounded-lg text-center animate-in fade-in">
@@ -293,7 +320,7 @@ export default function AdminPage() {
 
             {/* Stats */}
             <div className="grid gap-6 md:grid-cols-3">
-              <Card className="mt-16 border-0 bg-white/80 shadow-lg hover:shadow-xl transition-shadow">
+              <Card className="border-0 bg-white/80 shadow-lg hover:shadow-xl transition-shadow">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-gray-600">
                     Total Admin

@@ -30,6 +30,7 @@ import {
   ArrowRight,
   Activity,
   MapPin,
+  MoreHorizontal,
 } from "lucide-react";
 import { fetchData } from "@/lib/api";
 import {
@@ -274,6 +275,7 @@ export default function DashboardPage() {
     icon: React.ElementType;
     gradient: string;
     delay?: number;
+    onMoreInfo?: () => void;
   }
 
   interface ActionCardProps {
@@ -295,6 +297,7 @@ export default function DashboardPage() {
     icon: Icon,
     gradient,
     delay = 0,
+    onMoreInfo,
   }: StatCardProps) => (
     <Card
       className="group relative overflow-hidden border-0 bg-white/90 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-1"
@@ -313,11 +316,22 @@ export default function DashboardPage() {
           <Icon className="h-5 w-5 text-white" />
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="relative pb-10">
         <div className="text-3xl font-bold text-gray-900 mb-1 group-hover:scale-105 transition-transform duration-300">
           {value}
         </div>
         <p className="text-xs text-gray-500">{subtitle}</p>
+        {onMoreInfo && (
+          <Button
+            variant="outline"
+            size="sm"
+            className={`absolute bottom-3 right-3 text-xs font-medium border-gray-200 hover:border-gray-300 bg-white/80 hover:bg-white group-hover:bg-gradient-to-r ${gradient} group-hover:text-white group-hover:border-transparent transition-all`}
+            onClick={onMoreInfo}
+          >
+            Selengkapnya
+            <ArrowRight className="h-3 w-3 ml-1 group-hover:translate-x-1 transition-transform" />
+          </Button>
+        )}
       </CardContent>
     </Card>
   );
@@ -459,6 +473,7 @@ export default function DashboardPage() {
                       icon={Home}
                       gradient="from-blue-600 to-blue-700"
                       delay={0}
+                      onMoreInfo={() => router.push("/data-penduduk")}
                     />
                     <StatCard
                       title="Kepala Keluarga"
@@ -469,6 +484,7 @@ export default function DashboardPage() {
                       icon={UserCheck}
                       gradient="from-emerald-600 to-emerald-700"
                       delay={100}
+                      onMoreInfo={() => router.push("/kepala-keluarga")}
                     />
                     <StatCard
                       title="Total Anggota Keluarga"
@@ -479,6 +495,7 @@ export default function DashboardPage() {
                       icon={Users}
                       gradient="from-amber-600 to-orange-600"
                       delay={200}
+                      onMoreInfo={() => router.push("/anggota-keluarga")}
                     />
                     <StatCard
                       title="Dana APBDes"
@@ -491,6 +508,7 @@ export default function DashboardPage() {
                       icon={DollarSign}
                       gradient="from-purple-600 to-purple-700"
                       delay={300}
+                      onMoreInfo={() => router.push("/apbdes")}
                     />
                   </div>
                 </div>
@@ -628,56 +646,13 @@ export default function DashboardPage() {
                       icon={FileText}
                       gradient="from-indigo-600 to-purple-600"
                       buttonText="Lihat Dokumen"
-                      onButtonClick={() => router.push("/produk-hukum/produk-hukum")}
+                      onButtonClick={() =>
+                        router.push("/produk-hukum/produk-hukum")
+                      }
                       delay={200}
                     />
                   </div>
                 </div>
-
-                {/* Latest News Section
-                {(dashboardData.berita.latestBerita?.length ?? 0) > 0 && (
-                  <div>
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="w-1 h-8 bg-gradient-to-b from-rose-500 to-pink-600 rounded-full" />
-                      <h2 className="text-2xl font-bold text-gray-900">
-                        Berita Terkini
-                      </h2>
-                      <Newspaper className="h-6 w-6 text-rose-600" />
-                    </div>
-
-                    <Card className="border-0 bg-white/90 backdrop-blur-sm shadow-xl">
-                      <CardContent className="p-6">
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                          {dashboardData.berita.latestBerita.map((berita) => (
-                            <div
-                              key={berita.id}
-                              className="group p-4 rounded-xl border border-gray-100 hover:border-rose-200 hover:bg-gradient-to-br hover:from-rose-50 hover:to-pink-50 transition-all duration-300 cursor-pointer hover:shadow-lg"
-                              onClick={() =>
-                                router.push(`/berita/${berita.id}`)
-                              }
-                            >
-                              <h4 className="font-semibold text-gray-900 group-hover:text-rose-700 transition-colors line-clamp-2 mb-2">
-                                {berita.judul}
-                              </h4>
-                              <div className="text-sm text-gray-500">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-2 h-2 bg-rose-400 rounded-full" />
-                                  {new Date(
-                                    berita.createdAt
-                                  ).toLocaleDateString("id-ID", {
-                                    year: "numeric",
-                                    month: "long",
-                                    day: "numeric",
-                                  })}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                )} */}
               </div>
             )}
           </main>
