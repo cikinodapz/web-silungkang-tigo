@@ -33,7 +33,7 @@ export default function LoginPage() {
       })
 
       localStorage.setItem("token", response.token)
-      router.push("/admin")
+      router.push("/dashboard")
     } catch (err) {
       const errorMessage =
         err && typeof err === "object" && "message" in err
