@@ -1,6 +1,7 @@
 "use client";
 
 import type * as React from "react";
+import { usePathname } from "next/navigation"; // Ganti useRouter dengan usePathname
 import {
   LayoutDashboard,
   Users,
@@ -52,19 +53,16 @@ const data = {
       title: "Dashboard",
       url: "/dashboard",
       icon: LayoutDashboard,
-      isActive: true,
     },
     {
       title: "Akun Admin",
       url: "/admin",
       icon: Settings,
-      isActive: false,
     },
     {
       title: "Data Penduduk",
       url: "/data-penduduk",
       icon: Users,
-      isActive: false,
       items: [
         {
           title: "Kartu Keluarga (KK)",
@@ -170,6 +168,8 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const pathname = usePathname(); // Gunakan usePathname untuk mendapatkan URL saat ini
+
   return (
     <Sidebar
       {...props}
@@ -200,85 +200,68 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {data.navMain.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  {item.items ? (
-                    <Collapsible defaultOpen={item.isActive}>
-                      <CollapsibleTrigger asChild>
-                        <SidebarMenuButton
-                          className={cn(
-                            "group hover:bg-gradient-to-r hover:from-blue-100 hover:to-cyan-100 hover:scale-[1.02] transition-all duration-200",
-                            "data-[active=true]:bg-gradient-to-r data-[active=true]:from-blue-200 data-[active=true]:to-cyan-200 data-[active=true]:text-blue-900 data-[active=true]:font-semibold",
-                            "px-4 py-2.5 my-0.5 mx-2 rounded-lg"
-                          )}
-                          isActive={item.isActive}
-                        >
-                          <div className="flex items-center gap-3">
-                            <item.icon className="h-4 w-4 text-gray-500 group-data-[active=true]:text-blue-900 group-hover:text-blue-900" />
-                            <span className="text-sm font-medium text-gray-600 group-data-[active=true]:text-blue-900 group-hover:text-blue-900">
-                              {item.title}
-                            </span>
-                            <ChevronDown className="ml-auto h-4 w-4 text-gray-400 transition-transform duration-200 group-data-[state=open]:rotate-180 group-hover:text-blue-900" />
-                          </div>
-                        </SidebarMenuButton>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="CollapsibleContent">
-                        <SidebarMenuSub className="pl-2 py-1">
-                          {item.items.map((subItem) => (
-                            <SidebarMenuSubItem key={subItem.title}>
-                              {subItem.items ? (
-                                <Collapsible>
-                                  <CollapsibleTrigger asChild>
-                                    <SidebarMenuSubButton
-                                      className={cn(
-                                        "hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:scale-[1.01] hover:text-blue-900",
-                                        "px-3 py-2 rounded-md text-gray-600",
-                                        "transition-all duration-150"
-                                      )}
-                                    >
-                                      <div className="flex items-center gap-2">
-                                        <subItem.icon className="h-3.5 w-3.5 text-gray-500 group-hover:text-blue-900" />
-                                        <span className="text-sm">
-                                          {subItem.title}
-                                        </span>
-                                        <ChevronDown className="ml-auto h-4 w-4 text-gray-400 transition-transform duration-200 group-data-[state=open]:rotate-180 group-hover:text-blue-900" />
-                                      </div>
-                                    </SidebarMenuSubButton>
-                                  </CollapsibleTrigger>
-                                  <CollapsibleContent>
-                                    <SidebarMenuSub className="pl-4 py-1">
-                                      {subItem.items.map((subSubItem) => (
-                                        <SidebarMenuSubItem
-                                          key={subSubItem.title}
-                                        >
-                                          <SidebarMenuSubButton
-                                            asChild
-                                            className={cn(
-                                              "hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:scale-[1.01] hover:text-blue-900",
-                                              "px-3 py-2 rounded-md text-gray-600",
-                                              "transition-all duration-150"
-                                            )}
-                                          >
-                                            <a
-                                              href={subSubItem.url}
-                                              className="flex items-center gap-2"
-                                            >
-                                              <subSubItem.icon className="h-3.5 w-3.5 text-gray-500 group-hover:text-blue-900" />
-                                              <span className="text-sm">
-                                                {subSubItem.title}
-                                              </span>
-                                            </a>
-                                          </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                      ))}
-                                    </SidebarMenuSub>
-                                  </CollapsibleContent>
-                                </Collapsible>
-                              ) : (
+              {data.navMain.map((item) => {
+                // Periksa apakah item aktif, termasuk rute turunan (misalnya /apbdes/tambah, /apbdes/edit/[id])
+                const isActive =
+                  pathname === item.url ||
+                  pathname.startsWith(item.url + "/") ||
+                  (item.items &&
+                    item.items.some(
+                      (subItem) =>
+                        pathname === subItem.url ||
+                        pathname.startsWith(subItem.url + "/")
+                    ));
+
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    {item.items ? (
+                      <Collapsible defaultOpen={isActive}>
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton
+                            className={cn(
+                              "group hover:bg-gradient-to-r hover:from-blue-100 hover:to-cyan-100 hover:scale-[1.02] transition-all duration-200",
+                              isActive &&
+                                "bg-gradient-to-r from-blue-200 to-cyan-200 text-blue-900 font-semibold",
+                              "px-4 py-2.5 my-0.5 mx-2 rounded-lg"
+                            )}
+                            isActive={isActive}
+                          >
+                            <div className="flex items-center gap-3">
+                              <item.icon
+                                className={cn(
+                                  "h-4 w-4 text-gray-500 group-hover:text-blue-900",
+                                  isActive && "text-blue-900"
+                                )}
+                              />
+                              <span
+                                className={cn(
+                                  "text-sm font-medium text-gray-600 group-hover:text-blue-900",
+                                  isActive && "text-blue-900"
+                                )}
+                              >
+                                {item.title}
+                              </span>
+                              <ChevronDown
+                                className={cn(
+                                  "ml-auto h-4 w-4 text-gray-400 transition-transform duration-200 group-hover:text-blue-900",
+                                  isActive && "text-blue-900",
+                                  "group-data-[state=open]:rotate-180"
+                                )}
+                              />
+                            </div>
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="CollapsibleContent">
+                          <SidebarMenuSub className="pl-2 py-1">
+                            {item.items.map((subItem) => (
+                              <SidebarMenuSubItem key={subItem.title}>
                                 <SidebarMenuSubButton
                                   asChild
                                   className={cn(
                                     "hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:scale-[1.01] hover:text-blue-900",
+                                    (pathname === subItem.url ||
+                                      pathname.startsWith(subItem.url + "/")) &&
+                                      "bg-gradient-to-r from-blue-50 to-cyan-50 text-blue-900",
                                     "px-3 py-2 rounded-md text-gray-600",
                                     "transition-all duration-150"
                                   )}
@@ -287,37 +270,62 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     href={subItem.url}
                                     className="flex items-center gap-2"
                                   >
-                                    <subItem.icon className="h-3.5 w-3.5 text-gray-500 group-hover:text-blue-900" />
+                                    <subItem.icon
+                                      className={cn(
+                                        "h-3.5 w-3.5 text-gray-500 group-hover:text-blue-900",
+                                        (pathname === subItem.url ||
+                                          pathname.startsWith(
+                                            subItem.url + "/"
+                                          )) &&
+                                          "text-blue-900"
+                                      )}
+                                    />
                                     <span className="text-sm">
                                       {subItem.title}
                                     </span>
                                   </a>
                                 </SidebarMenuSubButton>
-                              )}
-                            </SidebarMenuSubItem>
-                          ))}
-                        </SidebarMenuSub>
-                      </CollapsibleContent>
-                    </Collapsible>
-                  ) : (
-                    <SidebarMenuButton
-                      asChild
-                      className={cn(
-                        "group hover:bg-gradient-to-r hover:from-blue-100 hover:to-cyan-100 hover:scale-[1.02] transition-all duration-200",
-                        "data-[active=true]:bg-gradient-to-r data-[active=true]:from-blue-200 data-[active=true]:to-cyan-200 data-[active=true]:text-blue-900 data-[active=true]:font-semibold",
-                        "px-4 py-2.5 my-0.5 mx-2 rounded-lg"
-                      )}
-                    >
-                      <a href={item.url} className="flex items-center gap-3">
-                        <item.icon className="h-4 w-4 text-gray-500 group-data-[active=true]:text-blue-900 group-hover:text-blue-900" />
-                        <span className="text-sm font-medium text-gray-600 group-data-[active=true]:text-blue-900 group-hover:text-blue-900">
-                          {item.title}
-                        </span>
-                      </a>
-                    </SidebarMenuButton>
-                  )}
-                </SidebarMenuItem>
-              ))}
+                              </SidebarMenuSubItem>
+                            ))}
+                          </SidebarMenuSub>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    ) : (
+                      <SidebarMenuButton
+                        asChild
+                        className={cn(
+                          "group hover:bg-gradient-to-r hover:from-blue-100 hover:to-cyan-100 hover:scale-[1.02] transition-all duration-200",
+                          (pathname === item.url ||
+                            pathname.startsWith(item.url + "/")) &&
+                            "bg-gradient-to-r from-blue-200 to-cyan-200 text-blue-900 font-semibold",
+                          "px-4 py-2.5 my-0.5 mx-2 rounded-lg"
+                        )}
+                      >
+                        <a href={item.url} className="flex items-center gap-3">
+                          <item.icon
+                            className={cn(
+                              "h-4 w-4 text-gray-500 group-hover:text-blue-900",
+                              (pathname === item.url ||
+                                pathname.startsWith(item.url + "/")) &&
+                                "text-blue-900"
+                            )}
+                          />
+                          <span
+                            className={cn(
+                              "text-sm font-medium text-gray-600 group-hover:text-blue-900",
+                              (pathname === item.url ||
+                                pathname.startsWith(item.url + "/")) &&
+                                "text-blue-900"
+                            )}
+                          >
+                            {item.title}
+                          </span>
+                        </a>
+                      </SidebarMenuButton>
+                    )}
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
