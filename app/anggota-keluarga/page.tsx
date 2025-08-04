@@ -31,9 +31,8 @@ import {
 import { fetchData } from "@/lib/api";
 import Swal from "sweetalert2";
 
-interface KepalaKeluarga {
+interface AnggotaKeluarga {
   id: string;
-  KK: string;
   nik: string;
   nama: string;
   no_akta_kelahiran: string;
@@ -42,6 +41,7 @@ interface KepalaKeluarga {
   tanggal_lahir: string;
   golongan_darah: string;
   agama: string;
+  status_hubungan: string;
   status_perkawinan: string;
   pendidikan_akhir: string;
   pekerjaan: string;
@@ -51,16 +51,11 @@ interface KepalaKeluarga {
   scan_kk?: string;
   scan_akta_lahir?: string;
   scan_buku_nikah?: string;
+  kk: { no_kk: string };
 }
 
-interface FamilyCard {
-  id: string;
-  no_kk: string;
-}
-
-export default function KepalaKeluargaPage() {
-  const [kepalaKeluargas, setKepalaKeluargas] = useState<KepalaKeluarga[]>([]);
-  const [familyCards, setFamilyCards] = useState<FamilyCard[]>([]);
+export default function AnggotaKeluargaPage() {
+  const [anggotaKeluargas, setAnggotaKeluargas] = useState<AnggotaKeluarga[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -74,22 +69,14 @@ export default function KepalaKeluargaPage() {
     return `http://localhost:3000/uploads/${type}/${filename}`;
   };
 
-  // Fetch kepala keluarga and KK without kepala on component mount
+  // Fetch all anggota keluarga on component mount
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
       try {
-        const [kepalaResponse, kkResponse] = await Promise.all([
-          fetchData("/kelola-kepala-keluarga/getAllKepalaKeluarga"),
-          fetchData("/kelola-kk/getKKWithoutKepalaKeluarga"),
-        ]);
-        const kepalaData = Array.isArray(kepalaResponse)
-          ? kepalaResponse
-          : kepalaResponse.data || [];
-        setKepalaKeluargas(kepalaData);
-        setFamilyCards(
-          Array.isArray(kkResponse) ? kkResponse : kkResponse.data || []
-        );
+        const response = await fetchData("/kelola-kepala-keluarga/getAllAnggotaKeluarga");
+        const data = Array.isArray(response) ? response : response.data || [];
+        setAnggotaKeluargas(data);
       } catch (err) {
         setError(`Gagal memuat data: ${err.message || "Terjadi kesalahan"}`);
         console.error("Fetch error:", err);
@@ -100,12 +87,12 @@ export default function KepalaKeluargaPage() {
     loadData();
   }, []);
 
-  // Handle delete kepala keluarga
-  const handleDeleteKepala = async (id: string) => {
+  // Handle delete anggota keluarga
+  const handleDeleteAnggota = async (id: string) => {
     const result = await Swal.fire({
       icon: "warning",
       title: "Konfirmasi",
-      text: "Apakah Anda yakin ingin menghapus Kepala Keluarga ini?",
+      text: "Apakah Anda yakin ingin menghapus Anggota Keluarga ini?",
       showCancelButton: true,
       confirmButtonText: "Ya, Hapus",
       cancelButtonText: "Batal",
@@ -116,12 +103,12 @@ export default function KepalaKeluargaPage() {
 
     setIsLoading(true);
     try {
-      await fetchData(`/kelola-kepala-keluarga/deleteKepalaKeluarga/${id}`, {
+      await fetchData(`/kelola-kepala-keluarga/deleteAnggotaKeluarga/${id}`, {
         method: "DELETE",
       });
-      setKepalaKeluargas(kepalaKeluargas.filter((kepala) => kepala.id !== id));
+      setAnggotaKeluargas(anggotaKeluargas.filter((anggota) => anggota.id !== id));
       if (
-        kepalaKeluargas.length - 1 <= (currentPage - 1) * itemsPerPage &&
+        anggotaKeluargas.length - 1 <= (currentPage - 1) * itemsPerPage &&
         currentPage > 1
       ) {
         setCurrentPage(currentPage - 1);
@@ -129,13 +116,13 @@ export default function KepalaKeluargaPage() {
       Swal.fire({
         icon: "success",
         title: "Berhasil",
-        text: "Kepala Keluarga berhasil dihapus!",
+        text: "Anggota Keluarga berhasil dihapus!",
       });
     } catch (err) {
       Swal.fire({
         icon: "error",
         title: "Gagal",
-        text: `Gagal menghapus Kepala Keluarga: ${
+        text: `Gagal menghapus Anggota Keluarga: ${
           err.message || "Terjadi kesalahan"
         }`,
       });
@@ -144,45 +131,39 @@ export default function KepalaKeluargaPage() {
     }
   };
 
-  // Handle view kepala keluarga details
+  // Handle view anggota keluarga details
   const handleViewDetails = async (id: string) => {
     setIsLoading(true);
     try {
-      const response = await fetchData(`/kelola-kepala-keluarga/getDetailKepalaKeluarga/${id}`);
-      const { kepalaKeluarga } = response;
-      const kkData = kepalaKeluarga.kk[0] || {};
+      const response = await fetchData(`/kelola-kepala-keluarga/getAnggotaKeluarga/${id}`);
+      const anggotaKeluarga = response.anggotaKeluarga || response;
 
       await Swal.fire({
-        title: "Detail Kepala Keluarga",
+        title: "Detail Anggota Keluarga",
         html: `
           <div style="text-align: left; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.6;">
             <h3 style="color: #1e3a8a; margin-bottom: 15px;">Informasi Pribadi</h3>
-            <p><strong>NIK:</strong> ${kepalaKeluarga.nik}</p>
-            <p><strong>Nama:</strong> ${kepalaKeluarga.nama}</p>
-            <p><strong>Jenis Kelamin:</strong> ${kepalaKeluarga.jenis_kelamin}</p>
-            <p><strong>Tempat Lahir:</strong> ${kepalaKeluarga.tempat_lahir}</p>
-            <p><strong>Tanggal Lahir:</strong> ${new Date(kepalaKeluarga.tanggal_lahir).toLocaleDateString()}</p>
-            <p><strong>Golongan Darah:</strong> ${kepalaKeluarga.golongan_darah}</p>
-            <p><strong>Agama:</strong> ${kepalaKeluarga.agama}</p>
-            <p><strong>Status Perkawinan:</strong> ${kepalaKeluarga.status_perkawinan}</p>
-            <p><strong>Pendidikan Terakhir:</strong> ${kepalaKeluarga.pendidikan_akhir}</p>
-            <p><strong>Pekerjaan:</strong> ${kepalaKeluarga.pekerjaan}</p>
-            <p><strong>Nama Ayah:</strong> ${kepalaKeluarga.nama_ayah}</p>
-            <p><strong>Nama Ibu:</strong> ${kepalaKeluarga.nama_ibu}</p>
+            <p><strong>NIK:</strong> ${anggotaKeluarga.nik}</p>
+            <p><strong>Nama:</strong> ${anggotaKeluarga.nama}</p>
+            <p><strong>No. Akta Kelahiran:</strong> ${anggotaKeluarga.no_akta_kelahiran || 'Tidak ada'}</p>
+            <p><strong>Jenis Kelamin:</strong> ${anggotaKeluarga.jenis_kelamin}</p>
+            <p><strong>Tempat Lahir:</strong> ${anggotaKeluarga.tempat_lahir}</p>
+            <p><strong>Tanggal Lahir:</strong> ${new Date(anggotaKeluarga.tanggal_lahir).toLocaleDateString()}</p>
+            <p><strong>Golongan Darah:</strong> ${anggotaKeluarga.golongan_darah}</p>
+            <p><strong>Agama:</strong> ${anggotaKeluarga.agama}</p>
+            <p><strong>Status Hubungan:</strong> ${anggotaKeluarga.status_hubungan}</p>
+            <p><strong>Status Perkawinan:</strong> ${anggotaKeluarga.status_perkawinan}</p>
+            <p><strong>Pendidikan Terakhir:</strong> ${anggotaKeluarga.pendidikan_akhir}</p>
+            <p><strong>Pekerjaan:</strong> ${anggotaKeluarga.pekerjaan}</p>
+            <p><strong>Nama Ayah:</strong> ${anggotaKeluarga.nama_ayah}</p>
+            <p><strong>Nama Ibu:</strong> ${anggotaKeluarga.nama_ibu}</p>
             <h3 style="color: #1e3a8a; margin-top: 20px; margin-bottom: 15px;">Informasi Kartu Keluarga</h3>
-            <p><strong>No. KK:</strong> ${kkData.no_kk || 'Tidak ada'}</p>
-            <p><strong>Provinsi:</strong> ${kkData.provinsi || 'Tidak ada'}</p>
-            <p><strong>Kabupaten:</strong> ${kkData.kabupaten || 'Tidak ada'}</p>
-            <p><strong>Kecamatan:</strong> ${kkData.kecamatan || 'Tidak ada'}</p>
-            <p><strong>Kelurahan:</strong> ${kkData.kelurahan || 'Tidak ada'}</p>
-            <p><strong>Dusun:</strong> ${kkData.dusun || 'Tidak ada'}</p>
-            <p><strong>RT/RW:</strong> ${kkData.rt && kkData.rw ? `${kkData.rt}/${kkData.rw}` : 'Tidak ada'}</p>
-            <p><strong>Kode Pos:</strong> ${kkData.kode_pos || 'Tidak ada'}</p>
+            <p><strong>No. KK:</strong> ${anggotaKeluarga.kk?.no_kk || 'Tidak ada'}</p>
             <h3 style="color: #1e3a8a; margin-top: 20px; margin-bottom: 15px;">Dokumen</h3>
-            <p><strong>Scan KTP:</strong> ${kepalaKeluarga.scan_ktp ? `<a href="#" onclick="window.handleViewScan('ktp', '${kepalaKeluarga.scan_ktp}')">Lihat KTP</a>` : 'Tidak ada'}</p>
-            <p><strong>Scan KK:</strong> ${kepalaKeluarga.scan_kk ? `<a href="#" onclick="window.handleViewScan('kk', '${kepalaKeluarga.scan_kk}')">Lihat KK</a>` : 'Tidak ada'}</p>
-            <p><strong>Scan Akta Lahir:</strong> ${kepalaKeluarga.scan_akta_lahir ? `<a href="#" onclick="window.handleViewScan('akta', '${kepalaKeluarga.scan_akta_lahir}')">Lihat Akta Lahir</a>` : 'Tidak ada'}</p>
-            <p><strong>Scan Buku Nikah:</strong> ${kepalaKeluarga.scan_buku_nikah ? `<a href="#" onclick="window.handleViewScan('nikah', '${kepalaKeluarga.scan_buku_nikah}')">Lihat Buku Nikah</a>` : 'Tidak ada'}</p>
+            <p><strong>Scan KTP:</strong> ${anggotaKeluarga.scan_ktp ? `<a href="#" onclick="window.handleViewScan('ktp', '${anggotaKeluarga.scan_ktp}')">Lihat KTP</a>` : 'Tidak ada'}</p>
+            <p><strong>Scan KK:</strong> ${anggotaKeluarga.scan_kk ? `<a href="#" onclick="window.handleViewScan('kk', '${anggotaKeluarga.scan_kk}')">Lihat KK</a>` : 'Tidak ada'}</p>
+            <p><strong>Scan Akta Lahir:</strong> ${anggotaKeluarga.scan_akta_lahir ? `<a href="#" onclick="window.handleViewScan('akta', '${anggotaKeluarga.scan_akta_lahir}')">Lihat Akta Lahir</a>` : 'Tidak ada'}</p>
+            <p><strong>Scan Buku Nikah:</strong> ${anggotaKeluarga.scan_buku_nikah ? `<a href="#" onclick="window.handleViewScan('nikah', '${anggotaKeluarga.scan_buku_nikah}')">Lihat Buku Nikah</a>` : 'Tidak ada'}</p>
           </div>
         `,
         icon: "info",
@@ -214,7 +195,7 @@ export default function KepalaKeluargaPage() {
       Swal.fire({
         icon: "error",
         title: "Gagal",
-        text: `Gagal memuat detail Kepala Keluarga: ${
+        text: `Gagal memuat detail Anggota Keluarga: ${
           err.message || "Terjadi kesalahan"
         }`,
       });
@@ -223,22 +204,22 @@ export default function KepalaKeluargaPage() {
     }
   };
 
-  // Filter kepala keluarga based on search query
-  const filteredKepalaKeluargas = kepalaKeluargas.filter(
-    (kepala) =>
-      kepala.nik.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      kepala.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      kepala.KK.toLowerCase().includes(searchQuery.toLowerCase())
+  // Filter anggota keluarga based on search query
+  const filteredAnggotaKeluargas = anggotaKeluargas.filter(
+    (anggota) =>
+      anggota.nik.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      anggota.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      anggota.kk?.no_kk.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredKepalaKeluargas.slice(
+  const currentItems = filteredAnggotaKeluargas.slice(
     indexOfFirstItem,
     indexOfLastItem
   );
-  const totalPages = Math.ceil(filteredKepalaKeluargas.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredAnggotaKeluargas.length / itemsPerPage);
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
@@ -309,10 +290,10 @@ export default function KepalaKeluargaPage() {
                 <SidebarTrigger className="text-blue-900 hover:bg-blue-100 transition-colors p-2 rounded-md" />
                 <div>
                   <h1 className="text-2xl font-semibold text-blue-900">
-                    Data Kepala Keluarga
+                    Data Anggota Keluarga
                   </h1>
                   <p className="text-sm text-gray-600">
-                    Kelola data Kepala Keluarga desa
+                    Kelola data Anggota Keluarga desa
                   </p>
                 </div>
               </div>
@@ -328,10 +309,10 @@ export default function KepalaKeluargaPage() {
                 </div>
                 <Button
                   className="flex items-center bg-gradient-to-r from-blue-900 to-cyan-700 hover:from-blue-800 hover:to-cyan-600 text-white px-4 py-2 rounded-md transition-colors"
-                  onClick={() => router.push("/kepala-keluarga/tambah-kepala")}
+                  onClick={() => router.push("/anggota-keluarga/tambah")}
                 >
                   <Plus className="h-4 w-4 mr-1" />
-                  Tambah Kepala Keluarga
+                  Tambah Anggota Keluarga
                 </Button>
               </div>
             </div>
@@ -348,53 +329,18 @@ export default function KepalaKeluargaPage() {
                 Memuat...
               </div>
             )}
-            {!isLoading && filteredKepalaKeluargas.length === 0 && !error && (
+            {!isLoading && filteredAnggotaKeluargas.length === 0 && !error && (
               <div className="text-center text-gray-600">
-                Tidak ada data Kepala Keluarga.
+                Tidak ada data Anggota Keluarga.
               </div>
             )}
-
-            <div className="grid gap-6 md:grid-cols-2">
-              <Card className="border-0 bg-white/80 shadow-lg hover:shadow-xl transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-600">
-                    Total Kepala Keluarga
-                  </CardTitle>
-                  <User className="h-5 w-5 text-blue-900" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-blue-900">
-                    {kepalaKeluargas.length}
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    Kepala Keluarga terdaftar
-                  </p>
-                </CardContent>
-              </Card>
-              <Card className="border-0 bg-white/80 shadow-lg hover:shadow-xl transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-600">
-                    KK Tanpa Kepala
-                  </CardTitle>
-                  <User className="h-5 w-5 text-blue-900" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-blue-900">
-                    {familyCards.length}
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    Kartu Keluarga tanpa kepala
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
 
             <Card className="border-0 bg-white/80 shadow-lg">
               <CardHeader>
                 <CardTitle className="text-blue-900">
-                  Daftar Kepala Keluarga
+                  Daftar Anggota Keluarga
                 </CardTitle>
-                <CardDescription>Kelola data Kepala Keluarga</CardDescription>
+                <CardDescription>Kelola data Anggota Keluarga</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
@@ -403,9 +349,10 @@ export default function KepalaKeluargaPage() {
                       <tr>
                         <th className="px-4 py-3 font-semibold">NIK</th>
                         <th className="px-4 py-3 font-semibold">Nama</th>
+                        <th className="px-4 py-3 font-semibold">No. KK</th>
                         <th className="px-4 py-3 font-semibold">Jenis Kelamin</th>
                         <th className="px-4 py-3 font-semibold">Tanggal Lahir</th>
-                        <th className="px-4 py-3 font-semibold">Agama</th>
+                        <th className="px-4 py-3 font-semibold">Status Hubungan</th>
                         <th className="px-4 py-3 font-semibold">Pekerjaan</th>
                         <th className="px-4 py-3 font-semibold">KTP</th>
                         <th className="px-4 py-3 font-semibold">KK</th>
@@ -415,26 +362,27 @@ export default function KepalaKeluargaPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {currentItems.map((kepala) => (
+                      {currentItems.map((anggota) => (
                         <tr
-                          key={kepala.id}
+                          key={anggota.id}
                           className="border-b border-gray-100 hover:bg-blue-50/50 transition-all"
                         >
-                          <td className="px-4 py-3">{kepala.nik}</td>
-                          <td className="px-4 py-3">{kepala.nama}</td>
-                          <td className="px-4 py-3">{kepala.jenis_kelamin}</td>
+                          <td className="px-4 py-3">{anggota.nik}</td>
+                          <td className="px-4 py-3">{anggota.nama}</td>
+                          <td className="px-4 py-3">{anggota.kk?.no_kk || '-'}</td>
+                          <td className="px-4 py-3">{anggota.jenis_kelamin}</td>
                           <td className="px-4 py-3">
-                            {new Date(kepala.tanggal_lahir).toLocaleDateString()}
+                            {new Date(anggota.tanggal_lahir).toLocaleDateString()}
                           </td>
-                          <td className="px-4 py-3">{kepala.agama}</td>
-                          <td className="px-4 py-3">{kepala.pekerjaan}</td>
+                          <td className="px-4 py-3">{anggota.status_hubungan}</td>
+                          <td className="px-4 py-3">{anggota.pekerjaan}</td>
                           <td className="px-4 py-3">
-                            {kepala.scan_ktp ? (
+                            {anggota.scan_ktp ? (
                               <Button
                                 variant="outline"
                                 size="sm"
                                 className="hover:bg-blue-100 text-blue-900 border-blue-200"
-                                onClick={() => handleViewScan("ktp", kepala.scan_ktp!)}
+                                onClick={() => handleViewScan("ktp", anggota.scan_ktp!)}
                               >
                                 <File className="h-4 w-4 mr-1" />
                                 Lihat
@@ -444,12 +392,12 @@ export default function KepalaKeluargaPage() {
                             )}
                           </td>
                           <td className="px-4 py-3">
-                            {kepala.scan_kk ? (
+                            {anggota.scan_kk ? (
                               <Button
                                 variant="outline"
                                 size="sm"
                                 className="hover:bg-blue-100 text-blue-900 border-blue-200"
-                                onClick={() => handleViewScan("kk", kepala.scan_kk!)}
+                                onClick={() => handleViewScan("kk", anggota.scan_kk!)}
                               >
                                 <File className="h-4 w-4 mr-1" />
                                 Lihat
@@ -459,12 +407,12 @@ export default function KepalaKeluargaPage() {
                             )}
                           </td>
                           <td className="px-4 py-3">
-                            {kepala.scan_akta_lahir ? (
+                            {anggota.scan_akta_lahir ? (
                               <Button
                                 variant="outline"
                                 size="sm"
                                 className="hover:bg-blue-100 text-blue-900 border-blue-200"
-                                onClick={() => handleViewScan("akta", kepala.scan_akta_lahir!)}
+                                onClick={() => handleViewScan("akta", anggota.scan_akta_lahir!)}
                               >
                                 <File className="h-4 w-4 mr-1" />
                                 Lihat
@@ -474,12 +422,12 @@ export default function KepalaKeluargaPage() {
                             )}
                           </td>
                           <td className="px-4 py-3">
-                            {kepala.scan_buku_nikah ? (
+                            {anggota.scan_buku_nikah ? (
                               <Button
                                 variant="outline"
                                 size="sm"
                                 className="hover:bg-blue-100 text-blue-900 border-blue-200"
-                                onClick={() => handleViewScan("nikah", kepala.scan_buku_nikah!)}
+                                onClick={() => handleViewScan("nikah", anggota.scan_buku_nikah!)}
                               >
                                 <File className="h-4 w-4 mr-1" />
                                 Lihat
@@ -494,7 +442,7 @@ export default function KepalaKeluargaPage() {
                                 variant="outline"
                                 size="sm"
                                 className="hover:bg-blue-100 text-blue-900 border-blue-200"
-                                onClick={() => handleViewDetails(kepala.id)}
+                                onClick={() => handleViewDetails(anggota.id)}
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
@@ -503,7 +451,7 @@ export default function KepalaKeluargaPage() {
                                 size="sm"
                                 className="hover:bg-blue-100 text-blue-900 border-blue-200"
                                 onClick={() =>
-                                  router.push(`/kepala-keluarga/edit-kepala/${kepala.id}`)
+                                  router.push(`/anggota-keluarga/edit/${anggota.id}`)
                                 }
                               >
                                 <Edit className="h-4 w-4" />
@@ -512,7 +460,7 @@ export default function KepalaKeluargaPage() {
                                 variant="outline"
                                 size="sm"
                                 className="hover:bg-red-100 text-red-600 border-red-200"
-                                onClick={() => handleDeleteKepala(kepala.id)}
+                                onClick={() => handleDeleteAnggota(anggota.id)}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>

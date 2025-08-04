@@ -55,7 +55,7 @@ const data = {
       isActive: true,
     },
     {
-      title: "Kelola Akun Admin",
+      title: "Akun Admin",
       url: "/admin",
       icon: Settings,
       isActive: false,
@@ -78,20 +78,8 @@ const data = {
         },
         {
           title: "Anggota Keluarga",
-          url: "/data-penduduk",
+          url: "/anggota-keluarga",
           icon: Users,
-          items: [
-            {
-              title: "Tambah Anggota",
-              url: "/data-penduduk/tambah",
-              icon: UserPlus,
-            },
-            {
-              title: "Edit Anggota",
-              url: "/data-penduduk/edit",
-              icon: UserMinus,
-            },
-          ],
         },
       ],
     },
