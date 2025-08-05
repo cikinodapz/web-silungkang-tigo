@@ -155,93 +155,96 @@ export default function KepalaKeluargaPage() {
       await Swal.fire({
         title: "Detail Kepala Keluarga",
         html: `
-          <div style="font-family: 'Inter', Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #1e293b; max-width: 600px; margin: 0 auto;">
-            <div style="background: #ffffff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);">
-              <!-- Informasi Pribadi -->
-              <h3 style="color: #1e3a8a; font-size: 18px; font-weight: 600; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">Informasi Pribadi</h3>
-              <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px;">
-                <span style="color: #475569; font-weight: 500;">NIK</span>
-                <span>${kepalaKeluarga.nik}</span>
-                <span style="color: #475569; font-weight: 500;">Nama</span>
-                <span>${kepalaKeluarga.nama}</span>
-                <span style="color: #475569; font-weight: 500;">Jenis Kelamin</span>
-                <span>${kepalaKeluarga.jenis_kelamin}</span>
-                <span style="color: #475569; font-weight: 500;">Tempat Lahir</span>
-                <span>${kepalaKeluarga.tempat_lahir}</span>
-                <span style="color: #475569; font-weight: 500;">Tanggal Lahir</span>
-                <span>${new Date(kepalaKeluarga.tanggal_lahir).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
-                <span style="color: #475569; font-weight: 500;">Golongan Darah</span>
-                <span>${kepalaKeluarga.golongan_darah}</span>
-                <span style="color: #475569; font-weight: 500;">Agama</span>
-                <span>${kepalaKeluarga.agama}</span>
-                <span style="color: #475569; font-weight: 500;">Status Perkawinan</span>
-                <span>${kepalaKeluarga.status_perkawinan}</span>
-                <span style="color: #475569; font-weight: 500;">Pendidikan Terakhir</span>
-                <span>${kepalaKeluarga.pendidikan_akhir}</span>
-                <span style="color: #475569; font-weight: 500;">Pekerjaan</span>
-                <span>${kepalaKeluarga.pekerjaan}</span>
-                <span style="color: #475569; font-weight: 500;">Nama Ayah</span>
-                <span>${kepalaKeluarga.nama_ayah}</span>
-                <span style="color: #475569; font-weight: 500;">Nama Ibu</span>
-                <span>${kepalaKeluarga.nama_ibu}</span>
+          <div style="text-align: left; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14px; line-height: 1.6; color: #2d3748;">
+            <div style="background: #f7fafc; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+              <h3 style="color: #2b6cb0; margin-bottom: 15px; font-size: 18px; font-weight: 600; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+                Informasi Pribadi
+              </h3>
+              <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px;">
+                <div style="color: #718096; font-weight: 500;">NIK</div>
+                <div>${kepalaKeluarga.nik}</div>
+                <div style="color: #718096; font-weight: 500;">Nama</div>
+                <div>${kepalaKeluarga.nama}</div>
+                <div style="color: #718096; font-weight: 500;">No. Akta Kelahiran</div>
+                <div>${kepalaKeluarga.no_akta_kelahiran || 'Tidak ada'}</div>
+                <div style="color: #718096; font-weight: 500;">Jenis Kelamin</div>
+                <div>${kepalaKeluarga.jenis_kelamin}</div>
+                <div style="color: #718096; font-weight: 500;">Tempat Lahir</div>
+                <div>${kepalaKeluarga.tempat_lahir}</div>
+                <div style="color: #718096; font-weight: 500;">Tanggal Lahir</div>
+                <div>${new Date(kepalaKeluarga.tanggal_lahir).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+                <div style="color: #718096; font-weight: 500;">Golongan Darah</div>
+                <div>${kepalaKeluarga.golongan_darah}</div>
+                <div style="color: #718096; font-weight: 500;">Agama</div>
+                <div>${kepalaKeluarga.agama}</div>
+                <div style="color: #718096; font-weight: 500;">Status Perkawinan</div>
+                <div>${kepalaKeluarga.status_perkawinan}</div>
+                <div style="color: #718096; font-weight: 500;">Pendidikan Terakhir</div>
+                <div>${kepalaKeluarga.pendidikan_akhir}</div>
+                <div style="color: #718096; font-weight: 500;">Pekerjaan</div>
+                <div>${kepalaKeluarga.pekerjaan}</div>
+                <div style="color: #718096; font-weight: 500;">Nama Ayah</div>
+                <div>${kepalaKeluarga.nama_ayah}</div>
+                <div style="color: #718096; font-weight: 500;">Nama Ibu</div>
+                <div>${kepalaKeluarga.nama_ibu}</div>
               </div>
-
-              <!-- Informasi Kartu Keluarga -->
-              <h3 style="color: #1e3a8a; font-size: 18px; font-weight: 600; margin: 20px 0 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">Informasi Kartu Keluarga</h3>
-              <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px;">
-                <span style="color: #475569; font-weight: 500;">No. KK</span>
-                <span>${kkData.no_kk || 'Tidak ada'}</span>
-                <span style="color: #475569; font-weight: 500;">Provinsi</span>
-                <span>${kkData.provinsi || 'Tidak ada'}</span>
-                <span style="color: #475569; font-weight: 500;">Kabupaten</span>
-                <span>${kkData.kabupaten || 'Tidak ada'}</span>
-                <span style="color: #475569; font-weight: 500;">Kecamatan</span>
-                <span>${kkData.kecamatan || 'Tidak ada'}</span>
-                <span style="color: #475569; font-weight: 500;">Kelurahan</span>
-                <span>${kkData.kelurahan || 'Tidak ada'}</span>
-                <span style="color: #475569; font-weight: 500;">Dusun</span>
-                <span>${kkData.dusun || 'Tidak ada'}</span>
-                <span style="color: #475569; font-weight: 500;">RT/RW</span>
-                <span>${kkData.rt && kkData.rw ? `${kkData.rt}/${kkData.rw}` : 'Tidak ada'}</span>
-                <span style="color: #475569; font-weight: 500;">Kode Pos</span>
-                <span>${kkData.kode_pos || 'Tidak ada'}</span>
+              <h3 style="color: #2b6cb0; margin: 20px 0 15px; font-size: 18px; font-weight: 600; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+                Informasi Kartu Keluarga
+              </h3>
+              <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px;">
+                <div style="color: #718096; font-weight: 500;">No. KK</div>
+                <div>${kkData.no_kk || 'Tidak ada'}</div>
+                <div style="color: #718096; font-weight: 500;">Provinsi</div>
+                <div>${kkData.provinsi || 'Tidak ada'}</div>
+                <div style="color: #718096; font-weight: 500;">Kabupaten</div>
+                <div>${kkData.kabupaten || 'Tidak ada'}</div>
+                <div style="color: #718096; font-weight: 500;">Kecamatan</div>
+                <div>${kkData.kecamatan || 'Tidak ada'}</div>
+                <div style="color: #718096; font-weight: 500;">Kelurahan</div>
+                <div>${kkData.kelurahan || 'Tidak ada'}</div>
+                <div style="color: #718096; font-weight: 500;">Dusun</div>
+                <div>${kkData.dusun || 'Tidak ada'}</div>
+                <div style="color: #718096; font-weight: 500;">RT/RW</div>
+                <div>${kkData.rt && kkData.rw ? `${kkData.rt}/${kkData.rw}` : 'Tidak ada'}</div>
+                <div style="color: #718096; font-weight: 500;">Kode Pos</div>
+                <div>${kkData.kode_pos || 'Tidak ada'}</div>
               </div>
-
-              <!-- Dokumen -->
-              <h3 style="color: #1e3a8a; font-size: 18px; font-weight: 600; margin: 20px 0 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">Dokumen</h3>
-              <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px;">
-                <span style="color: #475569; font-weight: 500;">Scan KTP</span>
-                <span>${
-                  kepalaKeluarga.scan_ktp
-                    ? `<a href="#" onclick="window.handleViewScan('ktp', '${kepalaKeluarga.scan_ktp}')" style="color: #1e3a8a; text-decoration: none; font-weight: 500; transition: color 0.2s;">Lihat KTP</a>`
+              <h3 style="color: #2b6cb0; margin: 20px 0 15px; font-size: 18px; font-weight: 600; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+                Dokumen
+              </h3>
+              <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px;">
+                <div style="color: #718096; font-weight: 500;">Scan KTP</div>
+                <div>${
+                  kepalaKeluarga.scan_ktp 
+                    ? `<a href="#" onclick="window.handleViewScan('ktp', '${kepalaKeluarga.scan_ktp}')" style="color: #2b6cb0; text-decoration: none; font-weight: 500; hover:text-blue-800;">Lihat KTP</a>` 
                     : 'Tidak ada'
-                }</span>
-                <span style="color: #475569; font-weight: 500;">Scan KK</span>
-                <span>${
-                  kepalaKeluarga.scan_kk
-                    ? `<a href="#" onclick="window.handleViewScan('kk', '${kepalaKeluarga.scan_kk}')" style="color: #1e3a8a; text-decoration: none; font-weight: 500; transition: color 0.2s;">Lihat KK</a>`
+                }</div>
+                <div style="color: #718096; font-weight: 500;">Scan KK</div>
+                <div>${
+                  kepalaKeluarga.scan_kk 
+                    ? `<a href="#" onclick="window.handleViewScan('kk', '${kepalaKeluarga.scan_kk}')" style="color: #2b6cb0; text-decoration: none; font-weight: 500; hover:text-blue-800;">Lihat KK</a>` 
                     : 'Tidak ada'
-                }</span>
-                <span style="color: #475569; font-weight: 500;">Scan Akta Lahir</span>
-                <span>${
-                  kepalaKeluarga.scan_akta_lahir
-                    ? `<a href="#" onclick="window.handleViewScan('akta', '${kepalaKeluarga.scan_akta_lahir}')" style="color: #1e3a8a; text-decoration: none; font-weight: 500; transition: color 0.2s;">Lihat Akta Lahir</a>`
+                }</div>
+                <div style="color: #718096; font-weight: 500;">Scan Akta Lahir</div>
+                <div>${
+                  kepalaKeluarga.scan_akta_lahir 
+                    ? `<a href="#" onclick="window.handleViewScan('akta', '${kepalaKeluarga.scan_akta_lahir}')" style="color: #2b6cb0; text-decoration: none; font-weight: 500; hover:text-blue-800;">Lihat Akta Lahir</a>` 
                     : 'Tidak ada'
-                }</span>
-                <span style="color: #475569; font-weight: 500;">Scan Buku Nikah</span>
-                <span>${
-                  kepalaKeluarga.scan_buku_nikah
-                    ? `<a href="#" onclick="window.handleViewScan('nikah', '${kepalaKeluarga.scan_buku_nikah}')" style="color: #1e3a8a; text-decoration: none; font-weight: 500; transition: color 0.2s;">Lihat Buku Nikah</a>`
+                }</div>
+                <div style="color: #718096; font-weight: 500;">Scan Buku Nikah</div>
+                <div>${
+                  kepalaKeluarga.scan_buku_nikah 
+                    ? `<a href="#" onclick="window.handleViewScan('nikah', '${kepalaKeluarga.scan_buku_nikah}')" style="color: #2b6cb0; text-decoration: none; font-weight: 500; hover:text-blue-800;">Lihat Buku Nikah</a>` 
                     : 'Tidak ada'
-                }</span>
+                }</div>
               </div>
             </div>
           </div>
         `,
         icon: "info",
         confirmButtonText: "Tutup",
-        confirmButtonColor: "#1e3a8a",
-        width: "700px",
+        confirmButtonColor: "#2b6cb0",
+        width: "800px",
         padding: "2em",
         customClass: {
           popup: 'swal2-popup-custom',
@@ -251,28 +254,30 @@ export default function KepalaKeluargaPage() {
         didOpen: () => {
           const popup = Swal.getPopup();
           if (popup) {
-            popup.style.backgroundColor = '#f8fafc';
+            popup.style.backgroundColor = '#ffffff';
             popup.style.borderRadius = '12px';
-            popup.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.1)';
-            popup.style.transition = 'all 0.3s ease-in-out';
+            popup.style.boxShadow = '0 6px 24px rgba(0, 0, 0, 0.15)';
+            popup.style.maxHeight = '90vh';
+            popup.style.overflowY = 'auto';
           }
           const title = Swal.getTitle();
           if (title) {
-            title.style.fontSize = '1.8em';
-            title.style.color = '#1e3a8a';
-            title.style.marginBottom = '1.5em';
+            title.style.fontSize = '1.75em';
+            title.style.color = '#2b6cb0';
             title.style.fontWeight = '600';
+            title.style.marginBottom = '1.5em';
+            title.style.textAlign = 'center';
           }
           // Add hover effect for links
-          const links = document.querySelectorAll('.swal2-popup a');
-          links.forEach((link) => {
-            link.addEventListener('mouseenter', () => {
-              (link as HTMLElement).style.color = '#2563eb';
+          const links = document.querySelectorAll('.swal2-content a');
+          links.forEach(link => {
+            link.addEventListener('mouseover', () => {
               (link as HTMLElement).style.textDecoration = 'underline';
+              (link as HTMLElement).style.color = '#1a4971';
             });
-            link.addEventListener('mouseleave', () => {
-              (link as HTMLElement).style.color = '#1e3a8a';
+            link.addEventListener('mouseout', () => {
               (link as HTMLElement).style.textDecoration = 'none';
+              (link as HTMLElement).style.color = '#2b6cb0';
             });
           });
         },
@@ -328,11 +333,11 @@ export default function KepalaKeluargaPage() {
 
     let htmlContent = '';
     if (isImage) {
-      htmlContent = `<img src="${fileUrl}" alt="Document" style="max-width: 100%; max-height: 80vh; object-fit: contain;" />`;
+      htmlContent = `<img src="${fileUrl}" alt="Document" style="max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 8px;" />`;
     } else if (isPdf) {
-      htmlContent = `<iframe src="${fileUrl}" style="width: 100%; height: 80vh; border: none;"></iframe>`;
+      htmlContent = `<iframe src="${fileUrl}" style="width: 100%; height: 80vh; border: none; border-radius: 8px;"></iframe>`;
     } else {
-      htmlContent = `<p>File tidak didukung untuk pratinjau. <a href="${fileUrl}" target="_blank">Unduh file</a></p>`;
+      htmlContent = `<p>File tidak didukung untuk pratinjau. <a href="${fileUrl}" target="_blank" style="color: #2b6cb0; text-decoration: none; font-weight: 500;">Unduh file</a></p>`;
     }
 
     Swal.fire({
@@ -340,18 +345,18 @@ export default function KepalaKeluargaPage() {
       html: htmlContent,
       showConfirmButton: true,
       confirmButtonText: "Tutup",
-      confirmButtonColor: "#1e3a8a",
+      confirmButtonColor: "#2b6cb0",
       width: isImage ? "auto" : "80%",
-      padding: "1em",
+      padding: "1.5em",
       customClass: {
         popup: 'swal2-popup-custom',
       },
       didOpen: () => {
         const popup = Swal.getPopup();
         if (popup) {
-          popup.style.backgroundColor = '#f8fafc';
+          popup.style.backgroundColor = '#ffffff';
           popup.style.borderRadius = '12px';
-          popup.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.1)';
+          popup.style.boxShadow = '0 6px 24px rgba(0, 0, 0, 0.15)';
         }
       },
     });
