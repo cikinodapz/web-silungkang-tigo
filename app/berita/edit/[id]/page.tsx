@@ -27,6 +27,18 @@ import {
 } from "@/components/ui/select";
 import { fetchData } from "@/lib/api";
 import Swal from "sweetalert2";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Underline from "@tiptap/extension-underline";
+import Link from "@tiptap/extension-link";
+import Image from "@tiptap/extension-image";
+import dynamic from "next/dynamic";
+
+// Dynamically import EditorContent to ensure client-side rendering
+const EditorContentDynamic = dynamic(() => import("@tiptap/react").then((mod) => mod.EditorContent), {
+  ssr: false,
+  loading: () => <p className="text-gray-600">Loading editor...</p>,
+});
 
 interface KategoriBerita {
   id: string;
@@ -55,13 +67,32 @@ export default function EditBeritaPage() {
   const params = useParams();
   const { id } = params;
 
+  // Initialize Tiptap editor with immediatelyRender set to false
+  const editor = useEditor({
+    immediatelyRender: false,
+    extensions: [
+      StarterKit.configure({
+        heading: {
+          levels: [1, 2, 3],
+        },
+      }),
+      Underline,
+      Link.configure({
+        openOnClick: false,
+      }),
+      Image,
+    ],
+    content: formData.berita,
+    onUpdate: ({ editor }) => {
+      setFormData((prev) => ({ ...prev, berita: editor.getHTML() }));
+    },
+  });
+
   useEffect(() => {
     const loadData = async () => {
       try {
         // Fetch all categories
-        const kategoriResponse = await fetchData(
-          "/berita/getAllKategoriBerita"
-        );
+        const kategoriResponse = await fetchData("/berita/getAllKategoriBerita");
         const kategoriData = Array.isArray(kategoriResponse)
           ? kategoriResponse
           : kategoriResponse.data || [];
@@ -81,9 +112,13 @@ export default function EditBeritaPage() {
           kategoriId: beritaData.kategoriId || "",
         });
         setExistingSampul(beritaData.sampul || "");
+
+        // Update editor content after fetching data
+        if (editor) {
+          editor.commands.setContent(beritaData.berita || "");
+        }
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Terjadi kesalahan";
+        const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan";
         setError(`Gagal memuat data: ${errorMessage}`);
         console.error("Load data error:", err);
       }
@@ -91,11 +126,9 @@ export default function EditBeritaPage() {
     if (id) {
       loadData();
     }
-  }, [id]);
+  }, [id, editor]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -133,7 +166,6 @@ export default function EditBeritaPage() {
       if (fileInput.files && fileInput.files[0]) {
         formDataToSend.append("sampul", fileInput.files[0]);
       } else if (existingSampul) {
-        // Preserve existing sampul if no new file is uploaded
         formDataToSend.append("existingSampul", existingSampul);
       }
 
@@ -154,7 +186,6 @@ export default function EditBeritaPage() {
       });
       router.push("/berita");
     } catch (err: any) {
-      // Improved error handling
       const errorMessage =
         err instanceof Error
           ? err.message
@@ -177,6 +208,110 @@ export default function EditBeritaPage() {
     if (!sampul) return "/placeholder-image.jpg";
     const filename = sampul.split("/").pop();
     return `http://localhost:3000/berita/getSampul/berita/${filename}`;
+  };
+
+  // Toolbar component for Tiptap
+  const Toolbar = () => {
+    if (!editor) return null;
+
+    return (
+      <div className="flex flex-wrap gap-2 p-2 bg-gray-100 border border-gray-300 rounded-t-md">
+        <Button
+          type="button"
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          className={editor.isActive("bold") ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+        >
+          Bold
+        </Button>
+        <Button
+          type="button"
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+          className={editor.isActive("italic") ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+        >
+          Italic
+        </Button>
+        <Button
+          type="button"
+          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          className={editor.isActive("underline") ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+        >
+          Underline
+        </Button>
+        <Button
+          type="button"
+          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+          className={editor.isActive("heading", { level: 1 }) ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+        >
+          H1
+        </Button>
+        <Button
+          type="button"
+          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          className={editor.isActive("heading", { level: 2 }) ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+        >
+          H2
+        </Button>
+        <Button
+          type="button"
+          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+          className={editor.isActive("heading", { level: 3 }) ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+        >
+          H3
+        </Button>
+        <Button
+          type="button"
+          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          className={editor.isActive("bulletList") ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+        >
+          Bullet List
+        </Button>
+        <Button
+          type="button"
+          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          className={editor.isActive("orderedList") ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+        >
+          Numbered List
+        </Button>
+        <Button
+          type="button"
+          onClick={() => {
+            const url = window.prompt("Enter the URL");
+            if (url) {
+              editor.chain().focus().setLink({ href: url }).run();
+            }
+          }}
+          className={editor.isActive("link") ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+        >
+          Link
+        </Button>
+        <Button
+          type="button"
+          onClick={() => {
+            const url = window.prompt("Enter image URL");
+            if (url) {
+              editor.chain().focus().setImage({ src: url }).run();
+            }
+          }}
+          className="bg-white text-gray-600"
+        >
+          Image
+        </Button>
+        <Button
+          type="button"
+          onClick={() => editor.chain().focus().undo().run()}
+          className="bg-white text-gray-600"
+        >
+          Undo
+        </Button>
+        <Button
+          type="button"
+          onClick={() => editor.chain().focus().redo().run()}
+          className="bg-white text-gray-600"
+        >
+          Redo
+        </Button>
+      </div>
+    );
   };
 
   return (
@@ -231,15 +366,10 @@ export default function EditBeritaPage() {
                     <Label htmlFor="berita" className="text-gray-600">
                       Berita
                     </Label>
-                    <Input
-                      id="berita"
-                      name="berita"
-                      value={formData.berita}
-                      onChange={handleChange}
-                      placeholder="Masukkan isi berita"
-                      className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                      required
-                    />
+                    <div className="border border-gray-300 rounded-md">
+                      <Toolbar />
+                      <EditorContentDynamic editor={editor} className="bg-white p-2 min-h-[200px]" />
+                    </div>
                   </div>
                   <div>
                     <Label htmlFor="kategoriId" className="text-gray-600">

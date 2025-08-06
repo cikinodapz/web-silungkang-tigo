@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PublicFooter } from "@/components/public-footer";
+import { htmlToText } from "html-to-text"; // Import html-to-text
 
 // Define interfaces
 interface Berita {
@@ -54,14 +55,12 @@ export default function BeritaPublicPage() {
     const loadData = async () => {
       setIsLoading(true);
       try {
-        // Fetch news data
         const beritaResponse = await fetchData("/public/getAllBerita");
         const beritaData = Array.isArray(beritaResponse.data)
           ? beritaResponse.data
           : [];
         setBeritaList(beritaData);
 
-        // Fetch categories data
         const kategoriResponse = await fetchData(
           "/public/getAllKategoriBerita"
         );
@@ -70,7 +69,6 @@ export default function BeritaPublicPage() {
           : [];
         setKategoriList(kategoriData);
       } catch (err: any) {
-        // Explicitly type err as any or define a custom error type
         setError(`Gagal memuat data: ${err.message || "Terjadi kesalahan"}`);
         console.error("Fetch error:", err);
       } finally {
@@ -79,6 +77,21 @@ export default function BeritaPublicPage() {
     };
     loadData();
   }, []);
+
+  // Function to clean HTML tags from content
+  const cleanContent = (html: string, maxLength: number) => {
+    const text = htmlToText(html, {
+      wordwrap: false,
+      preserveNewlines: true,
+      tags: {
+        p: { after: " " },
+        br: { after: " " },
+      },
+    });
+    return text.length > maxLength
+      ? text.substring(0, maxLength) + "..."
+      : text;
+  };
 
   // Get unique categories from the news data
   const categories = ["Semua", ...kategoriList.map((k) => k.kategori)];
@@ -89,9 +102,7 @@ export default function BeritaPublicPage() {
       ? {
           id: beritaList[0].id,
           title: beritaList[0].judul,
-          excerpt:
-            beritaList[0].berita.substring(0, 150) +
-            (beritaList[0].berita.length > 150 ? "..." : ""),
+          excerpt: cleanContent(beritaList[0].berita, 150),
           content: beritaList[0].berita,
           date: beritaList[0].createdAt,
           author: "Admin Desa",
@@ -107,8 +118,7 @@ export default function BeritaPublicPage() {
   const allNews = beritaList.slice(1).map((news) => ({
     id: news.id,
     title: news.judul,
-    excerpt:
-      news.berita.substring(0, 100) + (news.berita.length > 100 ? "..." : ""),
+    excerpt: cleanContent(news.berita, 100),
     date: news.createdAt,
     author: "Admin Desa",
     category: news.kategori.kategori,
@@ -170,6 +180,7 @@ export default function BeritaPublicPage() {
       .slice(0, 5);
   }
 
+  // Rest of the component remains unchanged
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">

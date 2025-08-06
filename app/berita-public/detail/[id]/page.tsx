@@ -6,17 +6,9 @@ import { PublicHeader } from "@/components/public-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Search,
-  Calendar,
-  User,
-  ArrowLeft,
-  Filter,
-  TrendingUp,
-} from "lucide-react";
+import { Calendar, User, TrendingUp, Filter, ArrowLeft } from "lucide-react";
 import { fetchData } from "@/lib/api";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PublicFooter } from "@/components/public-footer";
 
@@ -44,7 +36,6 @@ export default function BeritaDetailPage() {
   const [berita, setBerita] = useState<Berita | null>(null);
   const [beritaList, setBeritaList] = useState<Berita[]>([]);
   const [kategoriList, setKategoriList] = useState<Kategori[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Semua");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -134,15 +125,6 @@ export default function BeritaDetailPage() {
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             <div className="lg:col-span-3 space-y-8">
-              <div className="flex flex-col md:flex-row gap-4 items-center">
-                <Skeleton className="h-10 w-32" />
-                <Skeleton className="h-10 flex-1" />
-                <div className="flex gap-2 flex-wrap">
-                  {[1, 2, 3, 4].map((i) => (
-                    <Skeleton key={i} className="h-8 w-20 rounded-md" />
-                  ))}
-                </div>
-              </div>
               <Card className="border-0 shadow-lg">
                 <Skeleton className="aspect-video w-full rounded-t-lg" />
                 <CardContent className="p-6 space-y-4">
@@ -206,70 +188,6 @@ export default function BeritaDetailPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-sm">
-                <CardContent className="p-6">
-                  <div className="flex flex-col gap-6 md:gap-4">
-                    {/* Back Button and Search Bar in one row */}
-                    <div className="flex flex-col md:flex-row gap-4 items-center">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full md:w-auto border-[#073046]/30 text-[#073046] hover:bg-[#073046]/10 transition-colors"
-                        onClick={() => router.push("/berita-public")}
-                      >
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        Kembali
-                      </Button>
-                      <div className="flex-1 w-full relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                        <Input
-                          placeholder="Cari berita..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          className="pl-10 w-full border-[#073046]/30 focus:border-[#073046] focus:ring-[#073046]/20 rounded-lg"
-                        />
-                      </div>
-                    </div>
-                    {/* Categories in a separate row */}
-                    <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                      {categories.map((category) => (
-                        <motion.div
-                          key={category}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <Button
-                            variant={
-                              selectedCategory === category
-                                ? "default"
-                                : "outline"
-                            }
-                            size="sm"
-                            onClick={() => {
-                              setSelectedCategory(category);
-                              router.push("/berita-public");
-                            }}
-                            className={
-                              selectedCategory === category
-                                ? "bg-[#073046] hover:bg-[#0a4a66] shadow-md text-white px-4 py-2"
-                                : "border-[#073046]/30 text-[#073046] hover:bg-[#073046]/10 hover:text-[#073046] hover:border-[#073046]/50 px-4 py-2"
-                            }
-                          >
-                            {category}
-                          </Button>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.6 }}
             >
               <Card className="border-0 shadow-lg overflow-hidden">
@@ -320,7 +238,7 @@ export default function BeritaDetailPage() {
                     </div>
                   </motion.div>
                   <motion.div
-                    className="prose prose-slate max-w-none"
+                    className="prose prose-slate max-w-none text-justify"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4, duration: 0.5 }}
@@ -328,6 +246,22 @@ export default function BeritaDetailPage() {
                       __html: berita.berita.replace(/\n/g, "<br />"),
                     }}
                   />
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5, duration: 0.6 }}
+                    className="mt-6"
+                  >
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full md:w-auto border-blue-800 text-blue-800 hover:bg-blue-800/10 transition-colors"
+                      onClick={() => router.push("/berita-public")}
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Berita Lainnya
+                    </Button>
+                  </motion.div>
                 </CardContent>
               </Card>
             </motion.div>
