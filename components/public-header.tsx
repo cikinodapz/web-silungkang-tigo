@@ -3,7 +3,17 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Home, Users, Newspaper, Zap, Store, FileText, LogIn } from "lucide-react";
+import {
+  Menu,
+  X,
+  Users,
+  Newspaper,
+  Zap,
+  Store,
+  FileText,
+  LogIn,
+  Home,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -26,15 +36,26 @@ export function PublicHeader() {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-r from-[#073046] to-[#0a4a66] shadow-inner">
-              <Home className="h-5 w-5 text-white" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-lg font-bold text-[#073046] tracking-tight">
+          <Link href="/" className="flex items-center">
+            <img
+              src="/logo.png"
+              alt="Desa Silungkang Tigo Logo"
+              className="h-16 w-16 object-contain rounded-lg"
+              onError={(e) => {
+                e.currentTarget.src = "/placeholder-logo.png"; // Fallback image
+              }}
+            />
+            <div className="flex flex-col justify-center">
+              {" "}
+              {/* Tambahkan justify-center dan ml-2 */}
+              <span className="text-lg font-bold text-[#073046] tracking-tight leading-tight">
+                {" "}
+                {/* Tambahkan leading-tight */}
                 Desa Silungkang Tigo
               </span>
-              <span className="text-xs text-gray-600 font-medium">
+              <span className="text-xs text-gray-600 font-medium leading-tight">
+                {" "}
+                {/* Tambahkan leading-tight */}
                 Kec. Silungkang, Kab. Sawahlunto
               </span>
             </div>
@@ -43,7 +64,8 @@ export function PublicHeader() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-1">
             {navigation.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+              const isActive =
+                pathname === item.href || pathname.startsWith(item.href + "/");
               return (
                 <Link
                   key={item.name}
@@ -59,7 +81,9 @@ export function PublicHeader() {
                   <item.icon
                     className={cn(
                       "h-4 w-4",
-                      isActive ? "text-[#073046]" : "text-gray-500 group-hover:text-[#073046] transition-colors duration-300 ease-in-out"
+                      isActive
+                        ? "text-[#073046]"
+                        : "text-gray-500 group-hover:text-[#073046] transition-colors duration-300 ease-in-out"
                     )}
                   />
                   {item.name}
@@ -88,7 +112,11 @@ export function PublicHeader() {
               "hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-cyan-50/50 hover:text-[#073046] hover:scale-[1.02] transition-all duration-300 ease-in-out"
             )}
           >
-            {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {isMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </button>
         </div>
 
@@ -97,7 +125,9 @@ export function PublicHeader() {
           <div className="md:hidden border-t border-gray-200/50 bg-white/80 backdrop-blur shadow-lg">
             <nav className="py-4 space-y-1">
               {navigation.map((item) => {
-                const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                const isActive =
+                  pathname === item.href ||
+                  pathname.startsWith(item.href + "/");
                 return (
                   <Link
                     key={item.name}
@@ -114,7 +144,9 @@ export function PublicHeader() {
                     <item.icon
                       className={cn(
                         "h-4 w-4",
-                        isActive ? "text-[#073046]" : "text-gray-500 group-hover:text-[#073046] transition-colors duration-300 ease-in-out"
+                        isActive
+                          ? "text-[#073046]"
+                          : "text-gray-500 group-hover:text-[#073046] transition-colors duration-300 ease-in-out"
                       )}
                     />
                     {item.name}

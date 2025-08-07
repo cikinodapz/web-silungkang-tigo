@@ -6,7 +6,7 @@ import "./globals.css"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Dashboard Desa Digital",
+  title: "Desa Silungkang Tigo",
   description: "Sistem Informasi Desa Terpadu",
     generator: 'v0.dev'
 }
@@ -18,6 +18,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id">
+      <head>
+        <link rel="icon" href="/logo.png" type="image/png" />
+      </head>
       <body className={inter.className}>{children}</body>
     </html>
   )
