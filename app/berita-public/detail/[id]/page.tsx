@@ -208,9 +208,9 @@ export default function BeritaDetailPage() {
                     className="absolute top-4 left-4"
                     whileHover={{ scale: 1.05 }}
                   >
-                    <Badge className="bg-[#073046] hover:bg-[#0a4a66] transition-colors">
+                    {/* <Badge className="bg-[#073046] hover:bg-[#0a4a66] transition-colors">
                       {berita.kategori.kategori}
-                    </Badge>
+                    </Badge> */}
                   </motion.div>
                 </div>
                 <CardContent className="p-6">

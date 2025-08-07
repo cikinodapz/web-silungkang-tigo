@@ -22,6 +22,7 @@ import { useEffect, useState } from "react";
 import { fetchData } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { PublicFooter } from "@/components/public-footer";
+import { htmlToText } from "html-to-text"; // Import html-to-text
 
 interface PopulationStats {
   totalPenduduk: number;
@@ -54,6 +55,21 @@ interface APBDesItem {
   createdAt: string;
   updatedAt: string;
 }
+
+// Function to clean HTML tags from content
+const cleanContent = (html: string, maxLength: number) => {
+  const text = htmlToText(html, {
+    wordwrap: false,
+    preserveNewlines: true,
+    tags: {
+      p: { after: " " },
+      br: { after: " " },
+    },
+  });
+  return text.length > maxLength
+    ? text.substring(0, maxLength) + "..."
+    : text;
+};
 
 const getSampulUrl = (sampul: string | null) => {
   if (!sampul) return "/placeholder.svg?height=200&width=300";
@@ -488,38 +504,40 @@ export default function HomePage() {
                           damping: 10,
                         }}
                       >
-                        <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 h-full">
-                          <div className="aspect-video relative overflow-hidden">
-                            <img
-                              src={getSampulUrl(article.sampul)}
-                              alt={article.judul}
-                              className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                              onError={(e) => {
-                                e.currentTarget.src =
-                                  "/placeholder.svg?height=200&width=300";
-                              }}
-                            />
-                            <Badge className="absolute top-3 left-3 bg-[#073046]">
-                              {article.kategori.kategori}
-                            </Badge>
-                          </div>
-                          <CardContent className="p-6">
-                            <h3 className="font-bold text-lg text-[#073046] mb-2 line-clamp-2">
-                              {article.judul}
-                            </h3>
-                            <p className="text-slate-600 text-sm mb-4 line-clamp-3">
-                              {article.berita}
-                            </p>
-                            <div className="flex items-center justify-between text-xs text-slate-500">
-                              <div className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                {new Date(article.createdAt).toLocaleDateString(
-                                  "id-ID"
-                                )}
-                              </div>
+                        <Link href={`/berita-public/detail/${article.id}`}>
+                          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 h-full">
+                            <div className="aspect-video relative overflow-hidden">
+                              <img
+                                src={getSampulUrl(article.sampul)}
+                                alt={article.judul}
+                                className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                                onError={(e) => {
+                                  e.currentTarget.src =
+                                    "/placeholder.svg?height=200&width=300";
+                                }}
+                              />
+                              {/* <Badge className="absolute top-3 left-3 bg-[#073046]">
+                                {article.kategori.kategori}
+                              </Badge> */}
                             </div>
-                          </CardContent>
-                        </Card>
+                            <CardContent className="p-6">
+                              <h3 className="font-bold text-lg text-[#073046] mb-2 line-clamp-2">
+                                {article.judul}
+                              </h3>
+                              <p className="text-slate-600 text-sm mb-4 line-clamp-3">
+                                {cleanContent(article.berita, 100)}
+                              </p>
+                              <div className="flex items-center justify-between text-xs text-slate-500">
+                                <div className="flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
+                                  {new Date(article.createdAt).toLocaleDateString(
+                                    "id-ID"
+                                  )}
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </Link>
                       </motion.div>
                     ))}
                   </motion.div>

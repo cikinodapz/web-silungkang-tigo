@@ -286,9 +286,9 @@ export default function BeritaPublicPage() {
                         className="absolute top-4 left-4"
                         whileHover={{ scale: 1.05 }}
                       >
-                        <Badge className="bg-[#073046] hover:bg-[#0a4a66] transition-colors">
+                        {/* <Badge className="bg-[#073046] hover:bg-[#0a4a66] transition-colors">
                           {featuredNews.category}
-                        </Badge>
+                        </Badge> */}
                       </motion.div>
                       <div className="absolute bottom-6 left-6 right-6 text-white">
                         <motion.h2
@@ -417,9 +417,9 @@ export default function BeritaPublicPage() {
                               className="absolute top-3 left-3"
                               whileHover={{ scale: 1.05 }}
                             >
-                              <Badge className="bg-[#073046] hover:bg-[#0a4a66] transition-colors">
+                              {/* <Badge className="bg-[#073046] hover:bg-[#0a4a66] transition-colors">
                                 {news.category}
-                              </Badge>
+                              </Badge> */}
                             </motion.div>
                             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                           </div>

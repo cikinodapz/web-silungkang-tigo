@@ -1,357 +1,378 @@
-"use client"
+"use client";
 
-import { PublicHeader } from "@/components/public-header"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  MapPin,
-  Star,
-  Clock,
-  Phone,
-  Camera,
-  Mountain,
-  Music,
-  Users,
-  Building,
-  GraduationCap,
-  Heart,
-  Car,
-  Wifi,
-} from "lucide-react"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { PublicHeader } from "@/components/public-header";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button"; // Import Button component
+import { Input } from "@/components/ui/input";
+import { Search, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { fetchData } from "@/lib/api";
+import { motion, AnimatePresence } from "framer-motion";
+import { Skeleton } from "@/components/ui/skeleton";
+import { htmlToText } from "html-to-text";
+import { PublicFooter } from "@/components/public-footer";
 
-export default function PotensiPublicPage() {
-  const wisata = [
-    {
-      id: 1,
-      name: "Air Terjun Sekumpul",
-      description:
-        "Air terjun spektakuler dengan ketinggian 80 meter yang dikelilingi hutan tropis. Tempat yang sempurna untuk menikmati keindahan alam dan udara segar pegunungan.",
-      image: "/placeholder.svg?height=300&width=400",
-      rating: 4.8,
-      location: "Dusun Sekumpul, 15 menit dari pusat desa",
-      facilities: ["Parkir", "Toilet", "Warung", "Gazebo"],
-      openHours: "06:00 - 18:00 WIB",
-      ticketPrice: "Rp 10.000",
-      contact: "0812-3456-7890",
-      category: "Alam",
-    },
-    {
-      id: 2,
-      name: "Kebun Teh Panorama",
-      description:
-        "Perkebunan teh dengan pemandangan panorama pegunungan yang menakjubkan. Pengunjung dapat melihat proses pengolahan teh tradisional dan menikmati teh segar langsung dari kebun.",
-      image: "/placeholder.svg?height=300&width=400",
-      rating: 4.6,
-      location: "Bukit Hijau, 20 menit dari pusat desa",
-      facilities: ["Parkir", "Cafe", "Toilet", "Spot Foto"],
-      openHours: "07:00 - 17:00 WIB",
-      ticketPrice: "Rp 15.000",
-      contact: "0813-4567-8901",
-      category: "Agro",
-    },
-    {
-      id: 3,
-      name: "Danau Cermin",
-      description:
-        "Danau kecil dengan air jernih seperti cermin yang memantulkan langit dan pepohonan di sekitarnya. Tempat yang tenang untuk relaksasi dan meditasi.",
-      image: "/placeholder.svg?height=300&width=400",
-      rating: 4.5,
-      location: "Hutan Lindung, 25 menit dari pusat desa",
-      facilities: ["Parkir", "Toilet", "Gazebo", "Jalur Trekking"],
-      openHours: "06:00 - 18:00 WIB",
-      ticketPrice: "Rp 8.000",
-      contact: "0814-5678-9012",
-      category: "Alam",
-    },
-  ]
+interface PotensiDesa {
+  id: string;
+  nama: string;
+  deskripsi: string;
+  kategori: string;
+  foto?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
 
-  const budaya = [
-    {
-      id: 1,
-      name: "Tari Piring",
-      description:
-        "Tarian tradisional Minangkabau yang menggunakan piring sebagai properti utama. Gerakan yang lincah dan dinamis menggambarkan kehidupan masyarakat Minang.",
-      image: "/placeholder.svg?height=300&width=400",
-      performer: "Sanggar Seni Minang Jaya",
-      schedule: "Setiap Sabtu malam di Balai Desa",
-      contact: "0815-6789-0123",
-      category: "Tari",
+const cleanContent = (html: string, maxLength: number) => {
+  const text = htmlToText(html, {
+    wordwrap: false,
+    preserveNewlines: true,
+    tags: {
+      p: { after: " " },
+      br: { after: " " },
     },
-    {
-      id: 2,
-      name: "Randai",
-      description:
-        "Pertunjukan teater tradisional yang menggabungkan seni tari, musik, dan cerita rakyat. Biasanya menceritakan legenda dan nilai-nilai budaya Minangkabau.",
-      image: "/placeholder.svg?height=300&width=400",
-      performer: "Kelompok Randai Silungkang",
-      schedule: "Acara khusus dan festival",
-      contact: "0816-7890-1234",
-      category: "Teater",
-    },
-    {
-      id: 3,
-      name: "Talempong",
-      description:
-        "Alat musik tradisional Minangkabau yang terbuat dari logam. Menghasilkan suara merdu yang sering digunakan dalam upacara adat dan pertunjukan seni.",
-      image: "/placeholder.svg?height=300&width=400",
-      performer: "Grup Musik Tradisional Desa",
-      schedule: "Minggu pertama setiap bulan",
-      contact: "0817-8901-2345",
-      category: "Musik",
-    },
-  ]
+  });
+  return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
+};
 
-  const saranaPrasarana = [
-    {
-      category: "Pendidikan",
-      icon: GraduationCap,
-      items: [
-        { name: "SD Negeri 1 Silungkang Tigo", status: "Baik", capacity: "240 siswa" },
-        { name: "SMP Negeri 1 Silungkang", status: "Baik", capacity: "180 siswa" },
-        { name: "PAUD Tunas Bangsa", status: "Baik", capacity: "45 anak" },
-        { name: "Perpustakaan Desa Digital", status: "Baru", capacity: "50 pengunjung" },
-      ],
-    },
-    {
-      category: "Kesehatan",
-      icon: Heart,
-      items: [
-        { name: "Puskesmas Pembantu", status: "Baik", capacity: "100 pasien/hari" },
-        { name: "Posyandu Melati", status: "Aktif", capacity: "50 balita" },
-        { name: "Posyandu Mawar", status: "Aktif", capacity: "45 balita" },
-        { name: "Apotek Desa", status: "Baik", capacity: "24 jam" },
-      ],
-    },
-    {
-      category: "Transportasi",
-      icon: Car,
-      items: [
-        { name: "Jalan Desa Beraspal", status: "Baik", capacity: "5 km" },
-        { name: "Jembatan Sungai Batang", status: "Baik", capacity: "10 ton" },
-        { name: "Terminal Mini", status: "Baik", capacity: "20 kendaraan" },
-        { name: "Parkir Umum", status: "Baik", capacity: "50 kendaraan" },
-      ],
-    },
-    {
-      category: "Komunikasi",
-      icon: Wifi,
-      items: [
-        { name: "Tower BTS", status: "Baik", capacity: "4G LTE" },
-        { name: "WiFi Desa Gratis", status: "Aktif", capacity: "100 Mbps" },
-        { name: "Kantor Pos", status: "Baik", capacity: "Layanan lengkap" },
-        { name: "Warnet Desa", status: "Baik", capacity: "10 komputer" },
-      ],
-    },
-  ]
+const getFotoUrl = (foto: string | null) => {
+  if (!foto) return "/placeholder.svg?height=400&width=600";
+  const filename = foto.split("/").pop();
+  return `http://localhost:3000/public/foto-potensi-desa/potensidesa/${filename}`;
+};
+
+export default function PotensiDesaPublicPage() {
+  const [potensiDesaList, setPotensiDesaList] = useState<PotensiDesa[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("Semua");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 4;
+  const router = useRouter();
+
+  useEffect(() => {
+    const loadPotensiDesa = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetchData("/public/potensiDesa");
+        const data = Array.isArray(response.data) ? response.data : [];
+        setPotensiDesaList(data);
+      } catch (err: any) {
+        setError(`Gagal memuat data: ${err.message || "Terjadi kesalahan"}`);
+        console.error("Fetch error:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadPotensiDesa();
+  }, []);
+
+  const categories = [
+    "Semua",
+    ...new Set(potensiDesaList.map((item) => item.kategori)),
+  ];
+
+  const filteredRecords = potensiDesaList.filter(
+    (record) =>
+      (record.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        cleanContent(record.deskripsi, 1000)
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase())) &&
+      (selectedCategory === "Semua" || record.kategori === selectedCategory)
+  );
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredRecords.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
+        <PublicHeader />
+        <div className="container mx-auto px-4 py-16">
+          <Skeleton className="h-16 w-3/5 mx-auto mb-8 rounded-xl" />
+          <Skeleton className="h-8 w-4/5 mx-auto mb-12 rounded-lg" />
+          <div className="flex justify-between items-center mb-10">
+            <Skeleton className="h-12 w-1/3 rounded-lg" />
+            <div className="flex gap-3">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-10 w-28 rounded-md" />
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="space-y-4">
+                <Skeleton className="h-80 w-full rounded-lg" />
+                <Skeleton className="h-8 w-2/3 rounded-lg" />
+                <Skeleton className="h-4 w-4/5 rounded-lg" />
+                <Skeleton className="h-4 w-1/2 rounded-lg" />
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-between items-center mt-10">
+            <Skeleton className="h-12 w-36 rounded-md" />
+            <Skeleton className="h-6 w-28 rounded-md" />
+            <Skeleton className="h-12 w-36 rounded-md" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
+        <PublicHeader />
+        <motion.div
+          className="container mx-auto px-4 py-16 text-center text-red-600 font-semibold"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {error}
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
       <PublicHeader />
-
-      {/* Hero Section */}
-      <section className="relative py-16 px-4 bg-gradient-to-r from-[#073046] to-[#0a4a66] text-white">
-        <div className="container mx-auto">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">Potensi Desa</h1>
-            <p className="text-xl text-blue-100">Kekayaan alam, budaya, dan infrastruktur Desa Silungkang Tigo</p>
-          </div>
-        </div>
-      </section>
-
-      <div className="container mx-auto px-4 py-12">
-        <Tabs defaultValue="pariwisata" className="w-full">
-          <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 mb-8">
-            <TabsTrigger value="pariwisata" className="flex items-center gap-2">
-              <Mountain className="h-4 w-4" />
-              Pariwisata
-            </TabsTrigger>
-            <TabsTrigger value="budaya" className="flex items-center gap-2">
-              <Music className="h-4 w-4" />
-              Kesenian & Budaya
-            </TabsTrigger>
-            <TabsTrigger value="sarana" className="flex items-center gap-2">
-              <Building className="h-4 w-4" />
-              Sarana Prasarana
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="pariwisata" className="space-y-6">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-[#073046] mb-4">Destinasi Wisata</h2>
-              <p className="text-slate-600 max-w-2xl mx-auto">
-                Nikmati keindahan alam dan pengalaman wisata yang tak terlupakan di Desa Silungkang Tigo
-              </p>
+      <div className="container mx-auto px-4 py-16">
+        {/* Filter Section */}
+        <section className="mb-12">
+          <motion.div
+            className="flex flex-col md:flex-row justify-between items-center gap-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="relative w-full md:w-2/4">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Cari potensi desa..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 border-[#073046]/30 focus:border-[#073046] focus:ring-[#073046]/20 rounded-md shadow-sm transition-all duration-300"
+              />
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {wisata.map((destination) => (
-                <Card
-                  key={destination.id}
-                  className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden"
+            <div className="flex gap-2 flex-wrap">
+              {categories.map((category) => (
+                <motion.div
+                  key={category}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <div className="aspect-video relative overflow-hidden">
-                    <img
-                      src={destination.image || "/placeholder.svg"}
-                      alt={destination.name}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                    />
-                    <Badge className="absolute top-3 left-3 bg-[#073046]">{destination.category}</Badge>
-                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1">
-                      <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                      <span className="text-xs font-semibold">{destination.rating}</span>
-                    </div>
-                  </div>
-                  <CardContent className="p-6">
-                    <h3 className="font-bold text-xl text-[#073046] mb-2">{destination.name}</h3>
-                    <p className="text-slate-600 text-sm mb-4 line-clamp-3">{destination.description}</p>
-
-                    <div className="space-y-3 mb-4">
-                      <div className="flex items-start gap-2">
-                        <MapPin className="h-4 w-4 text-slate-500 mt-0.5 flex-shrink-0" />
-                        <span className="text-sm text-slate-600">{destination.location}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-slate-500 flex-shrink-0" />
-                        <span className="text-sm text-slate-600">{destination.openHours}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-slate-500 flex-shrink-0" />
-                        <span className="text-sm text-slate-600">{destination.contact}</span>
-                      </div>
-                    </div>
-
-                    <div className="mb-4">
-                      <h4 className="font-semibold text-sm text-[#073046] mb-2">Fasilitas:</h4>
-                      <div className="flex flex-wrap gap-1">
-                        {destination.facilities.map((facility, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {facility}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <span className="text-sm text-slate-500">Tiket Masuk</span>
-                        <p className="font-bold text-[#073046]">{destination.ticketPrice}</p>
-                      </div>
-                    </div>
-
-                    <Button className="w-full bg-gradient-to-r from-[#073046] to-[#0a4a66] hover:from-[#0a4a66] hover:to-[#073046]">
-                      <Camera className="mr-2 h-4 w-4" />
-                      Lihat Detail
-                    </Button>
-                  </CardContent>
-                </Card>
+                  <Button
+                    variant={selectedCategory === category ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedCategory(category)}
+                    className={
+                      selectedCategory === category
+                        ? "bg-[#073046] hover:bg-[#0a4a66] shadow-md"
+                        : "border-[#073046]/30 text-[#073046] hover:bg-[#073046]/10 hover:text-[#073046] hover:border-[#073046]/50"
+                    }
+                  >
+                    {category} (
+                    {category === "Semua"
+                      ? potensiDesaList.length
+                      : potensiDesaList.filter(
+                          (item) => item.kategori === category
+                        ).length}
+                    )
+                  </Button>
+                </motion.div>
               ))}
             </div>
-          </TabsContent>
+          </motion.div>
+        </section>
 
-          <TabsContent value="budaya" className="space-y-6">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-[#073046] mb-4">Kesenian & Budaya</h2>
-              <p className="text-slate-600 max-w-2xl mx-auto">
-                Warisan budaya dan kesenian tradisional yang masih lestari di Desa Silungkang Tigo
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {budaya.map((art) => (
-                <Card
-                  key={art.id}
-                  className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden"
-                >
-                  <div className="aspect-video relative overflow-hidden">
-                    <img
-                      src={art.image || "/placeholder.svg"}
-                      alt={art.name}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                    />
-                    <Badge className="absolute top-3 left-3 bg-[#073046]">{art.category}</Badge>
-                  </div>
-                  <CardContent className="p-6">
-                    <h3 className="font-bold text-xl text-[#073046] mb-2">{art.name}</h3>
-                    <p className="text-slate-600 text-sm mb-4 line-clamp-3">{art.description}</p>
-
-                    <div className="space-y-3 mb-4">
-                      <div className="flex items-start gap-2">
-                        <Users className="h-4 w-4 text-slate-500 mt-0.5 flex-shrink-0" />
-                        <span className="text-sm text-slate-600">{art.performer}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-slate-500 flex-shrink-0" />
-                        <span className="text-sm text-slate-600">{art.schedule}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-slate-500 flex-shrink-0" />
-                        <span className="text-sm text-slate-600">{art.contact}</span>
-                      </div>
-                    </div>
-
-                    <Button className="w-full bg-gradient-to-r from-[#073046] to-[#0a4a66] hover:from-[#0a4a66] hover:to-[#073046]">
-                      <Music className="mr-2 h-4 w-4" />
-                      Info Pertunjukan
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="sarana" className="space-y-6">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-[#073046] mb-4">Sarana & Prasarana</h2>
-              <p className="text-slate-600 max-w-2xl mx-auto">
-                Infrastruktur dan fasilitas publik yang mendukung kehidupan masyarakat desa
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {saranaPrasarana.map((category, index) => (
-                <Card key={index} className="border-0 shadow-lg">
-                  <CardHeader className="bg-gradient-to-r from-[#073046] to-[#0a4a66] text-white">
-                    <CardTitle className="flex items-center gap-2">
-                      <category.icon className="h-5 w-5" />
-                      {category.category}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    <div className="space-y-4">
-                      {category.items.map((item, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-[#073046] mb-1">{item.name}</h4>
-                            <p className="text-sm text-slate-600">{item.capacity}</p>
-                          </div>
-                          <Badge
-                            variant={
-                              item.status === "Baik" || item.status === "Aktif" || item.status === "Baru"
-                                ? "default"
-                                : "secondary"
-                            }
-                            className={
-                              item.status === "Baik" || item.status === "Aktif"
-                                ? "bg-green-500"
-                                : item.status === "Baru"
-                                  ? "bg-blue-500"
-                                  : ""
-                            }
+        {/* Potensi Desa List */}
+        <section>
+          <AnimatePresence mode="wait">
+            {currentItems.length > 0 ? (
+              <motion.div
+                className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+                key="potensi-list"
+              >
+                {currentItems.map((potensi, index) => (
+                  <motion.div
+                    key={potensi.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      delay: index * 0.1,
+                      duration: 0.5,
+                    }}
+                    whileHover={{ y: -5 }}
+                  >
+                    <Card
+                      className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer rounded-lg overflow-hidden bg-white/90"
+                      onClick={() =>
+                        router.push(`/potensi-desa-public/detail/${potensi.id}`)
+                      }
+                    >
+                      <div className="flex flex-col md:flex-row">
+                        <div className="md:w-1/3 relative">
+                          <motion.img
+                            src={getFotoUrl(potensi.foto)}
+                            alt={potensi.nama}
+                            className="w-full h-64 md:h-80 object-cover group-hover:scale-105 transition-transform duration-500"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.8 }}
+                            onError={(e) => {
+                              e.currentTarget.src =
+                                "/placeholder.svg?height=400&width=600";
+                            }}
+                          />
+                          <motion.div
+                            className="absolute top-3 left-3"
+                            whileHover={{ scale: 1.05 }}
                           >
-                            {item.status}
-                          </Badge>
+                            {/* <Badge className="bg-[#073046] hover:bg-[#0a4a66] text-white font-medium px-3 py-1 rounded-md transition-colors">
+                              {potensi.kategori}
+                            </Badge> */}
+                          </motion.div>
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         </div>
-                      ))}
-                    </div>
+                        <CardContent className="p-6 md:w-2/3 flex flex-col justify-between">
+                          <div>
+                            <motion.h3
+                              className="text-2xl font-bold text-[#073046] mb-3 tracking-tight group-hover:text-[#0a4a66] transition-colors"
+                              whileHover={{ x: 5 }}
+                            >
+                              {potensi.nama}
+                            </motion.h3>
+                            <p className="text-slate-600 text-sm leading-relaxed mb-4 line-clamp-3">
+                              {cleanContent(potensi.deskripsi, 200)}
+                            </p>
+                            <div className="flex items-center text-xs text-slate-500">
+                              <Calendar className="h-3 w-3 mr-1" />
+                              {new Date(potensi.createdAt).toLocaleDateString(
+                                "id-ID",
+                                {
+                                  day: "numeric",
+                                  month: "long",
+                                  year: "numeric",
+                                }
+                              )}
+                            </div>
+                          </div>
+                          <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <Button
+                              className="w-full bg-gradient-to-r from-[#073046] to-[#0a4a66] hover:from-[#0a4a66] hover:to-[#073046] shadow-md hover:shadow-lg transition-all rounded-md"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(
+                                  `/potensi-public/detail/${potensi.id}`
+                                );
+                              }}
+                            >
+                              Baca Selengkapnya
+                              <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                            </Button>
+                          </motion.div>
+                        </CardContent>
+                      </div>
+                    </Card>
+                  </motion.div>
+                ))}
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+                key="no-results"
+              >
+                <Card className="border-0 shadow-lg rounded-lg bg-white/90">
+                  <CardContent className="p-16 text-center">
+                    <motion.div
+                      className="text-slate-400 mb-6"
+                      animate={{
+                        rotate: [0, 10, -10, 0],
+                        y: [0, -5, 0],
+                      }}
+                      transition={{ repeat: Infinity, duration: 2 }}
+                    >
+                      <Search className="h-16 w-16 mx-auto" />
+                    </motion.div>
+                    <h3 className="text-xl font-semibold text-[#073046] mb-2">
+                      Tidak ada potensi desa ditemukan
+                    </h3>
+                    <p className="text-slate-500 text-sm">
+                      Coba ubah kata kunci pencarian atau kategori
+                    </p>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {totalPages > 1 && (
+            <motion.div
+              className="flex justify-between items-center mt-10"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.6 }}
+            >
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                  className={`bg-gradient-to-r from-[#073046] to-[#0a4a66] hover:from-[#0a4a66] hover:to-[#073046] shadow-md hover:shadow-lg transition-all rounded-md ${
+                    currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Sebelumnya
+                </Button>
+              </motion.div>
+              <span className="text-sm font-medium text-[#073046]">
+                Halaman {currentPage} dari {totalPages}
+              </span>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className={`bg-gradient-to-r from-[#073046] to-[#0a4a66] hover:from-[#0a4a66] hover:to-[#073046] shadow-md hover:shadow-lg transition-all rounded-md ${
+                    currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                >
+                  Berikutnya
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </motion.div>
+            </motion.div>
+          )}
+        </section>
       </div>
+      <PublicFooter/>
     </div>
-  )
+  );
 }
