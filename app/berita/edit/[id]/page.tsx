@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -34,11 +35,13 @@ import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import dynamic from "next/dynamic";
 
-// Dynamically import EditorContent to ensure client-side rendering
-const EditorContentDynamic = dynamic(() => import("@tiptap/react").then((mod) => mod.EditorContent), {
-  ssr: false,
-  loading: () => <p className="text-gray-600">Loading editor...</p>,
-});
+const EditorContentDynamic = dynamic(
+  () => import("@tiptap/react").then((mod) => mod.EditorContent),
+  {
+    ssr: false,
+    loading: () => <p className="text-gray-600">Loading editor...</p>,
+  }
+);
 
 interface KategoriBerita {
   id: string;
@@ -50,7 +53,7 @@ interface Berita {
   judul: string;
   berita: string;
   kategoriId: string;
-  sampul?: string;
+  sampul: string[];
 }
 
 export default function EditBeritaPage() {
@@ -62,12 +65,14 @@ export default function EditBeritaPage() {
   const [kategoriList, setKategoriList] = useState<KategoriBerita[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [existingSampul, setExistingSampul] = useState<string | undefined>("");
+  const [existingSampul, setExistingSampul] = useState<string[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [filesToRemove, setFilesToRemove] = useState<string[]>([]);
   const router = useRouter();
   const params = useParams();
   const { id } = params;
 
-  // Initialize Tiptap editor with immediatelyRender set to false
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -91,14 +96,12 @@ export default function EditBeritaPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Fetch all categories
         const kategoriResponse = await fetchData("/berita/getAllKategoriBerita");
         const kategoriData = Array.isArray(kategoriResponse)
           ? kategoriResponse
           : kategoriResponse.data || [];
         setKategoriList(kategoriData);
 
-        // Fetch the specific news item
         const beritaResponse = await fetchData(`/berita/getBerita/${id}`);
         const beritaData: Berita = beritaResponse.berita;
 
@@ -111,14 +114,15 @@ export default function EditBeritaPage() {
           berita: beritaData.berita || "",
           kategoriId: beritaData.kategoriId || "",
         });
-        setExistingSampul(beritaData.sampul || "");
+        setExistingSampul(beritaData.sampul || []);
+        setPreviews(beritaData.sampul.map((path) => getSampulUrl(path)) || []);
 
-        // Update editor content after fetching data
         if (editor) {
           editor.commands.setContent(beritaData.berita || "");
         }
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan";
+        const errorMessage =
+          err instanceof Error ? err.message : "Terjadi kesalahan";
         setError(`Gagal memuat data: ${errorMessage}`);
         console.error("Load data error:", err);
       }
@@ -127,6 +131,54 @@ export default function EditBeritaPage() {
       loadData();
     }
   }, [id, editor]);
+
+  const getSampulUrl = (sampul: string) => {
+    if (!sampul) return "/placeholder-image.jpg";
+    const filename = sampul.split("/").pop();
+    return `http://localhost:3000/berita/getSampul/berita/${filename}`;
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const newFiles = Array.from(files).slice(
+        0,
+        3 - (existingSampul.length - filesToRemove.length + selectedFiles.length)
+      );
+      if (
+        newFiles.length +
+          (existingSampul.length - filesToRemove.length) +
+          selectedFiles.length >
+        3
+      ) {
+        Swal.fire({
+          icon: "warning",
+          title: "Batas Gambar",
+          text: "Maksimal 3 gambar dapat diunggah.",
+        });
+        return;
+      }
+      setSelectedFiles((prev) => [...prev, ...newFiles]);
+      const newPreviews = newFiles.map((file) => URL.createObjectURL(file));
+      setPreviews((prev) => [...prev, ...newPreviews]);
+    }
+  };
+
+  const removeExistingImage = (path: string) => {
+    setFilesToRemove((prev) => [...prev, path]);
+    // Update previews to exclude the removed image
+    setPreviews((prev) => prev.filter((p) => p !== getSampulUrl(path)));
+    // Update existingSampul to exclude the removed image
+    setExistingSampul((prev) => prev.filter((p) => p !== path));
+  };
+
+  const removeNewFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    setPreviews((prev) => {
+      URL.revokeObjectURL(prev[existingSampul.length + index]);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -162,12 +214,19 @@ export default function EditBeritaPage() {
       formDataToSend.append("berita", formData.berita);
       formDataToSend.append("kategoriId", formData.kategoriId);
 
-      const fileInput = document.getElementById("sampul") as HTMLInputElement;
-      if (fileInput.files && fileInput.files[0]) {
-        formDataToSend.append("sampul", fileInput.files[0]);
-      } else if (existingSampul) {
-        formDataToSend.append("existingSampul", existingSampul);
-      }
+      // Send existingSampul as an array of paths to keep
+      formDataToSend.append(
+        "existingSampul",
+        JSON.stringify(existingSampul.filter((path) => !filesToRemove.includes(path)))
+      );
+
+      // Send filesToRemove as an array of paths to delete
+      formDataToSend.append("filesToRemove", JSON.stringify(filesToRemove));
+
+      // Append new files
+      selectedFiles.forEach((file) => {
+        formDataToSend.append("sampul", file);
+      });
 
       // Debug: Log FormData entries
       for (let [key, value] of formDataToSend.entries()) {
@@ -177,6 +236,13 @@ export default function EditBeritaPage() {
       const response = await fetchData(`/berita/updateBerita/${id}`, {
         method: "PUT",
         data: formDataToSend,
+      });
+
+      // Clean up previews for new files
+      previews.forEach((preview, index) => {
+        if (index >= existingSampul.length - filesToRemove.length) {
+          URL.revokeObjectURL(preview);
+        }
       });
 
       Swal.fire({
@@ -204,13 +270,6 @@ export default function EditBeritaPage() {
     }
   };
 
-  const getSampulUrl = (sampul: string | undefined) => {
-    if (!sampul) return "/placeholder-image.jpg";
-    const filename = sampul.split("/").pop();
-    return `http://localhost:3000/berita/getSampul/berita/${filename}`;
-  };
-
-  // Toolbar component for Tiptap
   const Toolbar = () => {
     if (!editor) return null;
 
@@ -219,56 +278,94 @@ export default function EditBeritaPage() {
         <Button
           type="button"
           onClick={() => editor.chain().focus().toggleBold().run()}
-          className={editor.isActive("bold") ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+          className={
+            editor.isActive("bold")
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-600"
+          }
         >
           Bold
         </Button>
         <Button
           type="button"
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={editor.isActive("italic") ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+          className={
+            editor.isActive("italic")
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-600"
+          }
         >
           Italic
         </Button>
         <Button
           type="button"
           onClick={() => editor.chain().focus().toggleUnderline().run()}
-          className={editor.isActive("underline") ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+          className={
+            editor.isActive("underline")
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-600"
+          }
         >
           Underline
         </Button>
         <Button
           type="button"
-          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          className={editor.isActive("heading", { level: 1 }) ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+          onClick={() =>
+            editor.chain().focus().toggleHeading({ level: 1 }).run()
+          }
+          className={
+            editor.isActive("heading", { level: 1 })
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-600"
+          }
         >
           H1
         </Button>
         <Button
           type="button"
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          className={editor.isActive("heading", { level: 2 }) ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+          onClick={() =>
+            editor.chain().focus().toggleHeading({ level: 2 }).run()
+          }
+          className={
+            editor.isActive("heading", { level: 2 })
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-600"
+          }
         >
           H2
         </Button>
         <Button
           type="button"
-          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          className={editor.isActive("heading", { level: 3 }) ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+          onClick={() =>
+            editor.chain().focus().toggleHeading({ level: 3 }).run()
+          }
+          className={
+            editor.isActive("heading", { level: 3 })
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-600"
+          }
         >
           H3
         </Button>
         <Button
           type="button"
           onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={editor.isActive("bulletList") ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+          className={
+            editor.isActive("bulletList")
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-600"
+          }
         >
           Bullet List
         </Button>
         <Button
           type="button"
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={editor.isActive("orderedList") ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+          className={
+            editor.isActive("orderedList")
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-600"
+          }
         >
           Numbered List
         </Button>
@@ -280,7 +377,11 @@ export default function EditBeritaPage() {
               editor.chain().focus().setLink({ href: url }).run();
             }
           }}
-          className={editor.isActive("link") ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+          className={
+            editor.isActive("link")
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-600"
+          }
         >
           Link
         </Button>
@@ -368,7 +469,10 @@ export default function EditBeritaPage() {
                     </Label>
                     <div className="border border-gray-300 rounded-md">
                       <Toolbar />
-                      <EditorContentDynamic editor={editor} className="bg-white p-2 min-h-[200px]" />
+                      <EditorContentDynamic
+                        editor={editor}
+                        className="bg-white p-2 min-h-[200px]"
+                      />
                     </div>
                   </div>
                   <div>
@@ -394,21 +498,75 @@ export default function EditBeritaPage() {
                   </div>
                   <div>
                     <Label htmlFor="sampul" className="text-gray-600">
-                      Sampul (Gambar, Opsional)
+                      Sampul (Maksimal 5 Gambar, Opsional)
                     </Label>
-                    {existingSampul && (
-                      <div className="mb-2">
-                        <p className="text-sm text-gray-600">
-                          Sampul Saat Ini:
+                    {(existingSampul.length > 0 || previews.length > 0) && (
+                      <div className="mt-2 mb-4">
+                        <p className="text-sm text-gray-600 mb-2">
+                          Gambar Saat Ini:
                         </p>
-                        <img
-                          src={getSampulUrl(existingSampul)}
-                          alt="Sampul Berita"
-                          className="w-24 h-24 object-cover rounded-md mt-1"
-                          onError={(e) => {
-                            e.currentTarget.src = "/placeholder-image.jpg";
-                          }}
-                        />
+                        <div className="flex flex-wrap gap-4">
+                          {existingSampul
+                            .filter((path) => !filesToRemove.includes(path))
+                            .map((path, index) => (
+                              <div
+                                key={`existing-${index}`}
+                                className="relative w-24 h-24 rounded-md overflow-hidden"
+                              >
+                                <img
+                                  src={getSampulUrl(path)}
+                                  alt={`Existing Sampul ${index + 1}`}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.src =
+                                      "/placeholder-image.jpg";
+                                  }}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="sm"
+                                  className="absolute top-1 right-1 h-6 w-6 p-0 rounded-full"
+                                  onClick={() => removeExistingImage(path)}
+                                >
+                                  &times;
+                                </Button>
+                              </div>
+                            ))}
+                          {previews
+                            .slice(existingSampul.length - filesToRemove.length)
+                            .map((preview, index) => (
+                              <div
+                                key={`new-${index}`}
+                                className="relative w-24 h-24 rounded-md overflow-hidden"
+                              >
+                                <img
+                                  src={preview}
+                                  alt={`New Sampul ${index + 1}`}
+                                  className="w-full h-full object-cover"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="sm"
+                                  className="absolute top-1 right-1 h-6 w-6 p-0 rounded-full"
+                                  onClick={() => removeNewFile(index)}
+                                >
+                                  &times;
+                                </Button>
+                              </div>
+                            ))}
+                        </div>
+                        {existingSampul.length - filesToRemove.length +
+                          selectedFiles.length >
+                          0 && (
+                          <Badge className="mt-2 bg-blue-900 hover:bg-blue-800">
+                            {existingSampul.length -
+                              filesToRemove.length +
+                              selectedFiles.length}{" "}
+                            Gambar
+                          </Badge>
+                        )}
                       </div>
                     )}
                     <Input
@@ -416,11 +574,13 @@ export default function EditBeritaPage() {
                       name="sampul"
                       type="file"
                       accept="image/*"
+                      multiple
+                      onChange={handleFileChange}
                       className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                     />
                     <p className="text-sm text-gray-500 mt-1">
-                      Pilih file baru untuk mengganti sampul (kosongkan jika
-                      tidak ingin mengubah).
+                      Pilih file baru untuk menambahkan sampul (maksimal 5 gambar
+                      total, termasuk gambar yang sudah ada).
                     </p>
                   </div>
                   <div className="flex justify-end gap-2">

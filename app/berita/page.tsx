@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Search,
   Plus,
@@ -34,7 +35,7 @@ interface Berita {
   konten: string;
   kategoriId: string;
   kategori: { kategori: string };
-  sampul?: string;
+  sampul: string[];
   createdAt?: string;
 }
 
@@ -44,6 +45,7 @@ export default function BeritaListPage() {
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [imageIndices, setImageIndices] = useState<{ [key: string]: number }>({});
   const itemsPerPage = 4;
   const router = useRouter();
 
@@ -53,7 +55,7 @@ export default function BeritaListPage() {
       try {
         const response = await fetchData("/berita/getAllBerita");
         const data = Array.isArray(response) ? response : response.data || [];
-        console.log("Fetched data:", data); // Debug log to inspect data
+        console.log("Fetched data:", data);
         setBeritaList(data);
       } catch (err) {
         setError(`Gagal memuat data: ${err.message || "Terjadi kesalahan"}`);
@@ -124,11 +126,25 @@ export default function BeritaListPage() {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
 
-  // Base URL for the image API
-  const getSampulUrl = (sampul: string) => {
-    // Ekstrak hanya nama file dari path yang disimpan di database
-    const filename = sampul.split("/").pop();
+  const getSampulUrl = (sampul: string[], index: number) => {
+    if (!sampul || sampul.length === 0 || index >= sampul.length)
+      return "/placeholder-image.jpg";
+    const filename = sampul[index].split("/").pop();
     return `http://localhost:3000/berita/getSampul/berita/${filename}`;
+  };
+
+  const handleNextImage = (id: string, totalImages: number) => {
+    setImageIndices((prev) => ({
+      ...prev,
+      [id]: Math.min((prev[id] || 0) + 1, totalImages - 1),
+    }));
+  };
+
+  const handlePrevImage = (id: string) => {
+    setImageIndices((prev) => ({
+      ...prev,
+      [id]: Math.max((prev[id] || 0) - 1, 0),
+    }));
   };
 
   return (
@@ -219,21 +235,65 @@ export default function BeritaListPage() {
                           className="border-b border-gray-100 hover:bg-blue-50/50 transition-all"
                         >
                           <td className="px-6 py-4">
-                            {record.sampul ? (
-                              <img
-                                src={getSampulUrl(record.sampul)}
-                                alt={record.judul}
-                                className="w-24 h-24 object-cover rounded-md" // Increased from w-16 h-16 to w-24 h-24
-                                onError={(e) => {
-                                  e.currentTarget.src =
-                                    "/placeholder-image.jpg"; // Fallback image
-                                }}
-                              />
-                            ) : (
-                              <span className="text-gray-400">
-                                Tidak ada sampul
-                              </span>
-                            )}
+                            <div className="relative w-24 h-24 rounded-md overflow-hidden group">
+                              {record.sampul && record.sampul.length > 0 ? (
+                                <>
+                                  <img
+                                    src={getSampulUrl(
+                                      record.sampul,
+                                      imageIndices[record.id] || 0
+                                    )}
+                                    alt={record.judul}
+                                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                    onError={(e) => {
+                                      e.currentTarget.src =
+                                        "/placeholder-image.jpg";
+                                    }}
+                                  />
+                                  <Badge
+                                    className="absolute bottom-2 right-2 bg-blue-900/80 text-white text-xs font-semibold rounded-full px-2 py-1 shadow-md"
+                                  >
+                                    {record.sampul.length} Gambar
+                                  </Badge>
+                                  {record.sampul.length > 1 && (
+                                    <div className="absolute inset-y-0 left-0 right-0 flex justify-between items-center px-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-white bg-black/50 hover:bg-black/70 p-1 rounded-full"
+                                        onClick={() =>
+                                          handlePrevImage(record.id)
+                                        }
+                                        disabled={(imageIndices[record.id] || 0) === 0}
+                                      >
+                                        <ChevronLeft className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-white bg-black/50 hover:bg-black/70 p-1 rounded-full"
+                                        onClick={() =>
+                                          handleNextImage(
+                                            record.id,
+                                            record.sampul.length
+                                          )
+                                        }
+                                        disabled={
+                                          (imageIndices[record.id] || 0) ===
+                                          record.sampul.length - 1
+                                        }
+                                      >
+                                        <ChevronRight className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="text-gray-400">
+                                  Tidak ada sampul
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="px-6 py-4">{record.judul}</td>
                           <td className="px-6 py-4">

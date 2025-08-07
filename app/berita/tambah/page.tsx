@@ -35,10 +35,13 @@ import Image from "@tiptap/extension-image";
 import dynamic from "next/dynamic";
 
 // Dynamically import EditorContent to ensure client-side rendering
-const EditorContentDynamic = dynamic(() => import("@tiptap/react").then((mod) => mod.EditorContent), {
-  ssr: false,
-  loading: () => <p className="text-gray-600">Loading editor...</p>,
-});
+const EditorContentDynamic = dynamic(
+  () => import("@tiptap/react").then((mod) => mod.EditorContent),
+  {
+    ssr: false,
+    loading: () => <p className="text-gray-600">Loading editor...</p>,
+  }
+);
 
 interface KategoriBerita {
   id: string;
@@ -54,11 +57,13 @@ export default function TambahBeritaPage() {
   const [kategoriList, setKategoriList] = useState<KategoriBerita[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]); // State for multiple files
+  const [previews, setPreviews] = useState<string[]>([]); // State for image previews
   const router = useRouter();
 
-  // Initialize Tiptap editor with immediatelyRender set to false
+  // Initialize Tiptap editor
   const editor = useEditor({
-    immediatelyRender: false, // Explicitly disable immediate rendering for SSR
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         heading: {
@@ -85,12 +90,43 @@ export default function TambahBeritaPage() {
         setKategoriList(data);
       } catch (err) {
         setError(
-          `Gagal memuat kategori: ${err instanceof Error ? err.message : "Terjadi kesalahan"}`
+          `Gagal memuat kategori: ${
+            err instanceof Error ? err.message : "Terjadi kesalahan"
+          }`
         );
       }
     };
     loadKategoriBerita();
   }, []);
+
+  // Handle file selection and preview
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const newFiles = Array.from(files).slice(0, 3 - selectedFiles.length); // Limit to 3 total images
+      if (newFiles.length + selectedFiles.length > 3) {
+        Swal.fire({
+          icon: "warning",
+          title: "Batas Gambar",
+          text: "Maksimal 5 gambar dapat diunggah.",
+        });
+      }
+      setSelectedFiles((prev) => [...prev, ...newFiles]);
+
+      // Generate previews
+      const newPreviews = newFiles.map((file) => URL.createObjectURL(file));
+      setPreviews((prev) => [...prev, ...newPreviews]);
+    }
+  };
+
+  // Remove a selected file
+  const removeFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    setPreviews((prev) => {
+      URL.revokeObjectURL(prev[index]); // Clean up object URL
+      return prev.filter((_, i) => i !== index);
+    });
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -126,10 +162,10 @@ export default function TambahBeritaPage() {
       formDataToSend.append("berita", formData.berita);
       formDataToSend.append("kategoriId", formData.kategoriId);
 
-      const fileInput = document.getElementById("sampul") as HTMLInputElement;
-      if (fileInput.files && fileInput.files[0]) {
-        formDataToSend.append("sampul", fileInput.files[0]);
-      }
+      // Append multiple files
+      selectedFiles.forEach((file) => {
+        formDataToSend.append("sampul", file);
+      });
 
       // Debug: Log FormData contents
       for (let [key, value] of formDataToSend.entries()) {
@@ -148,7 +184,8 @@ export default function TambahBeritaPage() {
       });
       router.push("/berita");
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan";
+      const errorMessage =
+        err instanceof Error ? err.message : "Terjadi kesalahan";
       Swal.fire({
         icon: "error",
         title: "Gagal",
@@ -169,56 +206,94 @@ export default function TambahBeritaPage() {
         <Button
           type="button"
           onClick={() => editor.chain().focus().toggleBold().run()}
-          className={editor.isActive("bold") ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+          className={
+            editor.isActive("bold")
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-600"
+          }
         >
           Bold
         </Button>
         <Button
           type="button"
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={editor.isActive("italic") ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+          className={
+            editor.isActive("italic")
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-600"
+          }
         >
           Italic
         </Button>
         <Button
           type="button"
           onClick={() => editor.chain().focus().toggleUnderline().run()}
-          className={editor.isActive("underline") ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+          className={
+            editor.isActive("underline")
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-600"
+          }
         >
           Underline
         </Button>
         <Button
           type="button"
-          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          className={editor.isActive("heading", { level: 1 }) ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+          onClick={() =>
+            editor.chain().focus().toggleHeading({ level: 1 }).run()
+          }
+          className={
+            editor.isActive("heading", { level: 1 })
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-600"
+          }
         >
           H1
         </Button>
         <Button
           type="button"
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          className={editor.isActive("heading", { level: 2 }) ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+          onClick={() =>
+            editor.chain().focus().toggleHeading({ level: 2 }).run()
+          }
+          className={
+            editor.isActive("heading", { level: 2 })
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-600"
+          }
         >
           H2
         </Button>
         <Button
           type="button"
-          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          className={editor.isActive("heading", { level: 3 }) ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+          onClick={() =>
+            editor.chain().focus().toggleHeading({ level: 3 }).run()
+          }
+          className={
+            editor.isActive("heading", { level: 3 })
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-600"
+          }
         >
           H3
         </Button>
         <Button
           type="button"
           onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={editor.isActive("bulletList") ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+          className={
+            editor.isActive("bulletList")
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-600"
+          }
         >
           Bullet List
         </Button>
         <Button
           type="button"
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={editor.isActive("orderedList") ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+          className={
+            editor.isActive("orderedList")
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-600"
+          }
         >
           Numbered List
         </Button>
@@ -230,7 +305,11 @@ export default function TambahBeritaPage() {
               editor.chain().focus().setLink({ href: url }).run();
             }
           }}
-          className={editor.isActive("link") ? "bg-blue-500 text-white" : "bg-white text-gray-600"}
+          className={
+            editor.isActive("link")
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-600"
+          }
         >
           Link
         </Button>
@@ -318,7 +397,10 @@ export default function TambahBeritaPage() {
                     </Label>
                     <div className="border border-gray-300 rounded-md">
                       <Toolbar />
-                      <EditorContentDynamic editor={editor} className="bg-white p-2 min-h-[200px]" />
+                      <EditorContentDynamic
+                        editor={editor}
+                        className="bg-white p-2 min-h-[200px]"
+                      />
                     </div>
                   </div>
                   <div>
@@ -344,14 +426,47 @@ export default function TambahBeritaPage() {
                   </div>
                   <div>
                     <Label htmlFor="sampul" className="text-gray-600">
-                      Sampul (Gambar, Opsional)
+                      Sampul (Maksimal 5 Gambar, Opsional)
                     </Label>
                     <Input
                       id="sampul"
                       name="sampul"
                       type="file"
+                      accept="image/*"
+                      multiple // Enable multiple file selection
+                      onChange={handleFileChange}
                       className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                     />
+                    {previews.length > 0 && (
+                      <div className="mt-4">
+                        <p className="text-sm text-gray-600 mb-2">
+                          Pratinjau Gambar:
+                        </p>
+                        <div className="flex flex-wrap gap-4">
+                          {previews.map((preview, index) => (
+                            <div
+                              key={index}
+                              className="relative w-24 h-24 rounded-md overflow-hidden"
+                            >
+                              <img
+                                src={preview}
+                                alt={`Preview ${index + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                className="absolute top-1 right-1 h-6 w-6 p-0 rounded-full"
+                                onClick={() => removeFile(index)}
+                              >
+                                &times;
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="flex justify-end gap-2">
                     <Button
@@ -379,6 +494,3 @@ export default function TambahBeritaPage() {
     </SidebarProvider>
   );
 }
-
-
-//dah lumayan bagus sih ini ya!! 

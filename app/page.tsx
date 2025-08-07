@@ -22,7 +22,7 @@ import { useEffect, useState } from "react";
 import { fetchData } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { PublicFooter } from "@/components/public-footer";
-import { htmlToText } from "html-to-text"; // Import html-to-text
+import { htmlToText } from "html-to-text";
 
 interface PopulationStats {
   totalPenduduk: number;
@@ -56,7 +56,6 @@ interface APBDesItem {
   updatedAt: string;
 }
 
-// Function to clean HTML tags from content
 const cleanContent = (html: string, maxLength: number) => {
   const text = htmlToText(html, {
     wordwrap: false,
@@ -66,14 +65,13 @@ const cleanContent = (html: string, maxLength: number) => {
       br: { after: " " },
     },
   });
-  return text.length > maxLength
-    ? text.substring(0, maxLength) + "..."
-    : text;
+  return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
 };
 
-const getSampulUrl = (sampul: string | null) => {
-  if (!sampul) return "/placeholder.svg?height=200&width=300";
-  const filename = sampul.split("/").pop();
+const getSampulUrl = (sampul: string[]) => {
+  if (!sampul || sampul.length === 0)
+    return "/placeholder.svg?height=200&width=300";
+  const filename = sampul[0].split("/").pop();
   return `http://localhost:3000/berita/getSampul/berita/${filename}`;
 };
 
@@ -125,20 +123,27 @@ export default function HomePage() {
   const [apbdesItems, setApbdesItems] = useState<APBDesItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const title = "Selamat Datang di Desa Silungkang Tigo";
   const images = ["/desa-silungkang-2.jpg", "/desa-silungkang-3.jpg"];
   const itemsPerSlide = 3;
 
-  // Coordinates for Desa Silungkang Tigo
   const mapCenter = { lat: -0.6833, lng: 100.7833 };
   const mapZoom = 14;
 
-  // Fetch data on component mount
+  const generateYearOptions = () => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let year = 2000; year <= currentYear; year++) {
+      years.push(year);
+    }
+    return years.reverse();
+  };
+
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
       try {
-        // Population data
         const populationResponse = await fetchData(
           "/public/getPopulationStats"
         );
@@ -170,99 +175,14 @@ export default function HomePage() {
           },
         ]);
 
-        // News data
         const newsResponse = await fetchData("/public/getAllBerita");
         setNews(Array.isArray(newsResponse.data) ? newsResponse.data : []);
 
-        // APBDes data
         const apbdesResponse = await fetchData("/public/getAllAPBDes");
-        console.log("APBDes Response:", apbdesResponse);
-
         const apbdesItems: APBDesItem[] = Array.isArray(apbdesResponse.data)
           ? apbdesResponse.data
           : [];
         setApbdesItems(apbdesItems);
-        console.log("APBDes Items:", apbdesItems);
-
-        if (apbdesItems.length > 0) {
-          // Calculate total
-          const totalDana = apbdesItems.reduce(
-            (sum, item) => sum + item.jumlah_dana,
-            0
-          );
-          setTotalApbdes(totalDana);
-          console.log("Total Dana:", totalDana);
-
-          // Group by jenis_apbd
-          const groupedData = apbdesItems.reduce((acc, item) => {
-            const jenis = item.jenis_apbd;
-            if (!acc[jenis]) {
-              acc[jenis] = 0;
-            }
-            acc[jenis] += item.jumlah_dana;
-            return acc;
-          }, {} as Record<string, number>);
-
-          console.log("Grouped Data:", groupedData);
-
-          // Create APBDes visualization data based on actual jenis_apbd from database
-          const categories = [
-            {
-              category: "Pendapatan & Belanja",
-              jenis: "Pendapatan & Belanja",
-              color: "bg-green-500",
-            },
-            { category: "Belanja", jenis: "Belanja", color: "bg-blue-500" },
-            {
-              category: "Pembangunan Desa",
-              jenis: "Pembangunan Desa",
-              color: "bg-purple-500",
-            },
-          ];
-
-          const updatedApbdesData = categories.map((cat) => {
-            const amount = groupedData[cat.jenis] || 0;
-            const percentage =
-              totalDana > 0 ? Math.round((amount / totalDana) * 100) : 0;
-            return {
-              category: cat.category,
-              amount: formatCurrency(amount),
-              percentage: percentage,
-              color: cat.color,
-            };
-          });
-
-          // Add "Lainnya" category for any other jenis_apbd not in the main categories
-          const mainCategories = categories.map((cat) => cat.jenis);
-          const otherAmount = Object.entries(groupedData)
-            .filter(([jenis]) => !mainCategories.includes(jenis))
-            .reduce((sum, [, amount]) => sum + amount, 0);
-
-          if (otherAmount > 0) {
-            const otherPercentage =
-              totalDana > 0 ? Math.round((otherAmount / totalDana) * 100) : 0;
-            updatedApbdesData.push({
-              category: "Lainnya",
-              amount: formatCurrency(otherAmount),
-              percentage: otherPercentage,
-              color: "bg-orange-500",
-            });
-          }
-
-          setApbdesData(
-            updatedApbdesData.filter((item) => item.percentage > 0)
-          );
-        } else {
-          console.log("No APBDes data found");
-          setApbdesData([
-            {
-              category: "Tidak ada data",
-              amount: "0",
-              percentage: 100,
-              color: "bg-gray-400",
-            },
-          ]);
-        }
       } catch (err) {
         console.error("Error loading data:", err);
         setError(`Gagal memuat data: ${err.message || "Terjadi kesalahan"}`);
@@ -273,7 +193,83 @@ export default function HomePage() {
     loadData();
   }, []);
 
-  // Typewriter effect with repeating animation
+  useEffect(() => {
+    const filteredItems = apbdesItems.filter(
+      (item) => item.tahun === selectedYear
+    );
+
+    if (filteredItems.length > 0) {
+      const totalDana = filteredItems.reduce(
+        (sum, item) => sum + item.jumlah_dana,
+        0
+      );
+      setTotalApbdes(totalDana);
+
+      const groupedData = filteredItems.reduce((acc, item) => {
+        const jenis = item.jenis_apbd;
+        if (!acc[jenis]) {
+          acc[jenis] = 0;
+        }
+        acc[jenis] += item.jumlah_dana;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const categories = [
+        {
+          category: "Pendapatan & Belanja",
+          jenis: "Pendapatan & Belanja",
+          color: "bg-green-500",
+        },
+        { category: "Belanja", jenis: "Belanja", color: "bg-blue-500" },
+        {
+          category: "Pembangunan Desa",
+          jenis: "Pembangunan Desa",
+          color: "bg-purple-500",
+        },
+      ];
+
+      const updatedApbdesData = categories.map((cat) => {
+        const amount = groupedData[cat.jenis] || 0;
+        const percentage =
+          totalDana > 0 ? Math.round((amount / totalDana) * 100) : 0;
+        return {
+          category: cat.category,
+          amount: formatCurrency(amount),
+          percentage: percentage,
+          color: cat.color,
+        };
+      });
+
+      const mainCategories = categories.map((cat) => cat.jenis);
+      const otherAmount = Object.entries(groupedData)
+        .filter(([jenis]) => !mainCategories.includes(jenis))
+        .reduce((sum, [, amount]) => sum + amount, 0);
+
+      if (otherAmount > 0) {
+        const otherPercentage =
+          totalDana > 0 ? Math.round((otherAmount / totalDana) * 100) : 0;
+        updatedApbdesData.push({
+          category: "Lainnya",
+          amount: formatCurrency(otherAmount),
+          percentage: otherPercentage,
+          color: "bg-orange-500",
+        });
+      }
+
+      setApbdesData(updatedApbdesData.filter((item) => item.percentage > 0));
+    } else {
+      setApbdesData([
+        {
+          category: "Tidak ada data",
+          amount: "0",
+          percentage: 100,
+          color: "bg-gray-400",
+        },
+      ]);
+      setTotalApbdes(0);
+    }
+  }, [apbdesItems, selectedYear]);
+
   useEffect(() => {
     if (currentIndex < title.length) {
       const typingTimeout = setTimeout(() => {
@@ -292,7 +288,6 @@ export default function HomePage() {
     }
   }, [currentIndex, title]);
 
-  // Slideshow effect for background images
   useEffect(() => {
     const slideshowTimeout = setTimeout(() => {
       setCurrentImageIndex((prev) => (prev + 1) % images.length);
@@ -301,7 +296,6 @@ export default function HomePage() {
     return () => clearTimeout(slideshowTimeout);
   }, [currentImageIndex, images.length]);
 
-  // Carousel navigation with animation
   const handleNextNews = () => {
     if (currentNewsIndex < news.length - itemsPerSlide) {
       setCurrentNewsIndex((prev) => prev + 1);
@@ -319,7 +313,6 @@ export default function HomePage() {
     currentNewsIndex + itemsPerSlide
   );
 
-  // Animation variants for news carousel
   const newsVariants = {
     enter: (direction: number) => {
       return {
@@ -343,7 +336,6 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
       <PublicHeader />
 
-      {/* Hero Section */}
       <section className="relative h-screen py-28 md:py-40 px-4 text-white overflow-hidden flex items-center justify-center">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000"
@@ -354,7 +346,6 @@ export default function HomePage() {
         ></div>
         <div className="absolute inset-0 bg-black/40"></div>
 
-        {/* Hyperspeed Effect */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="hyperspeed-lines"></div>
         </div>
@@ -368,33 +359,11 @@ export default function HomePage() {
             <p className="text-lg md:text-xl lg:text-2xl mb-8 text-blue-100 font-medium drop-shadow-md animate-slide-up animation-delay-200">
               Desa Modern dengan Teknologi Digital Terdepan
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up animation-delay-400">
-              <Link href="/profile">
-                <Button
-                  size="lg"
-                  className="bg-gradient-to-r from-[#073046]/80 to-[#0a4a66]/80 backdrop-blur-md text-white hover:bg-gradient-to-r hover:from-[#0a4a66] hover:to-[#073046] transform hover:scale-105 transition-all duration-300 shadow-lg border border-white/20 hover:shadow-xl hover:shadow-blue-500/20"
-                >
-                  Profil Desa
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="/lapak-public">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="bg-white/10 backdrop-blur-md text-white hover:bg-white/20 hover:text-white transform hover:scale-105 transition-all duration-300 shadow-lg border border-white/30 hover:shadow-xl hover:shadow-blue-500/20"
-                >
-                  Lapak Desa
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
           </div>
         </div>
         <div className="absolute -bottom-1 left-0 right-0 h-32 bg-gradient-to-t from-slate-50 to-transparent"></div>
       </section>
 
-      {/* Loading and Error States */}
       {isLoading && (
         <div className="text-center text-gray-600 animate-pulse py-12">
           Memuat...
@@ -408,7 +377,6 @@ export default function HomePage() {
 
       {!isLoading && !error && (
         <div className="container mx-auto px-4 py-12">
-          {/* Statistics Section */}
           <section className="mb-16">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-[#073046] mb-4">
@@ -446,7 +414,6 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* News Section with Animated Carousel */}
           <section className="mb-16">
             <div className="flex items-center justify-between mb-8">
               <div>
@@ -516,9 +483,11 @@ export default function HomePage() {
                                     "/placeholder.svg?height=200&width=300";
                                 }}
                               />
-                              {/* <Badge className="absolute top-3 left-3 bg-[#073046]">
-                                {article.kategori.kategori}
-                              </Badge> */}
+                              {article.sampul.length > 1 && (
+                                <Badge className="absolute top-2 right-2 bg-[#073046]">
+                                  {article.sampul.length} Gambar
+                                </Badge>
+                              )}
                             </div>
                             <CardContent className="p-6">
                               <h3 className="font-bold text-lg text-[#073046] mb-2 line-clamp-2">
@@ -530,9 +499,9 @@ export default function HomePage() {
                               <div className="flex items-center justify-between text-xs text-slate-500">
                                 <div className="flex items-center gap-1">
                                   <Calendar className="h-3 w-3" />
-                                  {new Date(article.createdAt).toLocaleDateString(
-                                    "id-ID"
-                                  )}
+                                  {new Date(
+                                    article.createdAt
+                                  ).toLocaleDateString("id-ID")}
                                 </div>
                               </div>
                             </CardContent>
@@ -556,7 +525,6 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* Enhanced Map Section */}
           <section className="mb-16">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-[#073046] mb-2">
@@ -568,7 +536,6 @@ export default function HomePage() {
             </div>
 
             <div className="relative rounded-xl overflow-hidden shadow-xl border border-slate-200 h-[500px]">
-              {/* Map Container with fallback */}
               <div className="absolute inset-0 bg-slate-100 flex items-center justify-center">
                 <div className="text-center p-6">
                   <MapPin className="h-12 w-12 mx-auto text-slate-400 mb-4" />
@@ -588,7 +555,6 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Embedded Google Maps Iframe - now larger */}
               <iframe
                 className="absolute inset-0 w-full h-full"
                 src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.563623576321!2d100.781125!3d-0.6833!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMMKwNDEnNTkuOSJTIDEwMMKwNDcnMDEuOSJF!5e0!3m2!1sen!2sid!4v1620000000000!5m2!1sen!2sid`}
@@ -597,7 +563,6 @@ export default function HomePage() {
                 title="Peta Lokasi Desa Silungkang Tigo"
               ></iframe>
 
-              {/* Enhanced Map Overlay with Info */}
               <div className="absolute bottom-6 left-6 right-6 bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg max-w-md border border-slate-200">
                 <h3 className="font-bold text-2xl text-[#073046] mb-2">
                   Desa Silungkang Tigo
@@ -628,24 +593,35 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* APBDes Section */}
           <section className="mb-16">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-[#073046] mb-2">
-                APBDes 2025
+                APBDes {selectedYear}
               </h2>
               <p className="text-slate-600">
                 Anggaran Pendapatan dan Belanja Desa
               </p>
+              <div className="mt-4">
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
+                  className="border border-slate-300 rounded-md p-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#073046]"
+                >
+                  {generateYearOptions().map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* APBDes Cards */}
               <Card className="border-0 shadow-lg">
                 <CardHeader className="bg-gradient-to-r from-[#073046] to-[#0a4a66] text-white">
                   <CardTitle className="flex items-center gap-2">
                     <DollarSign className="h-5 w-5" />
-                    APBDes 2024
+                    APBDes {selectedYear}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
@@ -685,7 +661,6 @@ export default function HomePage() {
                 </CardContent>
               </Card>
 
-              {/* APBDes Visualization */}
               <Card className="border-0 shadow-lg">
                 <CardHeader className="bg-gradient-to-r from-[#073046] to-[#0a4a66] text-white">
                   <CardTitle className="flex items-center gap-2">
@@ -697,7 +672,6 @@ export default function HomePage() {
                   <div className="h-64 flex items-center justify-center">
                     {totalApbdes > 0 ? (
                       <div className="relative w-48 h-48">
-                        {/* Pie Chart */}
                         <div className="relative w-full h-full">
                           <svg
                             viewBox="0 0 42 42"
@@ -769,7 +743,7 @@ export default function HomePage() {
                     ) : (
                       <div className="text-center text-slate-500">
                         <TrendingUp className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                        <p>Belum ada data APBDes</p>
+                        <p>Belum ada data APBDes untuk tahun {selectedYear}</p>
                       </div>
                     )}
                   </div>
@@ -791,7 +765,6 @@ export default function HomePage() {
           </section>
         </div>
       )}
-      {/* Footer Section */}
       <PublicFooter />
 
       <style jsx global>{`
@@ -830,7 +803,6 @@ export default function HomePage() {
           }
         }
 
-        /* Hyperspeed Effect */
         .hyperspeed-lines {
           position: absolute;
           top: 0;
@@ -884,7 +856,6 @@ export default function HomePage() {
           }
         }
 
-        /* Line clamp utilities */
         .line-clamp-2 {
           display: -webkit-box;
           -webkit-line-clamp: 2;

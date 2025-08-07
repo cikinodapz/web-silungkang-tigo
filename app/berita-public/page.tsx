@@ -19,7 +19,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PublicFooter } from "@/components/public-footer";
-import { htmlToText } from "html-to-text"; // Import html-to-text
+import { htmlToText } from "html-to-text";
 
 // Define interfaces
 interface Berita {
@@ -31,7 +31,7 @@ interface Berita {
     id: string;
     kategori: string;
   };
-  sampul?: string;
+  sampul: string[]; // Updated to string array
   createdAt: string;
   updatedAt: string;
 }
@@ -96,6 +96,13 @@ export default function BeritaPublicPage() {
   // Get unique categories from the news data
   const categories = ["Semua", ...kategoriList.map((k) => k.kategori)];
 
+  // Get image URL
+  function getSampulUrl(sampul: string[]) {
+    if (!sampul || sampul.length === 0) return "/placeholder.svg";
+    const filename = sampul[0].split("/").pop();
+    return `http://localhost:3000/public/getSampul/berita/${filename}`;
+  }
+
   // Get featured news (most recent)
   const featuredNews =
     beritaList.length > 0
@@ -108,9 +115,8 @@ export default function BeritaPublicPage() {
           author: "Admin Desa",
           category: beritaList[0].kategori.kategori,
           views: Math.floor(Math.random() * 1000) + 500,
-          image: beritaList[0].sampul
-            ? getSampulUrl(beritaList[0].sampul)
-            : "/placeholder.svg",
+          image: getSampulUrl(beritaList[0].sampul),
+          imageCount: beritaList[0].sampul.length, // Added to track number of images
         }
       : null;
 
@@ -123,7 +129,8 @@ export default function BeritaPublicPage() {
     author: "Admin Desa",
     category: news.kategori.kategori,
     views: Math.floor(Math.random() * 800) + 200,
-    image: news.sampul ? getSampulUrl(news.sampul) : "/placeholder.svg",
+    image: getSampulUrl(news.sampul),
+    imageCount: news.sampul.length, // Added to track number of images
   }));
 
   // Get popular news (sorted by views)
@@ -135,6 +142,7 @@ export default function BeritaPublicPage() {
       title: news.title,
       views: news.views,
       image: news.image,
+      imageCount: news.imageCount, // Added to track number of images
     }));
 
   // Generate archives based on creation dates
@@ -149,12 +157,6 @@ export default function BeritaPublicPage() {
       selectedCategory === "Semua" || news.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
-
-  // Get image URL
-  function getSampulUrl(sampul: string) {
-    const filename = sampul.split("/").pop();
-    return `http://localhost:3000/public/getSampul/berita/${filename}`;
-  }
 
   // Generate archives data
   function generateArchives(news: Berita[]) {
@@ -180,7 +182,6 @@ export default function BeritaPublicPage() {
       .slice(0, 5);
   }
 
-  // Rest of the component remains unchanged
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
@@ -290,6 +291,16 @@ export default function BeritaPublicPage() {
                           {featuredNews.category}
                         </Badge> */}
                       </motion.div>
+                      {featuredNews.imageCount > 1 && (
+                        <motion.div
+                          className="absolute top-4 right-4"
+                          whileHover={{ scale: 1.05 }}
+                        >
+                          <Badge className="bg-[#073046] hover:bg-[#0a4a66] transition-colors">
+                            {featuredNews.imageCount} Gambar
+                          </Badge>
+                        </motion.div>
+                      )}
                       <div className="absolute bottom-6 left-6 right-6 text-white">
                         <motion.h2
                           className="text-2xl md:text-3xl font-bold mb-3 leading-tight group-hover:text-blue-200 transition-colors"
@@ -421,6 +432,16 @@ export default function BeritaPublicPage() {
                                 {news.category}
                               </Badge> */}
                             </motion.div>
+                            {news.imageCount > 1 && (
+                              <motion.div
+                                className="absolute top-3 right-3"
+                                whileHover={{ scale: 1.05 }}
+                              >
+                                {/* <Badge className="bg-[#073046] hover:bg-[#0a4a66] transition-colors">
+                                  {news.imageCount} Gambar
+                                </Badge> */}
+                              </motion.div>
+                            )}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                           </div>
                           <CardContent className="p-6">
@@ -540,6 +561,11 @@ export default function BeritaPublicPage() {
                           <h4 className="font-semibold text-base text-[#073046] line-clamp-2 mb-1 hover:text-[#0a4a66] transition-colors">
                             {news.title}
                           </h4>
+                          {/* {news.imageCount > 1 && (
+                            <Badge className="bg-[#073046] hover:bg-[#0a4a66] transition-colors">
+                              {news.imageCount} Gambar
+                            </Badge>
+                          )} */}
                         </div>
                       </motion.div>
                     ))}

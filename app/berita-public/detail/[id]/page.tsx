@@ -21,7 +21,7 @@ interface Berita {
     id: string;
     kategori: string;
   };
-  sampul?: string;
+  sampul: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -39,6 +39,7 @@ export default function BeritaDetailPage() {
   const [selectedCategory, setSelectedCategory] = useState("Semua");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [activeImageIndex, setActiveImageIndex] = useState(0); // State for active image
   const router = useRouter();
   const params = useParams();
   const beritaId = params.id;
@@ -79,10 +80,19 @@ export default function BeritaDetailPage() {
   }, [beritaId]);
 
   // Get image URL
-  function getSampulUrl(sampul?: string) {
-    if (!sampul) return "/placeholder.svg";
-    const filename = sampul.split("/").pop();
+  function getSampulUrl(sampul: string[]) {
+    if (!sampul || sampul.length === 0) return "/placeholder.svg";
+    const filename = sampul[0].split("/").pop();
     return `http://localhost:3000/public/getSampul/berita/${filename}`;
+  }
+
+  // Get all image URLs for gallery
+  function getAllSampulUrls(sampul: string[]) {
+    if (!sampul || sampul.length === 0) return ["/placeholder.svg"];
+    return sampul.map((path) => {
+      const filename = path.split("/").pop();
+      return `http://localhost:3000/public/getSampul/berita/${filename}`;
+    });
   }
 
   // Get popular news
@@ -91,7 +101,8 @@ export default function BeritaDetailPage() {
       id: news.id,
       title: news.judul,
       views: Math.floor(Math.random() * 800) + 200,
-      image: news.sampul ? getSampulUrl(news.sampul) : "/placeholder.svg",
+      image: getSampulUrl(news.sampul),
+      imageCount: news.sampul.length,
     }))
     .sort((a, b) => b.views - a.views)
     .slice(0, 5);
@@ -179,6 +190,8 @@ export default function BeritaDetailPage() {
     );
   }
 
+  const imageUrls = getAllSampulUrls(berita.sampul);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
       <PublicHeader />
@@ -191,27 +204,68 @@ export default function BeritaDetailPage() {
               transition={{ delay: 0.3, duration: 0.6 }}
             >
               <Card className="border-0 shadow-lg overflow-hidden">
-                <div className="aspect-video relative">
-                  <motion.img
-                    src={getSampulUrl(berita.sampul)}
-                    alt={berita.judul}
-                    className="w-full h-full object-cover"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.8 }}
-                    onError={(e) => {
-                      e.currentTarget.src = "/placeholder.svg";
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
-                  <motion.div
-                    className="absolute top-4 left-4"
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    {/* <Badge className="bg-[#073046] hover:bg-[#0a4a66] transition-colors">
-                      {berita.kategori.kategori}
-                    </Badge> */}
-                  </motion.div>
+                <div className="relative">
+                  {/* Main Image */}
+                  <div className="aspect-video relative">
+                    <motion.img
+                      key={imageUrls[activeImageIndex]} // Key to trigger animation on image change
+                      src={imageUrls[activeImageIndex]}
+                      alt={`${berita.judul} - Image ${activeImageIndex + 1}`}
+                      className="w-full h-full object-cover rounded-t-lg"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5 }}
+                      onError={(e) => {
+                        e.currentTarget.src = "/placeholder.svg";
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+                    <motion.div
+                      className="absolute top-4 left-4"
+                      whileHover={{ scale: 1.05 }}
+                    >
+                      {/* <Badge className="bg-[#073046] hover:bg-[#0a4a66] transition-colors">
+                        {berita.kategori.kategori}
+                      </Badge> */}
+                    </motion.div>
+                    {imageUrls.length > 1 && (
+                      <motion.div
+                        className="absolute top-4 right-4"
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        <Badge className="bg-[#073046] hover:bg-[#0a4a66] transition-colors">
+                          {activeImageIndex + 1} / {imageUrls.length}
+                        </Badge>
+                      </motion.div>
+                    )}
+                  </div>
+                  {/* Thumbnail Gallery */}
+                  {imageUrls.length > 1 && (
+                    <div className="flex gap-2 p-4 overflow-x-auto">
+                      {imageUrls.map((url, index) => (
+                        <motion.div
+                          key={index}
+                          className={`w-16 h-16 flex-shrink-0 cursor-pointer rounded-md overflow-hidden border-2 ${
+                            activeImageIndex === index
+                              ? "border-[#073046]"
+                              : "border-transparent hover:border-[#073046]/50"
+                          }`}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setActiveImageIndex(index)}
+                        >
+                          <img
+                            src={url}
+                            alt={`${berita.judul} - Thumbnail ${index + 1}`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = "/placeholder.svg";
+                            }}
+                          />
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <CardContent className="p-6">
                   <motion.h1
@@ -304,6 +358,11 @@ export default function BeritaDetailPage() {
                           <h4 className="font-semibold text-base text-[#073046] line-clamp-2 mb-1 hover:text-[#0a4a66] transition-colors">
                             {news.title}
                           </h4>
+                          {/* {news.imageCount > 1 && (
+                            <Badge className="bg-[#073046] hover:bg-[#0a4a66] transition-colors">
+                              {news.imageCount} Gambar
+                            </Badge>
+                          )} */}
                         </div>
                       </motion.div>
                     ))}
