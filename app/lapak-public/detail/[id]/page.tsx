@@ -122,30 +122,6 @@ export default function UMKMDetailPublicPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
       <PublicHeader />
-      {/* <section className="relative py-20 px-4 bg-gradient-to-r from-[#073046] to-[#0a4a66] text-white overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
-        <div className="container mx-auto relative z-10">
-          <div className="max-w-3xl mx-auto text-center">
-            <motion.h1
-              className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              {umkm.nama_umkm}
-            </motion.h1>
-            <motion.p
-              className="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              Jelajahi produk unggulan dan dukung UMKM lokal Desa Silungkang Tigo.
-            </motion.p>
-          </div>
-        </div>
-      </section> */}
-
       <div className="container mx-auto px-4 py-16">
         <motion.section
           className="flex flex-col md:flex-row gap-8"
@@ -237,43 +213,42 @@ export default function UMKMDetailPublicPage() {
                     duration: 0.5,
                   }}
                   whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                  className="relative group"
                 >
-                  <Card className="border-0 shadow-md hover:shadow-lg transition-all duration-300 rounded-xl bg-white/95 overflow-hidden">
-                    <CardHeader className="p-0">
-                      <div className="relative h-48">
-                        <img
-                          src={getFotoUrl(produk.foto_produk, "produk")}
-                          alt={produk.nama_produk}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.src = "/placeholder.svg?height=400&width=600";
-                          }}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                      <CardTitle className="text-lg font-semibold text-[#073046] mb-2">
-                        {produk.nama_produk}
-                      </CardTitle>
-                      <p className="text-sm text-slate-600 mb-4 line-clamp-2">
-                        {cleanContent(produk.deskripsi_produk, 100)}
-                      </p>
-                      <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <Button
-                          variant="outline"
-                          className="w-full border-[#073046]/30 text-[#073046] hover:bg-[#073046] hover:text-white transition-all duration-300 rounded-lg text-base"
-                          onClick={() => window.open(produk.link_produk, "_blank")}
-                          aria-label={`Kunjungi link produk ${produk.nama_produk}`}
+                  <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl bg-white/95 overflow-hidden h-80">
+                    <div className="relative h-full w-full">
+                      <img
+                        src={getFotoUrl(produk.foto_produk, "produk")}
+                        alt={produk.nama_produk}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        onError={(e) => {
+                          e.currentTarget.src = "/placeholder.svg?height=400&width=600";
+                        }}
+                      />
+                      {/* Hover overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                        <CardTitle className="text-lg font-semibold text-white mb-2">
+                          {produk.nama_produk}
+                        </CardTitle>
+                        <p className="text-sm text-gray-200 mb-4 line-clamp-2">
+                          {cleanContent(produk.deskripsi_produk, 100)}
+                        </p>
+                        <motion.div
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
                         >
-                          <ExternalLink className="h-5 w-5 mr-2" />
-                          Lihat Produk
-                        </Button>
-                      </motion.div>
-                    </CardContent>
+                          <Button
+                            variant="outline"
+                            className="w-full bg-white/10 border-white/30 text-white hover:bg-white hover:text-[#073046] transition-all duration-300 rounded-lg text-base"
+                            onClick={() => window.open(produk.link_produk, "_blank")}
+                            aria-label={`Kunjungi link produk ${produk.nama_produk}`}
+                          >
+                            <ExternalLink className="h-5 w-5 mr-2" />
+                            Lihat Produk
+                          </Button>
+                        </motion.div>
+                      </div>
+                    </div>
                   </Card>
                 </motion.div>
               ))}
