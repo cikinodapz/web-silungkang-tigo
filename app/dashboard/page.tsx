@@ -30,7 +30,6 @@ import {
   ArrowRight,
   Activity,
   MapPin,
-  MoreHorizontal,
 } from "lucide-react";
 import { fetchData } from "@/lib/api";
 import {
@@ -102,6 +101,11 @@ type DashboardData = {
   };
 };
 
+type VisitorStats = {
+  totalVisitors: number;
+  totalVisits: number;
+};
+
 // Corrected ChartOptions type using Chart.js types
 const chartOptions: ChartOptions<"bar" | "doughnut"> = {
   responsive: true,
@@ -165,9 +169,8 @@ const chartOptions: ChartOptions<"bar" | "doughnut"> = {
 };
 
 export default function DashboardPage() {
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
-    null
-  );
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [visitorStats, setVisitorStats] = useState<VisitorStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -192,7 +195,29 @@ export default function DashboardPage() {
         setIsLoading(false);
       }
     };
+
+    const loadVisitorStats = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/kelola-kk/stats", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setVisitorStats({
+            totalVisitors: data.totalVisitors ?? 0,
+            totalVisits: data.totalVisits ?? 0,
+          });
+        } else {
+          console.error("Gagal memuat visitor stats:", data?.message || data);
+        }
+      } catch (e) {
+        console.error("Error fetch visitor stats:", e);
+      }
+    };
+
     loadDashboardData();
+    loadVisitorStats();
   }, []);
 
   // Fallback data to prevent chart errors
@@ -653,6 +678,50 @@ export default function DashboardPage() {
                     />
                   </div>
                 </div>
+
+                {/* Enhanced Visitor Stats Card */}
+                <Card className="group relative overflow-hidden border-0 bg-white/90 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 animate-in fade-in duration-700">
+                  <div className="absolute inset-0 bg-gradient-to-br from-pink-50 to-red-50 opacity-0 group-hover:opacity-10 transition-opacity duration-500" />
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-pink-600 to-red-600 shadow-lg">
+                        <Users className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-xl font-bold text-gray-900">
+                          Statistik Pengunjung
+                        </CardTitle>
+                        <CardDescription className="text-gray-600">
+                          Data pengunjung unik & total kunjungan
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="relative p-6 rounded-xl bg-gradient-to-r from-pink-50 to-red-50 shadow-inner group/item hover:scale-105 transition-transform duration-300">
+                      <div className="absolute inset-0 bg-gradient-to-br from-pink-600 to-red-600 opacity-0 group-hover/item:opacity-5 transition-opacity duration-500" />
+                      <p className="text-sm text-gray-600 mb-2 font-medium">
+                        Pengunjung Unik
+                      </p>
+                      <p className="text-3xl font-bold text-pink-700 group-hover/item:scale-110 transition-transform duration-300">
+                        {(visitorStats?.totalVisitors || 0).toLocaleString(
+                          "id-ID"
+                        )}
+                      </p>
+                    </div>
+                    <div className="relative p-6 rounded-xl bg-gradient-to-r from-teal-50 to-green-50 shadow-inner group/item hover:scale-105 transition-transform duration-300">
+                      <div className="absolute inset-0 bg-gradient-to-br from-teal-600 to-green-600 opacity-0 group-hover/item:opacity-5 transition-opacity duration-500" />
+                      <p className="text-sm text-gray-600 mb-2 font-medium">
+                        Total Kunjungan
+                      </p>
+                      <p className="text-3xl font-bold text-teal-700 group-hover/item:scale-110 transition-transform duration-300">
+                        {(visitorStats?.totalVisits || 0).toLocaleString(
+                          "id-ID"
+                        )}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             )}
           </main>

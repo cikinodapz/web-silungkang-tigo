@@ -16,6 +16,7 @@ import {
   ArrowRight,
   ChevronLeft,
   ChevronRight,
+  Eye,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -56,6 +57,15 @@ interface APBDesItem {
   updatedAt: string;
 }
 
+interface VisitorStats {
+  id: string;
+  ip_address: string;
+  user_agent: string;
+  visits: number;
+  first_visit: string;
+  last_visit: string;
+}
+
 const cleanContent = (html: string, maxLength: number) => {
   const text = htmlToText(html, {
     wordwrap: false,
@@ -84,6 +94,13 @@ const formatCurrency = (amount: number) => {
     return `${(amount / 1000).toFixed(1)} Ribu`;
   }
   return amount.toString();
+};
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleString("id-ID", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 };
 
 export default function HomePage() {
@@ -121,11 +138,12 @@ export default function HomePage() {
   ]);
   const [totalApbdes, setTotalApbdes] = useState(0);
   const [apbdesItems, setApbdesItems] = useState<APBDesItem[]>([]);
+  const [visitorStats, setVisitorStats] = useState<VisitorStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const title = "Selamat Datang di Desa Silungkang Tigo";
-  const images = ["/desa-silungkang-2.jpg", "/desa-silungkang-3.jpg"];
+  const images = ["/landing1.jpg", "/landing2.jpg", "/landing3.jpg"];
   const itemsPerSlide = 3;
 
   const mapCenter = { lat: -0.6833, lng: 100.7833 };
@@ -144,9 +162,8 @@ export default function HomePage() {
     const loadData = async () => {
       setIsLoading(true);
       try {
-        const populationResponse = await fetchData(
-          "/public/getPopulationStats"
-        );
+        // Fetch population stats
+        const populationResponse = await fetchData("/public/getPopulationStats");
         const populationData: PopulationStats = populationResponse.data || {};
         setStats([
           {
@@ -175,14 +192,20 @@ export default function HomePage() {
           },
         ]);
 
+        // Fetch news
         const newsResponse = await fetchData("/public/getAllBerita");
         setNews(Array.isArray(newsResponse.data) ? newsResponse.data : []);
 
+        // Fetch APBDes data
         const apbdesResponse = await fetchData("/public/getAllAPBDes");
         const apbdesItems: APBDesItem[] = Array.isArray(apbdesResponse.data)
           ? apbdesResponse.data
           : [];
         setApbdesItems(apbdesItems);
+
+        // Fetch visitor tracking data
+        const visitorResponse = await fetchData("/kelola-kk/track");
+        setVisitorStats(visitorResponse.data || null);
       } catch (err) {
         console.error("Error loading data:", err);
         setError(`Gagal memuat data: ${err.message || "Terjadi kesalahan"}`);
@@ -414,6 +437,75 @@ export default function HomePage() {
             </div>
           </section>
 
+          {visitorStats && (
+            <section className="mb-16">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl font-bold text-[#073046] mb-4">
+                  Statistik Pengunjung
+                </h2>
+                <p className="text-slate-600 max-w-2xl mx-auto">
+                  Informasi tentang kunjungan ke situs web Desa Silungkang Tigo
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-slate-600 mb-1">
+                          Total Kunjungan
+                        </p>
+                        <p className="text-3xl font-bold text-[#073046]">
+                          {visitorStats.visits}
+                        </p>
+                      </div>
+                      <div className="p-3 rounded-full bg-teal-500">
+                        <Eye className="h-6 w-6 text-white" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-slate-600 mb-1">
+                          Kunjungan Pertama
+                        </p>
+                        <p className="text-3xl font-bold text-[#073046]">
+                          {formatDate(visitorStats.first_visit)}
+                        </p>
+                      </div>
+                      <div className="p-3 rounded-full bg-indigo-500">
+                        <Calendar className="h-6 w-6 text-white" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-slate-600 mb-1">
+                          Kunjungan Terakhir
+                        </p>
+                        <p className="text-3xl font-bold text-[#073046]">
+                          {formatDate(visitorStats.last_visit)}
+                        </p>
+                      </div>
+                      <div className="p-3 rounded-full bg-orange-500">
+                        <Clock className="h-6 w-6 text-white" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </section>
+          )}
+
           <section className="mb-16">
             <div className="flex items-center justify-between mb-8">
               <div>
@@ -483,11 +575,6 @@ export default function HomePage() {
                                     "/placeholder.svg?height=200&width=300";
                                 }}
                               />
-                              {/* {article.sampul.length > 1 && (
-                                <Badge className="absolute top-2 right-2 bg-[#073046]">
-                                  {article.sampul.length} Gambar
-                                </Badge>
-                              )} */}
                             </div>
                             <CardContent className="p-6">
                               <h3 className="font-bold text-lg text-[#073046] mb-2 line-clamp-2">
