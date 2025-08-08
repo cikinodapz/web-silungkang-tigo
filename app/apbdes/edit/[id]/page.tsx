@@ -52,9 +52,9 @@ export default function EditAPBDesPage() {
   const id = params.id as string;
 
   const jenisApbdOptions = [
-    "Pendapatan & Belanja",
+    "Pendapatan",
     "Belanja",
-    "Pembangunan Desa",
+    "Pembiayaan",
   ];
 
   useEffect(() => {

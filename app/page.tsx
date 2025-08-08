@@ -105,14 +105,14 @@ export default function HomePage() {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [apbdesData, setApbdesData] = useState([
     {
-      category: "Pendapatan & Belanja",
+      category: "Pendapatan",
       amount: "0",
       percentage: 0,
       color: "bg-green-500",
     },
     { category: "Belanja", amount: "0", percentage: 0, color: "bg-blue-500" },
     {
-      category: "Pembangunan Desa",
+      category: "Pembiayaan",
       amount: "0",
       percentage: 0,
       color: "bg-purple-500",
@@ -216,14 +216,14 @@ export default function HomePage() {
 
       const categories = [
         {
-          category: "Pendapatan & Belanja",
-          jenis: "Pendapatan & Belanja",
+          category: "Pendapatan",
+          jenis: "Pendapatan",
           color: "bg-green-500",
         },
         { category: "Belanja", jenis: "Belanja", color: "bg-blue-500" },
         {
-          category: "Pembangunan Desa",
-          jenis: "Pembangunan Desa",
+          category: "Pembiayaan",
+          jenis: "Pembiayaan",
           color: "bg-purple-500",
         },
       ];

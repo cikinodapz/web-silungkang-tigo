@@ -1,584 +1,430 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, Search, FileText, Download, Calendar, User, Scale, BookOpen, Eye, Filter } from "lucide-react"
-import Link from "next/link"
+import { useState, useEffect } from "react";
+import { PublicHeader } from "@/components/public-header";
+import { PublicFooter } from "@/components/public-footer";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Search,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  ArrowUpDown,
+} from "lucide-react";
+import { fetchData } from "@/lib/api";
+import { motion, AnimatePresence } from "framer-motion";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+interface ProdukHukum {
+  id: string;
+  nama_produk_hukum: string;
+  file_pendukung: string;
+  kategoriId: string;
+  createdAt: string;
+  updatedAt: string;
+  kategori: {
+    id: string;
+    kategori: string;
+  };
+}
+
+interface SortConfig {
+  key: keyof ProdukHukum | "kategori.kategori";
+  direction: "asc" | "desc";
+}
+
+const getFileUrl = (filePath: string) => {
+  const filename = filePath.split("/").pop();
+  return `http://localhost:3000/public/getFileProdukHukum/produkhukum/${filename}`;
+};
 
 export default function ProdukHukumPublicPage() {
-  const dokumenHukum = [
-    {
-      id: 1,
-      nomor: "001/PERDES/2024",
-      judul: "Peraturan Desa tentang Anggaran Pendapatan dan Belanja Desa Tahun 2024",
-      jenis: "perdes",
-      tanggalTerbit: "2024-01-15",
-      status: "berlaku",
-      penerbit: "Kepala Desa",
-      kategori: "Keuangan",
-      ringkasan: "Mengatur tentang APBD Desa untuk tahun anggaran 2024 dengan total anggaran 1.35 miliar rupiah",
-      downloads: 245,
-      ukuranFile: "2.3 MB",
-    },
-    {
-      id: 2,
-      nomor: "002/PERDES/2024",
-      judul: "Peraturan Desa tentang Pengelolaan Sampah",
-      jenis: "perdes",
-      tanggalTerbit: "2024-01-10",
-      status: "berlaku",
-      penerbit: "Kepala Desa",
-      kategori: "Lingkungan",
-      ringkasan: "Mengatur tata cara pengelolaan sampah di wilayah desa untuk menjaga kebersihan lingkungan",
-      downloads: 189,
-      ukuranFile: "1.8 MB",
-    },
-    {
-      id: 3,
-      nomor: "001/SK-KADES/2024",
-      judul: "Surat Keputusan tentang Pembentukan Tim Pelaksana Program Desa",
-      jenis: "sk",
-      tanggalTerbit: "2024-01-05",
-      status: "berlaku",
-      penerbit: "Kepala Desa",
-      kategori: "Organisasi",
-      ringkasan: "Pembentukan tim pelaksana untuk berbagai program pembangunan desa tahun 2024",
-      downloads: 156,
-      ukuranFile: "1.2 MB",
-    },
-    {
-      id: 4,
-      nomor: "001/PERKADES/2023",
-      judul: "Peraturan Kepala Desa tentang Tata Tertib Rapat Desa",
-      jenis: "perkades",
-      tanggalTerbit: "2023-12-20",
-      status: "berlaku",
-      penerbit: "Kepala Desa",
-      kategori: "Pemerintahan",
-      ringkasan: "Mengatur tata tertib pelaksanaan rapat desa dan musyawarah desa",
-      downloads: 134,
-      ukuranFile: "1.5 MB",
-    },
-    {
-      id: 5,
-      nomor: "003/PERDES/2023",
-      judul: "Peraturan Desa tentang Retribusi Pasar Desa",
-      jenis: "perdes",
-      tanggalTerbit: "2023-11-15",
-      status: "dicabut",
-      penerbit: "Kepala Desa",
-      kategori: "Keuangan",
-      ringkasan: "Mengatur tarif retribusi pasar desa (sudah dicabut dan diganti dengan peraturan baru)",
-      downloads: 89,
-      ukuranFile: "1.1 MB",
-    },
-    {
-      id: 6,
-      nomor: "002/SK-KADES/2023",
-      judul: "Surat Keputusan tentang Penetapan Batas Wilayah Desa",
-      jenis: "sk",
-      tanggalTerbit: "2023-10-10",
-      status: "berlaku",
-      penerbit: "Kepala Desa",
-      kategori: "Wilayah",
-      ringkasan: "Penetapan batas wilayah desa berdasarkan hasil survei dan pemetaan",
-      downloads: 167,
-      ukuranFile: "3.2 MB",
-    },
-  ]
+  const [produkHukumList, setProdukHukumList] = useState<ProdukHukum[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("Semua");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: "createdAt",
+    direction: "desc",
+  });
+  const itemsPerPage = 10;
 
-  const kategoriList = ["Semua", "Keuangan", "Lingkungan", "Organisasi", "Pemerintahan", "Wilayah"]
+  useEffect(() => {
+    const loadProdukHukum = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetchData("/public/getAllProdukHukum");
+        const data = Array.isArray(response.data) ? response.data : [];
+        setProdukHukumList(data);
+      } catch (err: any) {
+        setError(`Gagal memuat data: ${err.message || "Terjadi kesalahan"}`);
+        console.error("Fetch error:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadProdukHukum();
+  }, []);
 
-  const getJenisColor = (jenis: string) => {
-    switch (jenis) {
-      case "perdes":
-        return "bg-blue-100 text-blue-700"
-      case "sk":
-        return "bg-green-100 text-green-700"
-      case "perkades":
-        return "bg-purple-100 text-purple-700"
-      case "keputusan":
-        return "bg-orange-100 text-orange-700"
-      default:
-        return "bg-slate-100 text-slate-700"
+  const categories = [
+    "Semua",
+    ...new Set(produkHukumList.map((item) => item.kategori.kategori)),
+  ];
+
+  const handleSort = (key: keyof ProdukHukum | "kategori.kategori") => {
+    setSortConfig((prev) => ({
+      key,
+      direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
+    }));
+  };
+
+  const sortedRecords = [...produkHukumList].sort((a, b) => {
+    const direction = sortConfig.direction === "asc" ? 1 : -1;
+    if (sortConfig.key === "kategori.kategori") {
+      const aValue = a.kategori.kategori || "";
+      const bValue = b.kategori.kategori || "";
+      return aValue.localeCompare(bValue) * direction;
     }
+    const aValue = a[sortConfig.key] || "";
+    const bValue = b[sortConfig.key] || "";
+    if (sortConfig.key === "createdAt") {
+      return (
+        (new Date(aValue).getTime() - new Date(bValue).getTime()) * direction
+      );
+    }
+    return aValue.toString().localeCompare(bValue.toString()) * direction;
+  });
+
+  const filteredRecords = sortedRecords.filter(
+    (record) =>
+      record.nama_produk_hukum
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) &&
+      (selectedCategory === "Semua" ||
+        record.kategori.kategori === selectedCategory)
+  );
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredRecords.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
+        <PublicHeader />
+        <div className="container mx-auto px-4 py-16">
+          <Skeleton className="h-20 w-3/4 mx-auto mb-8 rounded-xl" />
+          <Skeleton className="h-10 w-4/5 mx-auto mb-12 rounded-lg" />
+          <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+            <Skeleton className="h-12 w-full md:w-1/3 rounded-lg" />
+            <Skeleton className="h-12 w-full md:w-1/4 rounded-lg" />
+          </div>
+          <div className="rounded-xl border bg-white/95 shadow-sm">
+            <Skeleton className="h-12 w-full" />
+            <div className="divide-y">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex p-4 gap-4">
+                  <Skeleton className="h-10 w-1/3" />
+                  <Skeleton className="h-10 w-1/4" />
+                  <Skeleton className="h-10 w-1/4" />
+                  <Skeleton className="h-10 w-1/6" />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="flex justify-between items-center mt-10">
+            <Skeleton className="h-12 w-36 rounded-md" />
+            <Skeleton className="h-6 w-28 rounded-md" />
+            <Skeleton className="h-12 w-36 rounded-md" />
+          </div>
+        </div>
+        <PublicFooter />
+      </div>
+    );
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "berlaku":
-        return "bg-emerald-100 text-emerald-700"
-      case "draft":
-        return "bg-yellow-100 text-yellow-700"
-      case "dicabut":
-        return "bg-red-100 text-red-700"
-      case "direvisi":
-        return "bg-orange-100 text-orange-700"
-      default:
-        return "bg-slate-100 text-slate-700"
-    }
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
+        <PublicHeader />
+        <motion.div
+          className="container mx-auto px-4 py-16 text-center text-red-600 font-semibold"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {error}
+        </motion.div>
+        <PublicFooter />
+      </div>
+    );
   }
-
-  const getJenisText = (jenis: string) => {
-    switch (jenis) {
-      case "perdes":
-        return "Peraturan Desa"
-      case "sk":
-        return "Surat Keputusan"
-      case "perkades":
-        return "Peraturan Kepala Desa"
-      case "keputusan":
-        return "Keputusan"
-      default:
-        return jenis.toUpperCase()
-    }
-  }
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "berlaku":
-        return "Berlaku"
-      case "draft":
-        return "Draft"
-      case "dicabut":
-        return "Dicabut"
-      case "direvisi":
-        return "Direvisi"
-      default:
-        return status
-    }
-  }
-
-  const dokumenTerpopuler = dokumenHukum
-    .sort((a, b) => b.downloads - a.downloads)
-    .slice(0, 5)
-    .map((doc, index) => ({ ...doc, rank: index + 1 }))
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-cyan-50/50">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-slate-200/60 bg-white/80 backdrop-blur-xl">
-        <div className="container mx-auto px-6">
-          <div className="flex h-16 items-center justify-between">
-            <Button variant="ghost" asChild className="text-slate-600 hover:text-[#073046]">
-              <Link href="/">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Kembali ke Beranda
-              </Link>
-            </Button>
-
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-[#073046] to-[#0a4a66] text-white">
-                <Scale className="h-4 w-4" />
-              </div>
-              <span className="font-semibold text-[#073046]">Produk Hukum Desa Silungkang Tigo</span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
+      <PublicHeader />
+      <div className="container mx-auto px-4 py-16">
+        {/* Filter Section */}
+        <section className="mb-12">
+          <motion.div
+            className="flex flex-col md:flex-row justify-between items-center gap-6 bg-white/80 p-6 rounded-xl shadow-sm"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="relative w-full md:w-2/5">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+              <Input
+                placeholder="Cari produk hukum..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 border-[#073046]/20 focus:border-[#073046] focus:ring-[#073046]/30 rounded-lg shadow-sm transition-all duration-300 text-base"
+                aria-label="Pencarian produk hukum"
+              />
             </div>
-
-            <Button asChild className="bg-gradient-to-r from-[#073046] to-[#0a4a66] hover:from-[#0a4a66] to-[#0d5a7a]">
-              <Link href="/login">
-                <User className="h-4 w-4 mr-2" />
-                Login Admin
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-6 py-8">
-        {/* Hero Section */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-[#073046] to-[#0a4a66] bg-clip-text text-transparent mb-4">
-            Produk Hukum Desa
-          </h1>
-          <p className="text-slate-600 max-w-2xl mx-auto">
-            Akses dokumen hukum dan peraturan desa secara transparan. Semua peraturan yang berlaku di Desa Silungkang
-            Tigo dapat diunduh dan dipelajari oleh masyarakat.
-          </p>
-        </div>
-
-        {/* Search & Filter */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
-            <Input placeholder="Cari dokumen hukum..." className="pl-10" />
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            {kategoriList.map((kategori) => (
-              <Button key={kategori} variant="outline" size="sm" className="hover:bg-[#073046]/10 bg-transparent">
-                {kategori}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            <Tabs defaultValue="semua" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4 bg-white/50 backdrop-blur-sm">
-                <TabsTrigger value="semua" className="data-[state=active]:bg-[#073046] data-[state=active]:text-white">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Semua
-                </TabsTrigger>
-                <TabsTrigger value="perdes" className="data-[state=active]:bg-[#073046] data-[state=active]:text-white">
-                  <Scale className="h-4 w-4 mr-2" />
-                  Perdes
-                </TabsTrigger>
-                <TabsTrigger value="sk" className="data-[state=active]:bg-[#073046] data-[state=active]:text-white">
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  SK
-                </TabsTrigger>
-                <TabsTrigger
-                  value="perkades"
-                  className="data-[state=active]:bg-[#073046] data-[state=active]:text-white"
+            <div className="w-full md:w-1/4">
+              <Select
+                value={selectedCategory}
+                onValueChange={setSelectedCategory}
+              >
+                <SelectTrigger
+                  className="border-[#073046]/20 focus:border-[#073046] focus:ring-[#073046]/30 rounded-lg shadow-sm transition-all duration-300"
+                  aria-label="Filter berdasarkan kategori"
                 >
-                  <FileText className="h-4 w-4 mr-2" />
-                  Perkades
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="semua" className="space-y-4">
-                {dokumenHukum.map((dokumen) => (
-                  <Card
-                    key={dokumen.id}
-                    className="border-0 bg-gradient-to-r from-white to-slate-50/50 shadow-lg hover:shadow-xl transition-all duration-300"
-                  >
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <Badge className={getJenisColor(dokumen.jenis)}>{getJenisText(dokumen.jenis)}</Badge>
-                            <Badge className={getStatusColor(dokumen.status)}>{getStatusText(dokumen.status)}</Badge>
-                            <span className="text-sm text-slate-500">#{dokumen.nomor}</span>
-                          </div>
-                          <h3 className="text-lg font-semibold text-[#073046] mb-2 hover:text-[#0a4a66] transition-colors">
-                            {dokumen.judul}
-                          </h3>
-                          <p className="text-slate-600 text-sm mb-3">{dokumen.ringkasan}</p>
-                          <div className="flex items-center gap-4 text-xs text-slate-500">
-                            <span className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              {dokumen.tanggalTerbit}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <User className="h-3 w-3" />
-                              {dokumen.penerbit}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Download className="h-3 w-3" />
-                              {dokumen.downloads} unduhan
-                            </span>
-                            <span>{dokumen.ukuranFile}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          className="bg-gradient-to-r from-[#073046] to-[#0a4a66] hover:from-[#0a4a66] to-[#0d5a7a]"
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          Unduh PDF
-                        </Button>
-                        <Button variant="outline" size="sm" className="hover:bg-[#073046]/10 bg-transparent">
-                          <Eye className="h-4 w-4 mr-2" />
-                          Lihat Detail
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </TabsContent>
-
-              <TabsContent value="perdes" className="space-y-4">
-                {dokumenHukum
-                  .filter((d) => d.jenis === "perdes")
-                  .map((dokumen) => (
-                    <Card
-                      key={dokumen.id}
-                      className="border-0 bg-gradient-to-r from-white to-slate-50/50 shadow-lg hover:shadow-xl transition-all duration-300"
-                    >
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <Badge className={getStatusColor(dokumen.status)}>{getStatusText(dokumen.status)}</Badge>
-                              <span className="text-sm text-slate-500">#{dokumen.nomor}</span>
-                            </div>
-                            <h3 className="text-lg font-semibold text-[#073046] mb-2">{dokumen.judul}</h3>
-                            <p className="text-slate-600 text-sm mb-3">{dokumen.ringkasan}</p>
-                            <div className="flex items-center gap-4 text-xs text-slate-500">
-                              <span className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                {dokumen.tanggalTerbit}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Download className="h-3 w-3" />
-                                {dokumen.downloads} unduhan
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            className="bg-gradient-to-r from-[#073046] to-[#0a4a66] hover:from-[#0a4a66] to-[#0d5a7a]"
-                          >
-                            <Download className="h-4 w-4 mr-2" />
-                            Unduh PDF
-                          </Button>
-                          <Button variant="outline" size="sm" className="hover:bg-[#073046]/10 bg-transparent">
-                            <Eye className="h-4 w-4 mr-2" />
-                            Lihat Detail
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
+                  <SelectValue placeholder="Pilih Kategori" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category} (
+                      {category === "Semua"
+                        ? produkHukumList.length
+                        : produkHukumList.filter(
+                            (item) => item.kategori.kategori === category
+                          ).length}
+                      )
+                    </SelectItem>
                   ))}
-              </TabsContent>
-
-              <TabsContent value="sk" className="space-y-4">
-                {dokumenHukum
-                  .filter((d) => d.jenis === "sk")
-                  .map((dokumen) => (
-                    <Card
-                      key={dokumen.id}
-                      className="border-0 bg-gradient-to-r from-white to-slate-50/50 shadow-lg hover:shadow-xl transition-all duration-300"
-                    >
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <Badge className={getStatusColor(dokumen.status)}>{getStatusText(dokumen.status)}</Badge>
-                              <span className="text-sm text-slate-500">#{dokumen.nomor}</span>
-                            </div>
-                            <h3 className="text-lg font-semibold text-[#073046] mb-2">{dokumen.judul}</h3>
-                            <p className="text-slate-600 text-sm mb-3">{dokumen.ringkasan}</p>
-                            <div className="flex items-center gap-4 text-xs text-slate-500">
-                              <span className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                {dokumen.tanggalTerbit}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Download className="h-3 w-3" />
-                                {dokumen.downloads} unduhan
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            className="bg-gradient-to-r from-[#073046] to-[#0a4a66] hover:from-[#0a4a66] to-[#0d5a7a]"
-                          >
-                            <Download className="h-4 w-4 mr-2" />
-                            Unduh PDF
-                          </Button>
-                          <Button variant="outline" size="sm" className="hover:bg-[#073046]/10 bg-transparent">
-                            <Eye className="h-4 w-4 mr-2" />
-                            Lihat Detail
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-              </TabsContent>
-
-              <TabsContent value="perkades" className="space-y-4">
-                {dokumenHukum
-                  .filter((d) => d.jenis === "perkades")
-                  .map((dokumen) => (
-                    <Card
-                      key={dokumen.id}
-                      className="border-0 bg-gradient-to-r from-white to-slate-50/50 shadow-lg hover:shadow-xl transition-all duration-300"
-                    >
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <Badge className={getStatusColor(dokumen.status)}>{getStatusText(dokumen.status)}</Badge>
-                              <span className="text-sm text-slate-500">#{dokumen.nomor}</span>
-                            </div>
-                            <h3 className="text-lg font-semibold text-[#073046] mb-2">{dokumen.judul}</h3>
-                            <p className="text-slate-600 text-sm mb-3">{dokumen.ringkasan}</p>
-                            <div className="flex items-center gap-4 text-xs text-slate-500">
-                              <span className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                {dokumen.tanggalTerbit}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Download className="h-3 w-3" />
-                                {dokumen.downloads} unduhan
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            className="bg-gradient-to-r from-[#073046] to-[#0a4a66] hover:from-[#0a4a66] to-[#0d5a7a]"
-                          >
-                            <Download className="h-4 w-4 mr-2" />
-                            Unduh PDF
-                          </Button>
-                          <Button variant="outline" size="sm" className="hover:bg-[#073046]/10 bg-transparent">
-                            <Eye className="h-4 w-4 mr-2" />
-                            Lihat Detail
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-              </TabsContent>
-            </Tabs>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Stats */}
-            <Card className="border-0 bg-gradient-to-br from-white to-blue-50/50 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-[#073046] flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Statistik Dokumen
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center p-3 bg-white/50 rounded-lg">
-                    <span className="text-slate-600">Total Dokumen</span>
-                    <span className="font-bold text-[#073046]">{dokumenHukum.length}</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-white/50 rounded-lg">
-                    <span className="text-slate-600">Berlaku</span>
-                    <span className="font-bold text-emerald-600">
-                      {dokumenHukum.filter((d) => d.status === "berlaku").length}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-white/50 rounded-lg">
-                    <span className="text-slate-600">Total Unduhan</span>
-                    <span className="font-bold text-[#073046]">
-                      {dokumenHukum.reduce((total, doc) => total + doc.downloads, 0)}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Dokumen Terpopuler */}
-            <Card className="border-0 bg-gradient-to-br from-white to-emerald-50/50 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-[#073046] flex items-center gap-2">
-                  <Download className="h-5 w-5" />
-                  Paling Banyak Diunduh
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {dokumenTerpopuler.map((dokumen) => (
-                    <div key={dokumen.id} className="flex gap-3 p-3 rounded-lg hover:bg-white/50 transition-colors">
-                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-r from-[#073046] to-[#0a4a66] text-white flex items-center justify-center text-xs font-bold">
-                        {dokumen.rank}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-[#073046] text-sm line-clamp-2 mb-1">{dokumen.judul}</h4>
-                        <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <span className="flex items-center gap-1">
-                            <Download className="h-3 w-3" />
-                            {dokumen.downloads}
-                          </span>
-                          <Badge className={getJenisColor(dokumen.jenis)} variant="outline">
-                            {getJenisText(dokumen.jenis)}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Kategori */}
-            <Card className="border-0 bg-gradient-to-br from-white to-purple-50/50 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-[#073046] flex items-center gap-2">
-                  <Filter className="h-5 w-5" />
-                  Kategori Dokumen
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {kategoriList.slice(1).map((kategori) => {
-                    const count = dokumenHukum.filter((doc) => doc.kategori === kategori).length
-                    return (
-                      <div
-                        key={kategori}
-                        className="flex items-center justify-between p-2 rounded-lg hover:bg-white/50 transition-colors cursor-pointer"
-                      >
-                        <span className="text-slate-700">{kategori}</span>
-                        <Badge variant="outline" className="text-xs">
-                          {count}
-                        </Badge>
-                      </div>
-                    )
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Info Section */}
-        <Card className="border-0 bg-gradient-to-r from-white to-slate-50/50 shadow-lg mt-8">
-          <CardHeader>
-            <CardTitle className="text-[#073046] text-center">Tentang Produk Hukum Desa</CardTitle>
-            <CardDescription className="text-center">
-              Informasi penting mengenai akses dan penggunaan dokumen hukum desa
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div>
-                <h3 className="font-semibold text-[#073046] mb-3">Hak Akses Masyarakat</h3>
-                <ul className="space-y-2 text-sm text-slate-600">
-                  <li className="flex items-start gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[#073046] mt-2 flex-shrink-0"></div>
-                    <span>Semua dokumen dapat diakses dan diunduh secara gratis</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[#073046] mt-2 flex-shrink-0"></div>
-                    <span>Tidak diperlukan registrasi untuk mengunduh dokumen</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[#073046] mt-2 flex-shrink-0"></div>
-                    <span>Dokumen tersedia dalam format PDF yang mudah dibaca</span>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold text-[#073046] mb-3">Informasi Kontak</h3>
-                <ul className="space-y-2 text-sm text-slate-600">
-                  <li className="flex items-start gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[#073046] mt-2 flex-shrink-0"></div>
-                    <span>Untuk pertanyaan dokumen hubungi: +62 754 123456</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[#073046] mt-2 flex-shrink-0"></div>
-                    <span>Email: hukum@silungkangtigo.desa.id</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[#073046] mt-2 flex-shrink-0"></div>
-                    <span>Kunjungi kantor desa untuk konsultasi langsung</span>
-                  </li>
-                </ul>
-              </div>
+                </SelectContent>
+              </Select>
             </div>
-          </CardContent>
-        </Card>
-      </main>
+          </motion.div>
+        </section>
+
+        {/* Produk Hukum Table */}
+        <section>
+          <AnimatePresence mode="wait">
+            {currentItems.length > 0 ? (
+              <motion.div
+                className="rounded-xl border bg-white/95 shadow-sm overflow-x-auto"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+                key="produk-hukum-table"
+              >
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-[#073046]/5 hover:bg-[#073046]/10">
+                      <TableHead className="w-2/5">
+                        <Button
+                          variant="ghost"
+                          onClick={() => handleSort("nama_produk_hukum")}
+                          className="flex items-center gap-2 text-[#073046] font-semibold"
+                          aria-label="Urutkan berdasarkan nama produk hukum"
+                        >
+                          Nama Produk Hukum
+                          <ArrowUpDown className="h-4 w-4" />
+                        </Button>
+                      </TableHead>
+                      <TableHead className="w-1/4">
+                        <Button
+                          variant="ghost"
+                          onClick={() => handleSort("kategori.kategori")}
+                          className="flex items-center gap-2 text-[#073046] font-semibold"
+                          aria-label="Urutkan berdasarkan kategori"
+                        >
+                          Kategori
+                          <ArrowUpDown className="h-4 w-4" />
+                        </Button>
+                      </TableHead>
+                      <TableHead className="w-1/4">
+                        <Button
+                          variant="ghost"
+                          onClick={() => handleSort("createdAt")}
+                          className="flex items-center gap-2 text-[#073046] font-semibold"
+                          aria-label="Urutkan berdasarkan tanggal dibuat"
+                        >
+                          Tanggal Dibuat
+                          <ArrowUpDown className="h-4 w-4" />
+                        </Button>
+                      </TableHead>
+                      <TableHead className="w-1/6 text-center">Aksi</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {currentItems.map((produk, index) => (
+                      <motion.tr
+                        key={produk.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05, duration: 0.3 }}
+                        className="hover:bg-[#073046]/5"
+                      >
+                        <TableCell className="font-medium text-[#073046]">
+                          {produk.nama_produk_hukum}
+                        </TableCell>
+                        <TableCell>
+                          <span className="inline-block px-2 py-1 rounded-md text-sm text-[#073046] bg-[#073046]/10 border border-[#073046]/20">
+                            {produk.kategori.kategori}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-slate-600">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4" />
+                            {new Date(produk.createdAt).toLocaleDateString(
+                              "id-ID",
+                              {
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric",
+                              }
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              window.open(
+                                getFileUrl(produk.file_pendukung),
+                                "_blank"
+                              )
+                            }
+                            className="border-[#073046]/30 text-[#073046] hover:bg-[#073046] hover:text-white transition-all duration-300"
+                            aria-label={`Lihat dokumen ${produk.nama_produk_hukum}`}
+                          >
+                            <FileText className="h-4 w-4 mr-2" />
+                            Lihat
+                          </Button>
+                        </TableCell>
+                      </motion.tr>
+                    ))}
+                  </TableBody>
+                </Table>
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+                key="no-results"
+              >
+                <div className="rounded-xl border bg-white/95 shadow-sm p-16 text-center">
+                  <motion.div
+                    className="text-slate-400 mb-6"
+                    animate={{
+                      rotate: [0, 10, -10, 0],
+                      y: [0, -5, 0],
+                    }}
+                    transition={{ repeat: Infinity, duration: 2 }}
+                  >
+                    <Search className="h-16 w-16 mx-auto" />
+                  </motion.div>
+                  <h3 className="text-xl font-semibold text-[#073046] mb-2">
+                    Tidak ada produk hukum ditemukan
+                  </h3>
+                  <p className="text-slate-500 text-sm">
+                    Coba ubah kata kunci pencarian atau kategori
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {totalPages > 1 && (
+            <motion.div
+              className="flex justify-between items-center mt-12"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.6 }}
+            >
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button
+                  variant="default"
+                  size="lg"
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                  className={`bg-gradient-to-r from-[#073046] to-[#0a4a66] hover:from-[#0a4a66] hover:to-[#073046] shadow-md hover:shadow-lg transition-all duration-300 rounded-lg ${
+                    currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                  aria-label="Halaman sebelumnya"
+                >
+                  <ChevronLeft className="h-5 w-5 mr-2" />
+                  Sebelumnya
+                </Button>
+              </motion.div>
+              <span className="text-base font-medium text-[#073046]">
+                Halaman {currentPage} dari {totalPages}
+              </span>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button
+                  variant="default"
+                  size="lg"
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className={`bg-gradient-to-r from-[#073046] to-[#0a4a66] hover:from-[#0a4a66] hover:to-[#073046] shadow-md hover:shadow-lg transition-all duration-300 rounded-lg ${
+                    currentPage === totalPages
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
+                  aria-label="Halaman berikutnya"
+                >
+                  Berikutnya
+                  <ChevronRight className="h-5 w-5 ml-2" />
+                </Button>
+              </motion.div>
+            </motion.div>
+          )}
+        </section>
+      </div>
+      <PublicFooter />
     </div>
-  )
+  );
 }

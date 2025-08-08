@@ -41,9 +41,9 @@ export default function TambahAPBDesPage() {
   const router = useRouter();
 
   const jenisApbdOptions = [
-    "Pendapatan & Belanja",
+    "Pendapatan",
     "Belanja",
-    "Pembangunan Desa",
+    "Pembiayaan",
   ];
 
   const handleChange = (
