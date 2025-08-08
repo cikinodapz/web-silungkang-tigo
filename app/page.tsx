@@ -483,11 +483,11 @@ export default function HomePage() {
                                     "/placeholder.svg?height=200&width=300";
                                 }}
                               />
-                              {article.sampul.length > 1 && (
+                              {/* {article.sampul.length > 1 && (
                                 <Badge className="absolute top-2 right-2 bg-[#073046]">
                                   {article.sampul.length} Gambar
                                 </Badge>
-                              )}
+                              )} */}
                             </div>
                             <CardContent className="p-6">
                               <h3 className="font-bold text-lg text-[#073046] mb-2 line-clamp-2">

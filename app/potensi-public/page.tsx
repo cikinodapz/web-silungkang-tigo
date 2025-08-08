@@ -3,16 +3,16 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { PublicHeader } from "@/components/public-header";
+import { PublicFooter } from "@/components/public-footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button"; // Import Button component
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { fetchData } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { htmlToText } from "html-to-text";
-import { PublicFooter } from "@/components/public-footer";
 
 interface PotensiDesa {
   id: string;
@@ -101,8 +101,8 @@ export default function PotensiDesaPublicPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
         <PublicHeader />
         <div className="container mx-auto px-4 py-16">
-          <Skeleton className="h-16 w-3/5 mx-auto mb-8 rounded-xl" />
-          <Skeleton className="h-8 w-4/5 mx-auto mb-12 rounded-lg" />
+          <Skeleton className="h-20 w-3/4 mx-auto mb-8 rounded-xl" />
+          <Skeleton className="h-10 w-4/5 mx-auto mb-12 rounded-lg" />
           <div className="flex justify-between items-center mb-10">
             <Skeleton className="h-12 w-1/3 rounded-lg" />
             <div className="flex gap-3">
@@ -127,6 +127,7 @@ export default function PotensiDesaPublicPage() {
             <Skeleton className="h-12 w-36 rounded-md" />
           </div>
         </div>
+        <PublicFooter />
       </div>
     );
   }
@@ -143,6 +144,7 @@ export default function PotensiDesaPublicPage() {
         >
           {error}
         </motion.div>
+        <PublicFooter />
       </div>
     );
   }
@@ -150,11 +152,35 @@ export default function PotensiDesaPublicPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
       <PublicHeader />
+      <section className="relative py-20 px-4 bg-gradient-to-r from-[#073046] to-[#0a4a66] text-white overflow-hidden">
+        <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
+        <div className="container mx-auto relative z-10">
+          <div className="max-w-3xl mx-auto text-center">
+            <motion.h1
+              className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              Potensi Desa Silungkang Tigo
+            </motion.h1>
+            <motion.p
+              className="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              Temukan kekayaan budaya, alam, dan potensi lokal yang menjadi kebanggaan Desa Silungkang Tigo.
+            </motion.p>
+          </div>
+        </div>
+      </section>
+
       <div className="container mx-auto px-4 py-16">
         {/* Filter Section */}
         <section className="mb-12">
           <motion.div
-            className="flex flex-col md:flex-row justify-between items-center gap-6"
+            className="flex flex-col md:flex-row justify-between items-center gap-6 bg-white/80 p-6 rounded-xl shadow-sm"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
@@ -166,6 +192,7 @@ export default function PotensiDesaPublicPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 border-[#073046]/30 focus:border-[#073046] focus:ring-[#073046]/20 rounded-md shadow-sm transition-all duration-300"
+                aria-label="Pencarian potensi desa"
               />
             </div>
             <div className="flex gap-2 flex-wrap">
@@ -184,6 +211,7 @@ export default function PotensiDesaPublicPage() {
                         ? "bg-[#073046] hover:bg-[#0a4a66] shadow-md"
                         : "border-[#073046]/30 text-[#073046] hover:bg-[#073046]/10 hover:text-[#073046] hover:border-[#073046]/50"
                     }
+                    aria-label={`Filter kategori ${category}`}
                   >
                     {category} (
                     {category === "Semua"
@@ -225,7 +253,7 @@ export default function PotensiDesaPublicPage() {
                     <Card
                       className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer rounded-lg overflow-hidden bg-white/90"
                       onClick={() =>
-                        router.push(`/potensi-desa-public/detail/${potensi.id}`)
+                        router.push(`/potensi-public/detail/${potensi.id}`)
                       }
                     >
                       <div className="flex flex-col md:flex-row">
@@ -246,9 +274,6 @@ export default function PotensiDesaPublicPage() {
                             className="absolute top-3 left-3"
                             whileHover={{ scale: 1.05 }}
                           >
-                            {/* <Badge className="bg-[#073046] hover:bg-[#0a4a66] text-white font-medium px-3 py-1 rounded-md transition-colors">
-                              {potensi.kategori}
-                            </Badge> */}
                           </motion.div>
                           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         </div>
@@ -287,6 +312,7 @@ export default function PotensiDesaPublicPage() {
                                   `/potensi-public/detail/${potensi.id}`
                                 );
                               }}
+                              aria-label={`Lihat detail ${potensi.nama}`}
                             >
                               Baca Selengkapnya
                               <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -346,6 +372,7 @@ export default function PotensiDesaPublicPage() {
                   className={`bg-gradient-to-r from-[#073046] to-[#0a4a66] hover:from-[#0a4a66] hover:to-[#073046] shadow-md hover:shadow-lg transition-all rounded-md ${
                     currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
                   }`}
+                  aria-label="Halaman sebelumnya"
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" />
                   Sebelumnya
@@ -363,6 +390,7 @@ export default function PotensiDesaPublicPage() {
                   className={`bg-gradient-to-r from-[#073046] to-[#0a4a66] hover:from-[#0a4a66] hover:to-[#073046] shadow-md hover:shadow-lg transition-all rounded-md ${
                     currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""
                   }`}
+                  aria-label="Halaman berikutnya"
                 >
                   Berikutnya
                   <ChevronRight className="h-4 w-4 ml-1" />
@@ -372,7 +400,7 @@ export default function PotensiDesaPublicPage() {
           )}
         </section>
       </div>
-      <PublicFooter/>
+      <PublicFooter />
     </div>
   );
 }
