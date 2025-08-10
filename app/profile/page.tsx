@@ -338,7 +338,7 @@ export default function ProfilePage() {
                           <CardContent className="p-4">
                             <div className="flex items-center gap-2">
                               <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-                              <span className="text-xs text-slate-600">Aktif</span>
+                              <span className="text-xs text-slate-600"></span>
                             </div>
                           </CardContent>
                         </Card>
