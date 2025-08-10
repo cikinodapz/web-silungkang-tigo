@@ -133,8 +133,8 @@ export default function TambahPotensiDesa() {
                         <SelectValue placeholder="Pilih kategori" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Kesenian dan Kebudayaan">Kesenian dan Kebudayaan</SelectItem>
-                        <SelectItem value="Pariwisata">Pariwisata</SelectItem>
+                        <SelectItem value="Kesenian dan Kerajinan">Kesenian dan Kerajinan</SelectItem>
+                        <SelectItem value="Kuliner">Kuliner</SelectItem>
                         <SelectItem value="Sarana Prasarana">Sarana Prasarana</SelectItem>
                       </SelectContent>
                     </Select>

@@ -191,6 +191,20 @@ export default function ProdukHukumPublicPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
       <PublicHeader />
+      {/* Hero Section */}
+      <section className="relative py-16 px-4 bg-gradient-to-r from-[#073046] to-[#0a4a66] text-white">
+        <div className="container mx-auto">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              Produk Hukum Desa
+            </h1>
+            <p className="text-lg md:text-xl text-blue-100">
+              Kumpulan dokumen dan peraturan resmi yang berlaku di Desa
+              Silungkang Tigo
+            </p>
+          </div>
+        </div>
+      </section>
       <div className="container mx-auto px-4 py-16">
         {/* Filter Section */}
         <section className="mb-12">

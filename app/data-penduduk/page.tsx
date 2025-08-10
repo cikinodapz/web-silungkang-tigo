@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { AppSidebar } from "@/components/app-sidebar";
 import {
@@ -28,6 +28,7 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  ArrowUpDown,
 } from "lucide-react";
 import { fetchData } from "@/lib/api";
 import Swal from "sweetalert2";
@@ -79,16 +80,34 @@ interface FamilyCard {
   }[];
 }
 
+type SortKey =
+  | "no_kk"
+  | "kepala"
+  | "provinsi"
+  | "kabupaten"
+  | "kecamatan"
+  | "kelurahan"
+  | "dusun"
+  | "rtrw"
+  | "anggota"
+  | "status";
+type SortDirection = "asc" | "desc";
+
 export default function DataPendudukPage() {
   const [familyCards, setFamilyCards] = useState<FamilyCard[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDusun, setSelectedDusun] = useState<string>("ALL");
+
+  const [sortKey, setSortKey] = useState<SortKey>("no_kk");
+  const [sortDir, setSortDir] = useState<SortDirection>("asc");
+
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const router = useRouter();
 
-  // Fetch family cards on component mount
+  // Fetch
   useEffect(() => {
     const loadFamilyCards = async () => {
       setIsLoading(true);
@@ -97,8 +116,8 @@ export default function DataPendudukPage() {
         setFamilyCards(
           Array.isArray(response) ? response : response.data || []
         );
-      } catch (err) {
-        setError(`Gagal memuat data: ${err.message || "Terjadi kesalahan"}`);
+      } catch (err: any) {
+        setError(`Gagal memuat data: ${err?.message || "Terjadi kesalahan"}`);
       } finally {
         setIsLoading(false);
       }
@@ -106,7 +125,7 @@ export default function DataPendudukPage() {
     loadFamilyCards();
   }, []);
 
-  // Handle delete family card
+  // Delete KK
   const handleDeleteKK = async (id: string) => {
     const result = await Swal.fire({
       icon: "warning",
@@ -117,30 +136,28 @@ export default function DataPendudukPage() {
       cancelButtonText: "Batal",
       confirmButtonColor: "#d33",
     });
-
     if (!result.isConfirmed) return;
 
     setIsLoading(true);
     try {
       await fetchData(`/kelola-kk/deleteKK/${id}`, { method: "DELETE" });
-      setFamilyCards(familyCards.filter((kk) => kk.id !== id));
-      if (
-        familyCards.length - 1 <= (currentPage - 1) * itemsPerPage &&
-        currentPage > 1
-      ) {
-        setCurrentPage(currentPage - 1);
-      }
+      setFamilyCards((prev) => prev.filter((kk) => kk.id !== id));
+      setCurrentPage((prev) => {
+        const remaining = familyCards.length - 1;
+        if (remaining <= (prev - 1) * itemsPerPage && prev > 1) return prev - 1;
+        return prev;
+      });
       Swal.fire({
         icon: "success",
         title: "Berhasil",
         text: "Kartu Keluarga berhasil dihapus!",
       });
-    } catch (err) {
+    } catch (err: any) {
       Swal.fire({
         icon: "error",
         title: "Gagal",
         text: `Gagal menghapus Kartu Keluarga: ${
-          err.message || "Terjadi kesalahan"
+          err?.message || "Terjadi kesalahan"
         }`,
       });
     } finally {
@@ -148,35 +165,124 @@ export default function DataPendudukPage() {
     }
   };
 
-  // Filter family cards based on search query
-  const filteredFamilyCards = familyCards.filter(
-    (kk) =>
-      kk.no_kk.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (kk.kepalaKeluarga?.nama || "")
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      kk.kelurahan.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // ===== Derived: opsi dusun unik =====
+  const dusunOptions = useMemo(() => {
+    const s = new Set<string>();
+    familyCards.forEach((kk) => {
+      if (kk.dusun) s.add(kk.dusun);
+    });
+    return Array.from(s).sort((a, b) => a.localeCompare(b, "id"));
+  }, [familyCards]);
 
-  // Pagination logic
+  // ===== Filter + Search + Sort =====
+  const processed = useMemo(() => {
+    // search + filter dusun
+    let out = familyCards.filter((kk) => {
+      const q = searchQuery.toLowerCase();
+      const bySearch =
+        kk.no_kk.toLowerCase().includes(q) ||
+        (kk.kepalaKeluarga?.nama || "").toLowerCase().includes(q) ||
+        kk.kelurahan.toLowerCase().includes(q);
+      const byDusun = selectedDusun === "ALL" || kk.dusun === selectedDusun;
+      return bySearch && byDusun;
+    });
+
+    // sort
+    out.sort((a, b) => {
+      const dir = sortDir === "asc" ? 1 : -1;
+
+      const getVal = (x: FamilyCard): string | number => {
+        switch (sortKey) {
+          case "no_kk":
+            return x.no_kk || "";
+          case "kepala":
+            return x.kepalaKeluarga?.nama || "";
+          case "provinsi":
+            return x.provinsi || "";
+          case "kabupaten":
+            return x.kabupaten || "";
+          case "kecamatan":
+            return x.kecamatan || "";
+          case "kelurahan":
+            return x.kelurahan || "";
+          case "dusun":
+            return x.dusun || "";
+          case "rtrw":
+            // sort secara natural: rt/rw numerik jika memungkinkan
+            const rtA = parseInt(x.rt || "0", 10);
+            const rwA = parseInt(x.rw || "0", 10);
+            return rtA * 1000 + rwA;
+          case "anggota":
+            return x.AnggotaKeluarga.length;
+          case "status":
+            // aktif (punya kepala) > tanpa kepala
+            return x.kepalaKeluargaId ? 1 : 0;
+          default:
+            return "";
+        }
+      };
+
+      const va = getVal(a);
+      const vb = getVal(b);
+
+      if (typeof va === "number" && typeof vb === "number") {
+        return (va - vb) * dir;
+      }
+      return String(va).localeCompare(String(vb), "id") * dir;
+    });
+
+    return out;
+  }, [familyCards, searchQuery, selectedDusun, sortKey, sortDir]);
+
+  // Pagination
+  const totalPages = Math.ceil(processed.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredFamilyCards.slice(
-    indexOfFirstItem,
-    indexOfLastItem
-  );
-  const totalPages = Math.ceil(filteredFamilyCards.length / itemsPerPage);
+  const currentItems = processed.slice(indexOfFirstItem, indexOfLastItem);
+
+  // reset halaman ketika kriteria berubah
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedDusun, sortKey, sortDir]);
 
   const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
+    if (currentPage < totalPages) setCurrentPage((p) => p + 1);
+  };
+  const handlePrevPage = () => {
+    if (currentPage > 1) setCurrentPage((p) => p - 1);
+  };
+
+  const onHeaderClick = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
     }
   };
 
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
+  const SortButton: React.FC<{ label: string; column: SortKey }> = ({
+    label,
+    column,
+  }) => {
+    const active = sortKey === column;
+    return (
+      <button
+        type="button"
+        className={`inline-flex items-center gap-1 select-none ${
+          active ? "text-blue-900 font-semibold" : "text-blue-900/80"
+        }`}
+        onClick={() => onHeaderClick(column)}
+        title="Urutkan"
+      >
+        {label}
+        <ArrowUpDown
+          className={`h-4 w-4 ${
+            active ? (sortDir === "asc" ? "rotate-180" : "") : "opacity-60"
+          } transition-transform`}
+        />
+      </button>
+    );
   };
 
   return (
@@ -229,12 +335,13 @@ export default function DataPendudukPage() {
                 Memuat...
               </div>
             )}
-            {!isLoading && filteredFamilyCards.length === 0 && !error && (
+            {!isLoading && processed.length === 0 && !error && (
               <div className="text-center text-gray-600">
                 Tidak ada data Kartu Keluarga.
               </div>
             )}
 
+            {/* Kartu ringkasan */}
             <div className="grid gap-6 md:grid-cols-4">
               <Card className="border-0 bg-white/80 shadow-lg hover:shadow-xl transition-shadow">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -247,11 +354,10 @@ export default function DataPendudukPage() {
                   <div className="text-2xl font-bold text-blue-900">
                     {familyCards.length}
                   </div>
-                  <p className="text-xs text-gray-500">
-                    Kartu Keluarga terdaftar
-                  </p>
+                  <p className="text-xs text-gray-500">Kartu Keluarga terdaftar</p>
                 </CardContent>
               </Card>
+
               <Card className="border-0 bg-white/80 shadow-lg hover:shadow-xl transition-shadow">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-gray-600">
@@ -266,6 +372,7 @@ export default function DataPendudukPage() {
                   <p className="text-xs text-gray-500">Masih berdomisili</p>
                 </CardContent>
               </Card>
+
               <Card className="border-0 bg-white/80 shadow-lg hover:shadow-xl transition-shadow">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-gray-600">
@@ -277,11 +384,10 @@ export default function DataPendudukPage() {
                   <div className="text-2xl font-bold text-blue-900">
                     {familyCards.filter((kk) => !kk.kepalaKeluargaId).length}
                   </div>
-                  <p className="text-xs text-gray-500">
-                    Tanpa kepala keluarga
-                  </p>
+                  <p className="text-xs text-gray-500">Tanpa kepala keluarga</p>
                 </CardContent>
               </Card>
+
               <Card className="border-0 bg-white/80 shadow-lg hover:shadow-xl transition-shadow">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-gray-600">
@@ -300,35 +406,83 @@ export default function DataPendudukPage() {
                         ).toFixed(1)
                       : 0}
                   </div>
-                  <p className="text-xs text-gray-500">
-                    Per Kartu Keluarga
-                  </p>
+                  <p className="text-xs text-gray-500">Per Kartu Keluarga</p>
                 </CardContent>
               </Card>
             </div>
 
+            {/* Tabel + Filter */}
             <Card className="border-0 bg-white/80 shadow-lg">
-              <CardHeader>
+              <CardHeader className="pb-3">
                 <CardTitle className="text-blue-900">
                   Daftar Kartu Keluarga
                 </CardTitle>
                 <CardDescription>Kelola data Kartu Keluarga</CardDescription>
               </CardHeader>
               <CardContent>
+                {/* Filter Dusun */}
+                <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-gray-700">Filter Dusun</label>
+                    <select
+                      className="text-sm border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={selectedDusun}
+                      onChange={(e) => setSelectedDusun(e.target.value)}
+                    >
+                      <option value="ALL">Semua Dusun</option>
+                      {dusunOptions.map((d) => (
+                        <option key={d} value={d}>
+                          {d}
+                        </option>
+                      ))}
+                    </select>
+                    {selectedDusun !== "ALL" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="ml-1 border-gray-300"
+                        onClick={() => setSelectedDusun("ALL")}
+                      >
+                        Reset
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm text-gray-600">
                     <thead className="bg-blue-50 text-blue-900">
                       <tr>
-                        <th className="px-4 py-3 font-semibold">No. KK</th>
-                        <th className="px-4 py-3 font-semibold">Kepala Keluarga</th>
-                        <th className="px-4 py-3 font-semibold">Provinsi</th>
-                        <th className="px-4 py-3 font-semibold">Kabupaten</th>
-                        <th className="px-4 py-3 font-semibold">Kecamatan</th>
-                        <th className="px-4 py-3 font-semibold">Kelurahan</th>
-                        <th className="px-4 py-3 font-semibold">Dusun</th>
-                        <th className="px-4 py-3 font-semibold">RT/RW</th>
-                        <th className="px-4 py-3 font-semibold">Jumlah Anggota</th>
-                        <th className="px-4 py-3 font-semibold">Status</th>
+                        <th className="px-4 py-3 font-semibold">
+                          <SortButton label="No. KK" column="no_kk" />
+                        </th>
+                        <th className="px-4 py-3 font-semibold">
+                          <SortButton label="Kepala Keluarga" column="kepala" />
+                        </th>
+                        <th className="px-4 py-3 font-semibold">
+                          <SortButton label="Provinsi" column="provinsi" />
+                        </th>
+                        <th className="px-4 py-3 font-semibold">
+                          <SortButton label="Kabupaten" column="kabupaten" />
+                        </th>
+                        <th className="px-4 py-3 font-semibold">
+                          <SortButton label="Kecamatan" column="kecamatan" />
+                        </th>
+                        <th className="px-4 py-3 font-semibold">
+                          <SortButton label="Kelurahan" column="kelurahan" />
+                        </th>
+                        <th className="px-4 py-3 font-semibold">
+                          <SortButton label="Dusun" column="dusun" />
+                        </th>
+                        <th className="px-4 py-3 font-semibold">
+                          <SortButton label="RT/RW" column="rtrw" />
+                        </th>
+                        <th className="px-4 py-3 font-semibold">
+                          <SortButton label="Jumlah Anggota" column="anggota" />
+                        </th>
+                        <th className="px-4 py-3 font-semibold">
+                          <SortButton label="Status" column="status" />
+                        </th>
                         <th className="px-4 py-3 font-semibold text-right">Aksi</th>
                       </tr>
                     </thead>
@@ -347,8 +501,12 @@ export default function DataPendudukPage() {
                           <td className="px-4 py-3">{kk.kecamatan}</td>
                           <td className="px-4 py-3">{kk.kelurahan}</td>
                           <td className="px-4 py-3">{kk.dusun}</td>
-                          <td className="px-4 py-3">{kk.rt}/{kk.rw}</td>
-                          <td className="px-4 py-3">{kk.AnggotaKeluarga.length}</td>
+                          <td className="px-4 py-3">
+                            {kk.rt}/{kk.rw}
+                          </td>
+                          <td className="px-4 py-3">
+                            {kk.AnggotaKeluarga.length}
+                          </td>
                           <td className="px-4 py-3">
                             <Badge
                               variant={kk.kepalaKeluargaId ? "default" : "secondary"}
@@ -388,6 +546,8 @@ export default function DataPendudukPage() {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Pagination */}
                 {totalPages > 1 && (
                   <div className="flex justify-between items-center mt-4">
                     <Button
