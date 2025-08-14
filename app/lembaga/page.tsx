@@ -207,7 +207,7 @@ export default function LembagaPage() {
         contact: { phone: "0813-3333-4444", email: "wakil.bpd@silungkangtigo.desa.id" },
       },
       {
-        name: "Bapak Joko Widodo",
+        name: "Bapak Joko Santoso",
         position: "Sekretaris",
         photo: "/placeholder.svg?height=120&width=120",
         contact: { phone: "0814-4444-5555", email: "sekretaris.bpd@silungkangtigo.desa.id" },
@@ -226,7 +226,7 @@ export default function LembagaPage() {
       },
       {
         name: "Fungsi Legislasi",
-        coordinator: "Bapak Joko Widodo",
+        coordinator: "Bapak Joko Santoso",
         activities: ["Pembentukan perdes", "Pembahasan anggaran desa", "Pengesahan rencana pembangunan"],
       },
     ],
