@@ -29,6 +29,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ArrowUpDown,
+  Download,
 } from "lucide-react";
 import { fetchData } from "@/lib/api";
 import Swal from "sweetalert2";
@@ -96,6 +97,7 @@ type SortDirection = "asc" | "desc";
 export default function DataPendudukPage() {
   const [familyCards, setFamilyCards] = useState<FamilyCard[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDusun, setSelectedDusun] = useState<string>("ALL");
@@ -107,15 +109,86 @@ export default function DataPendudukPage() {
   const itemsPerPage = 5;
   const router = useRouter();
 
+  // ===== Helper: parse filename dari Content-Disposition =====
+  const parseFilename = (contentDisposition: string | null) => {
+    if (!contentDisposition) return "Data_Penduduk.xlsx";
+    // dukung filename* dan filename
+    const match =
+      contentDisposition.match(/filename\*=UTF-8''([^;]+)/i) ||
+      contentDisposition.match(/filename="?([^"]+)"?/i);
+    if (match && match[1]) {
+      try {
+        return decodeURIComponent(match[1]);
+      } catch {
+        return match[1];
+      }
+    }
+    return "Data_Penduduk.xlsx";
+  };
+
+  // ===== Export to Excel =====
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+
+      // Base URL backend. Pakai env kalau beda origin.
+      const API_BASE =
+        process.env.NEXT_PUBLIC_API_URL ?? window.location.origin;
+      const url = `${API_BASE}/kelola-kk/exportPopulationData`;
+
+      // Ambil token kalau pakai JWT di header Authorization
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("token") || ""
+          : "";
+
+      const res = await fetch(url, {
+        method: "GET",
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: "include", // kalau pakai cookie session
+      });
+
+      if (!res.ok) {
+        throw new Error(`Gagal export (HTTP ${res.status})`);
+      }
+
+      const blob = await res.blob();
+      const filename = parseFilename(res.headers.get("Content-Disposition"));
+
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(blobUrl);
+
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil",
+        text: `Berhasil mengunduh ${filename}`,
+      });
+    } catch (e: any) {
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: e?.message || "Gagal mengunduh berkas",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // Fetch
   useEffect(() => {
     const loadFamilyCards = async () => {
       setIsLoading(true);
       try {
         const response = await fetchData("/kelola-kk/getAllKK");
-        setFamilyCards(
-          Array.isArray(response) ? response : response.data || []
-        );
+        setFamilyCards(Array.isArray(response) ? response : response.data || []);
       } catch (err: any) {
         setError(`Gagal memuat data: ${err?.message || "Terjadi kesalahan"}`);
       } finally {
@@ -208,15 +281,14 @@ export default function DataPendudukPage() {
           case "dusun":
             return x.dusun || "";
           case "rtrw":
-            // sort secara natural: rt/rw numerik jika memungkinkan
+            // sort natural: rt/rw numerik
             const rtA = parseInt(x.rt || "0", 10);
             const rwA = parseInt(x.rw || "0", 10);
             return rtA * 1000 + rwA;
           case "anggota":
             return x.AnggotaKeluarga.length;
           case "status":
-            // aktif (punya kepala) > tanpa kepala
-            return x.kepalaKeluargaId ? 1 : 0;
+            return x.kepalaKeluargaId ? 1 : 0; // aktif > tanpa kepala
           default:
             return "";
         }
@@ -313,6 +385,18 @@ export default function DataPendudukPage() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
+
+                {/* ===== Button Export Excel ===== */}
+                <Button
+                  variant="outline"
+                  className="flex items-center border-blue-200 text-blue-900 hover:bg-blue-100"
+                  onClick={handleExport}
+                  disabled={isExporting}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  {isExporting ? "Mengekspor..." : "Export Excel"}
+                </Button>
+
                 <Button
                   className="flex items-center bg-gradient-to-r from-blue-900 to-cyan-700 hover:from-blue-800 hover:to-cyan-600 text-white px-4 py-2 rounded-md transition-colors"
                   onClick={() => router.push("/data-penduduk/tambah-kk")}
