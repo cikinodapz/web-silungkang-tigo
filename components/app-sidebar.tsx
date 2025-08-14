@@ -1,7 +1,8 @@
 "use client";
 
 import type * as React from "react";
-import { usePathname } from "next/navigation"; // Ganti useRouter dengan usePathname
+import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
@@ -21,6 +22,8 @@ import {
   Tags,
   Package,
   FolderOpen,
+  LogOut,
+  Loader2,
 } from "lucide-react";
 
 import {
@@ -44,6 +47,18 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 
 // Menu data
@@ -168,18 +183,53 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const pathname = usePathname(); // Gunakan usePathname untuk mendapatkan URL saat ini
+  const pathname = usePathname();
+  const router = useRouter();
+  const [openLogout, setOpenLogout] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      const res = await fetch("http://localhost:3000/auth/logout", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error("Logout gagal");
+      }
+
+      // optionally clear local storage/session if you store tokens there
+      localStorage.removeItem("token");
+
+      setOpenLogout(false);
+      // Redirect ke halaman utama
+      router.push("http://localhost:8000");
+    } catch (err) {
+      console.error(err);
+      alert("Gagal logout. Coba lagi ya.");
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <Sidebar
       {...props}
       className="border-r border-gray-100 bg-white/80 shadow-lg"
     >
-      {/* Header with gradient matching buttons */}
       <SidebarHeader className="border-b border-gray-200/50 bg-gradient-to-r from-blue-900 to-cyan-700">
         <div className="flex items-center gap-3 px-4 py-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 shadow-inner">
-            <Home className="h-5 w-5 text-white" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 shadow-inner overflow-hidden">
+            <img
+              src="/logo.png"
+              alt="Desa Digital Logo"
+              className="h-10 w-10 object-contain"
+            />
           </div>
           <div className="flex flex-col">
             <span className="text-lg font-bold text-white tracking-tight">
@@ -192,7 +242,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </div>
       </SidebarHeader>
 
-      {/* Content Area */}
       <SidebarContent className="bg-white/80">
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-gray-600 px-4 pt-4 pb-2">
@@ -201,7 +250,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroupContent>
             <SidebarMenu>
               {data.navMain.map((item) => {
-                // Periksa apakah item aktif, termasuk rute turunan (misalnya /apbdes/tambah, /apbdes/edit/[id])
                 const isActive =
                   pathname === item.url ||
                   pathname.startsWith(item.url + "/") ||
@@ -331,22 +379,60 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
       </SidebarContent>
 
-      {/* Footer with user profile card */}
       <SidebarFooter className="border-t border-gray-200/50 bg-white/80">
         <div className="p-3">
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50/50 border border-gray-200/50 transition-all hover:bg-gradient-to-r hover:from-blue-100 hover:to-cyan-100 hover:scale-[1.02] cursor-pointer">
-            <div className="h-9 w-9 rounded-full bg-gradient-to-r from-blue-900 to-cyan-700 flex items-center justify-center text-white text-sm font-semibold shadow-sm">
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50/50 border border-gray-200/50 transition-all hover:bg-gradient-to-r hover:from-blue-100 hover:to-cyan-100 hover:scale-[1.02]">
+            {/* <div className="h-9 w-9 rounded-full bg-gradient-to-r from-blue-900 to-cyan-700 flex items-center justify-center text-white text-sm font-semibold shadow-sm">
               AD
-            </div>
-            <div className="flex-1 min-w-0">
+            </div> */}
+            {/* <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-blue-900 truncate">
                 Admin Desa
               </p>
               <p className="text-xs text-gray-600 truncate">admin@desa.id</p>
-            </div>
-            <div className="text-gray-400 group-hover:text-blue-900">
+            </div> */}
+
+            {/* Settings (existing) */}
+            {/* <div className="text-gray-400">
               <Settings className="h-4 w-4" />
-            </div>
+            </div> */}
+
+            {/* Logout with confirm dialog */}
+            <AlertDialog open={openLogout} onOpenChange={setOpenLogout}>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="ml-2 border-red-200 text-red-600 hover:bg-red-600 hover:text-white"
+                >
+                  <LogOut className="h-4 w-4 mr-1" />
+                  Keluar
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Keluar dari akun?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Kamu akan keluar dari sesi saat ini. Lanjutkan?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isLoggingOut}>
+                    Batal
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                    className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                  >
+                    {isLoggingOut && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Ya, Keluar
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       </SidebarFooter>

@@ -56,7 +56,7 @@ export function PublicHeader() {
               <span className="text-xs text-gray-600 font-medium leading-tight">
                 {" "}
                 {/* Tambahkan leading-tight */}
-                Kec. Silungkang, Kab. Sawahlunto
+                Kec. Silungkang, Kota. Sawahlunto
               </span>
             </div>
           </Link>

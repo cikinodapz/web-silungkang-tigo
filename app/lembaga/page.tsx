@@ -4,7 +4,7 @@ import { PublicHeader } from "@/components/public-header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, Phone, Mail, MapPin, Calendar, Heart, Building } from "lucide-react"
+import { Users, Phone, Mail, MapPin, Calendar, Heart, Building, Scale } from "lucide-react"
 
 export default function LembagaPage() {
   const karangTaruna = {
@@ -192,6 +192,66 @@ export default function LembagaPage() {
     ],
   }
 
+  const bpd = {
+    pengurus: [
+      {
+        name: "H. Ahmad Yani",
+        position: "Ketua BPD",
+        photo: "/placeholder.svg?height=120&width=120",
+        contact: { phone: "0812-2222-3333", email: "ketua.bpd@silungkangtigo.desa.id" },
+      },
+      {
+        name: "Hj. Siti Aisyah",
+        position: "Wakil Ketua",
+        photo: "/placeholder.svg?height=120&width=120",
+        contact: { phone: "0813-3333-4444", email: "wakil.bpd@silungkangtigo.desa.id" },
+      },
+      {
+        name: "Bapak Joko Widodo",
+        position: "Sekretaris",
+        photo: "/placeholder.svg?height=120&width=120",
+        contact: { phone: "0814-4444-5555", email: "sekretaris.bpd@silungkangtigo.desa.id" },
+      },
+    ],
+    fungsi: [
+      {
+        name: "Fungsi Permusyawaratan",
+        coordinator: "Bapak Ahmad Yani",
+        activities: ["Musyawarah desa", "Pembahasan rencana pembangunan", "Pengambilan keputusan bersama"],
+      },
+      {
+        name: "Fungsi Pengawasan",
+        coordinator: "Hj. Siti Aisyah",
+        activities: ["Pengawasan pelaksanaan perdes", "Pengelolaan keuangan desa", "Kinerja kepala desa"],
+      },
+      {
+        name: "Fungsi Legislasi",
+        coordinator: "Bapak Joko Widodo",
+        activities: ["Pembentukan perdes", "Pembahasan anggaran desa", "Pengesahan rencana pembangunan"],
+      },
+    ],
+    programs: [
+      {
+        title: "Musyawarah Desa Berkala",
+        description: "Pertemuan rutin untuk membahas isu-isu desa",
+        schedule: "Setiap 3 bulan sekali",
+        participants: 100,
+      },
+      {
+        title: "Pengawasan Proyek Desa",
+        description: "Monitoring pelaksanaan proyek pembangunan desa",
+        schedule: "Sepanjang tahun",
+        participants: 20,
+      },
+      {
+        title: "Pembentukan Peraturan Desa",
+        description: "Penyusunan dan pengesahan perdes baru",
+        schedule: "Sesuai kebutuhan",
+        participants: 50,
+      },
+    ],
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
       <PublicHeader />
@@ -208,19 +268,25 @@ export default function LembagaPage() {
 
       <div className="container mx-auto px-4 py-12">
         <Tabs defaultValue="karang-taruna" className="w-full">
-          <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 mb-8">
-            <TabsTrigger value="karang-taruna" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Karang Taruna
-            </TabsTrigger>
-            <TabsTrigger value="lpm" className="flex items-center gap-2">
-              <Building className="h-4 w-4" />
-              LPM
-            </TabsTrigger>
-            <TabsTrigger value="pkk" className="flex items-center gap-2">
-              <Heart className="h-4 w-4" />
-              PKK
-            </TabsTrigger>
+          <TabsList className="w-full mb-8 overflow-x-auto">
+            <div className="flex space-x-2 min-w-max md:grid md:grid-cols-4 md:gap-2 md:space-x-0">
+              <TabsTrigger value="karang-taruna" className="flex items-center gap-2 whitespace-nowrap">
+                <Users className="h-4 w-4" />
+                Karang Taruna
+              </TabsTrigger>
+              <TabsTrigger value="lpm" className="flex items-center gap-2 whitespace-nowrap">
+                <Building className="h-4 w-4" />
+                LPM
+              </TabsTrigger>
+              <TabsTrigger value="pkk" className="flex items-center gap-2 whitespace-nowrap">
+                <Heart className="h-4 w-4" />
+                PKK
+              </TabsTrigger>
+              <TabsTrigger value="bpd" className="flex items-center gap-2 whitespace-nowrap">
+                <Scale className="h-4 w-4" />
+                BPD
+              </TabsTrigger>
+            </div>
           </TabsList>
 
           <TabsContent value="karang-taruna" className="space-y-6">
@@ -574,6 +640,127 @@ export default function LembagaPage() {
                           <div className="flex items-center gap-2">
                             <Mail className="h-4 w-4 text-slate-500" />
                             <span className="text-slate-600">pkk@silungkangtigo.desa.id</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="bpd" className="space-y-6">
+            <Card className="border-0 shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-[#073046] to-[#0a4a66] text-white">
+                <CardTitle className="flex items-center gap-2">
+                  <Scale className="h-5 w-5" />
+                  Badan Permusyawaratan Desa (BPD)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  <div className="lg:col-span-2 space-y-6">
+                    <div>
+                      <h3 className="text-xl font-bold text-[#073046] mb-3">Tentang BPD</h3>
+                      <p className="text-slate-600 leading-relaxed">
+                        Badan Permusyawaratan Desa (BPD) adalah lembaga yang mewujudkan fungsi perwakilan masyarakat desa dalam menampung dan menyalurkan aspirasi masyarakat, melakukan pengawasan terhadap kinerja pemerintah desa, serta bersama-sama dengan pemerintah desa menyusun peraturan desa.
+                      </p>
+                    </div>
+
+                    <div>
+                      <h3 className="text-xl font-bold text-[#073046] mb-4">Pengurus BPD</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {bpd.pengurus.map((pengurus, index) => (
+                          <Card key={index} className="border border-slate-200 text-center">
+                            <CardContent className="p-4">
+                              <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-slate-100 mb-3">
+                                <img
+                                  src={pengurus.photo || "/placeholder.svg"}
+                                  alt={pengurus.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <h4 className="font-bold text-[#073046] mb-1">{pengurus.name}</h4>
+                              <p className="text-sm text-slate-600 mb-3">{pengurus.position}</p>
+                              <div className="space-y-1 text-xs text-slate-500">
+                                <div className="flex items-center justify-center gap-1">
+                                  <Phone className="h-3 w-3" />
+                                  {pengurus.contact.phone}
+                                </div>
+                                <div className="flex items-center justify-center gap-1">
+                                  <Mail className="h-3 w-3" />
+                                  {pengurus.contact.email}
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="text-xl font-bold text-[#073046] mb-4">Fungsi Utama</h3>
+                      <div className="space-y-4">
+                        {bpd.fungsi.map((fungsi, index) => (
+                          <Card key={index} className="border border-slate-200">
+                            <CardContent className="p-4">
+                              <h4 className="font-bold text-[#073046] mb-2">{fungsi.name}</h4>
+                              <p className="text-sm text-slate-600 mb-3">Koordinator: {fungsi.coordinator}</p>
+                              <div className="flex flex-wrap gap-2">
+                                {fungsi.activities.map((activity, idx) => (
+                                  <Badge key={idx} variant="outline" className="text-xs">
+                                    {activity}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <Card className="border border-slate-200">
+                      <CardContent className="p-6">
+                        <h4 className="font-bold text-[#073046] mb-4">Program Unggulan</h4>
+                        <div className="space-y-4">
+                          {bpd.programs.map((program, index) => (
+                            <div key={index} className="border-l-4 border-[#073046] pl-4">
+                              <h5 className="font-semibold text-sm text-[#073046]">{program.title}</h5>
+                              <p className="text-xs text-slate-600 mb-2">{program.description}</p>
+                              <div className="space-y-1 text-xs text-slate-500">
+                                <div className="flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
+                                  {program.schedule}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Users className="h-3 w-3" />
+                                  {program.participants} peserta
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border border-slate-200">
+                      <CardContent className="p-6">
+                        <h4 className="font-bold text-[#073046] mb-4">Kontak BPD</h4>
+                        <div className="space-y-3 text-sm">
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-slate-500" />
+                            <span className="text-slate-600">Kantor BPD Desa Silungkang Tigo</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-4 w-4 text-slate-500" />
+                            <span className="text-slate-600">0812-2222-3333</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4 text-slate-500" />
+                            <span className="text-slate-600">bpd@silungkangtigo.desa.id</span>
                           </div>
                         </div>
                       </CardContent>
