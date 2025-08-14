@@ -36,10 +36,11 @@ const cleanContent = (html: string, maxLength: number) => {
   return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
 };
 
+// Get image URL
 const getFotoUrl = (foto: string | null) => {
   if (!foto) return "/placeholder.svg?height=400&width=600";
   const filename = foto.split("/").pop();
-  return `http://localhost:3000/public/foto-potensi-desa/potensidesa/${filename}`;
+  return `${process.env.NEXT_PUBLIC_API_URL}/public/foto-potensi-desa/potensidesa/${filename}`;
 };
 
 export default function PotensiDesaPublicPage() {

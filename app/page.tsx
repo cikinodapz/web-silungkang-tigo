@@ -78,7 +78,7 @@ const getSampulUrl = (sampul: any) => {
   else if (typeof sampul === "string") first = sampul;
   if (!first) return "/placeholder.svg?height=200&width=300";
   const filename = first.split("/").pop();
-  return `http://localhost:3000/berita/getSampul/berita/${filename}`;
+  return `${process.env.NEXT_PUBLIC_API_URL}/berita/getSampul/berita/${filename}`;
 };
 
 const formatCurrency = (amount: number) => {

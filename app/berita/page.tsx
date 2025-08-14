@@ -45,7 +45,9 @@ export default function BeritaListPage() {
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [imageIndices, setImageIndices] = useState<{ [key: string]: number }>({});
+  const [imageIndices, setImageIndices] = useState<{ [key: string]: number }>(
+    {}
+  );
   const itemsPerPage = 4;
   const router = useRouter();
 
@@ -130,7 +132,7 @@ export default function BeritaListPage() {
     if (!sampul || sampul.length === 0 || index >= sampul.length)
       return "/placeholder-image.jpg";
     const filename = sampul[index].split("/").pop();
-    return `http://localhost:3000/berita/getSampul/berita/${filename}`;
+    return `${process.env.NEXT_PUBLIC_API_URL}/berita/getSampul/berita/${filename}`;
   };
 
   const handleNextImage = (id: string, totalImages: number) => {
@@ -250,9 +252,7 @@ export default function BeritaListPage() {
                                         "/placeholder-image.jpg";
                                     }}
                                   />
-                                  <Badge
-                                    className="absolute bottom-2 right-2 bg-blue-900/80 text-white text-xs font-semibold rounded-full px-2 py-1 shadow-md"
-                                  >
+                                  <Badge className="absolute bottom-2 right-2 bg-blue-900/80 text-white text-xs font-semibold rounded-full px-2 py-1 shadow-md">
                                     {record.sampul.length} Gambar
                                   </Badge>
                                   {record.sampul.length > 1 && (
@@ -264,7 +264,9 @@ export default function BeritaListPage() {
                                         onClick={() =>
                                           handlePrevImage(record.id)
                                         }
-                                        disabled={(imageIndices[record.id] || 0) === 0}
+                                        disabled={
+                                          (imageIndices[record.id] || 0) === 0
+                                        }
                                       >
                                         <ChevronLeft className="h-4 w-4" />
                                       </Button>

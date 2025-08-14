@@ -62,9 +62,12 @@ import {
 import { cn } from "@/lib/utils";
 
 // ====== CONFIG BASE URL ======
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL;
-const LOGIN_URL = "http://localhost:8000/login";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+
+// FE base (opsional). Kalau nggak di-set, fallback ke path relatif.
+const APP_BASE = (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/+$/, "");
+const LOGIN_PATH = "/login";
+const LOGIN_URL = APP_BASE ? `${APP_BASE}${LOGIN_PATH}` : LOGIN_PATH;
 
 // Menu data
 const data = {

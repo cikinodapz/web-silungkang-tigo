@@ -132,7 +132,7 @@ export default function EditProdukPage() {
 
   const getFotoUrl = (foto: string) => {
     const filename = foto.split("/").pop();
-    return `http://localhost:3000/lapak-desa/foto-produk/produk/${filename}`;
+    return `${process.env.NEXT_PUBLIC_API_URL}/lapak-desa/foto-produk/produk/${filename}`;
   };
 
   return (
@@ -148,7 +148,9 @@ export default function EditProdukPage() {
                   <h1 className="text-2xl font-semibold text-blue-900">
                     Edit Produk
                   </h1>
-                  <p className="text-sm text-gray-600">Perbarui detail produk</p>
+                  <p className="text-sm text-gray-600">
+                    Perbarui detail produk
+                  </p>
                 </div>
               </div>
             </div>
@@ -195,7 +197,9 @@ export default function EditProdukPage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="link_produk">Link Produk (Opsional)</Label>
+                      <Label htmlFor="link_produk">
+                        Link Produk (Opsional)
+                      </Label>
                       <Input
                         id="link_produk"
                         value={linkProduk}
@@ -220,7 +224,9 @@ export default function EditProdukPage() {
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="foto_produk">Foto Produk (Opsional)</Label>
+                      <Label htmlFor="foto_produk">
+                        Foto Produk (Opsional)
+                      </Label>
                       {existingFoto && (
                         <div className="mb-2">
                           <img

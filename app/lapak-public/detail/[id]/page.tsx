@@ -33,10 +33,11 @@ interface UMKM {
   produk: Produk[];
 }
 
+// Get image URL
 const getFotoUrl = (foto: string | null, type: "umkm" | "produk") => {
   if (!foto) return "/placeholder.svg?height=400&width=600";
   const filename = foto.split("/").pop();
-  return `http://localhost:3000/public/foto-${type}/${type}/${filename}`;
+  return `${process.env.NEXT_PUBLIC_API_URL}/public/foto-${type}/${type}/${filename}`;
 };
 
 const cleanContent = (text: string, maxLength: number) => {

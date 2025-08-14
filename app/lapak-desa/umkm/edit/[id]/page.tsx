@@ -105,7 +105,7 @@ export default function EditUMKM() {
 
   const getFotoUrl = (foto: string) => {
     const filename = foto.split("/").pop();
-    return `http://localhost:3000/lapak-desa/foto-umkm/umkm/${filename}`;
+    return `${process.env.NEXT_PUBLIC_API_URL}/lapak-desa/foto-umkm/umkm/${filename}`;
   };
 
   return (
@@ -147,7 +147,9 @@ export default function EditUMKM() {
                       </div>
                     )}
                     <div>
-                      <Label htmlFor="nama_umkm" className="text-gray-600">Nama UMKM</Label>
+                      <Label htmlFor="nama_umkm" className="text-gray-600">
+                        Nama UMKM
+                      </Label>
                       <Input
                         id="nama_umkm"
                         value={nama_umkm}
@@ -157,7 +159,9 @@ export default function EditUMKM() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="deskripsi_umkm" className="text-gray-600">Deskripsi</Label>
+                      <Label htmlFor="deskripsi_umkm" className="text-gray-600">
+                        Deskripsi
+                      </Label>
                       <Textarea
                         id="deskripsi_umkm"
                         value={deskripsi_umkm}
@@ -168,7 +172,9 @@ export default function EditUMKM() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="kontak_wa" className="text-gray-600">Kontak WA</Label>
+                      <Label htmlFor="kontak_wa" className="text-gray-600">
+                        Kontak WA
+                      </Label>
                       <Input
                         id="kontak_wa"
                         value={kontak_wa}
@@ -178,7 +184,9 @@ export default function EditUMKM() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="foto_umkm" className="text-gray-600">Foto UMKM</Label>
+                      <Label htmlFor="foto_umkm" className="text-gray-600">
+                        Foto UMKM
+                      </Label>
                       {existingFoto && (
                         <div className="mb-2">
                           <img
@@ -195,7 +203,9 @@ export default function EditUMKM() {
                         id="foto_umkm"
                         type="file"
                         accept="image/*"
-                        onChange={(e) => setFotoUmkm(e.target.files?.[0] || null)}
+                        onChange={(e) =>
+                          setFotoUmkm(e.target.files?.[0] || null)
+                        }
                         className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                       />
                     </div>

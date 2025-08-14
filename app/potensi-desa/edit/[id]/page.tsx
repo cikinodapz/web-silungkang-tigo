@@ -19,7 +19,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { fetchData } from "@/lib/api";
 import Swal from "sweetalert2";
 
@@ -97,7 +103,9 @@ export default function EditPotensiDesa() {
       Swal.fire({
         icon: "error",
         title: "Gagal",
-        text: `Gagal memperbarui potensi desa: ${err.message || "Terjadi kesalahan"}`,
+        text: `Gagal memperbarui potensi desa: ${
+          err.message || "Terjadi kesalahan"
+        }`,
       });
     } finally {
       setIsLoading(false);
@@ -106,7 +114,7 @@ export default function EditPotensiDesa() {
 
   const getFotoUrl = (foto: string) => {
     const filename = foto.split("/").pop();
-    return `http://localhost:3000/potensi-desa/foto-potensi-desa/potensidesa/${filename}`;
+    return `${process.env.NEXT_PUBLIC_API_URL}/potensi-desa/foto-potensi-desa/potensidesa/${filename}`;
   };
 
   return (
@@ -122,7 +130,9 @@ export default function EditPotensiDesa() {
                   <h1 className="text-2xl font-semibold text-blue-900">
                     Edit Potensi Desa
                   </h1>
-                  <p className="text-sm text-gray-600">Perbarui data potensi desa</p>
+                  <p className="text-sm text-gray-600">
+                    Perbarui data potensi desa
+                  </p>
                 </div>
               </div>
             </div>
@@ -131,7 +141,9 @@ export default function EditPotensiDesa() {
           <main className="p-6">
             <Card className="border-0 bg-white/80 shadow-lg max-w-2xl mx-auto">
               <CardHeader>
-                <CardTitle className="text-blue-900">Form Edit Potensi Desa</CardTitle>
+                <CardTitle className="text-blue-900">
+                  Form Edit Potensi Desa
+                </CardTitle>
                 <CardDescription>Perbarui detail potensi desa</CardDescription>
               </CardHeader>
               <CardContent>
@@ -148,7 +160,9 @@ export default function EditPotensiDesa() {
                       </div>
                     )}
                     <div>
-                      <Label htmlFor="nama" className="text-gray-600">Nama</Label>
+                      <Label htmlFor="nama" className="text-gray-600">
+                        Nama
+                      </Label>
                       <Input
                         id="nama"
                         value={nama}
@@ -158,7 +172,9 @@ export default function EditPotensiDesa() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="deskripsi" className="text-gray-600">Deskripsi</Label>
+                      <Label htmlFor="deskripsi" className="text-gray-600">
+                        Deskripsi
+                      </Label>
                       <Textarea
                         id="deskripsi"
                         value={deskripsi}
@@ -169,20 +185,28 @@ export default function EditPotensiDesa() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="kategori" className="text-gray-600">Kategori</Label>
+                      <Label htmlFor="kategori" className="text-gray-600">
+                        Kategori
+                      </Label>
                       <Select value={kategori} onValueChange={setKategori}>
                         <SelectTrigger className="border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                           <SelectValue placeholder="Pilih kategori" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Kesenian dan Kerajinan">Kesenian dan Kerajinan</SelectItem>
+                          <SelectItem value="Kesenian dan Kerajinan">
+                            Kesenian dan Kerajinan
+                          </SelectItem>
                           <SelectItem value="Kuliner">Kuliner</SelectItem>
-                          <SelectItem value="Sarana Prasarana">Sarana Prasarana</SelectItem>
+                          <SelectItem value="Sarana Prasarana">
+                            Sarana Prasarana
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="foto" className="text-gray-600">Foto</Label>
+                      <Label htmlFor="foto" className="text-gray-600">
+                        Foto
+                      </Label>
                       {existingFoto && (
                         <div className="mb-2">
                           <img

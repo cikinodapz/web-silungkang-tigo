@@ -79,7 +79,9 @@ export default function PotensiDesaListPage() {
 
     setIsLoading(true);
     try {
-      await fetchData(`/potensi-desa/deletePotensiDesa/${id}`, { method: "DELETE" });
+      await fetchData(`/potensi-desa/deletePotensiDesa/${id}`, {
+        method: "DELETE",
+      });
       setPotensiDesaList(potensiDesaList.filter((record) => record.id !== id));
       if (
         potensiDesaList.length - 1 <= (currentPage - 1) * itemsPerPage &&
@@ -123,9 +125,11 @@ export default function PotensiDesaListPage() {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
 
-  const getFotoUrl = (foto: string) => {
+  const getFotoUrl = (foto?: string) => {
+    if (!foto) return "/placeholder-image.jpg";
     const filename = foto.split("/").pop();
-    return `http://localhost:3000/potensi-desa/foto-potensi-desa/potensidesa/${filename}`;
+    const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
+    return `${base}/potensi-desa/foto-potensi-desa/potensidesa/${filename}`;
   };
 
   return (
@@ -184,7 +188,9 @@ export default function PotensiDesaListPage() {
 
             <Card className="border-0 bg-white/80 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-blue-900">Daftar Potensi Desa</CardTitle>
+                <CardTitle className="text-blue-900">
+                  Daftar Potensi Desa
+                </CardTitle>
                 <CardDescription>Kelola potensi desa</CardDescription>
               </CardHeader>
               <CardContent>
@@ -257,7 +263,9 @@ export default function PotensiDesaListPage() {
                                 variant="outline"
                                 size="sm"
                                 className="hover:bg-red-100 text-red-600 border-red-200"
-                                onClick={() => handleDeletePotensiDesa(record.id)}
+                                onClick={() =>
+                                  handleDeletePotensiDesa(record.id)
+                                }
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>

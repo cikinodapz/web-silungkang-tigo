@@ -49,11 +49,12 @@ interface SortConfig {
   key: keyof ProdukHukum | "kategori.kategori";
   direction: "asc" | "desc";
 }
-
+// File URL pakai env
 const getFileUrl = (filePath: string) => {
   const filename = filePath.split("/").pop();
-  return `http://localhost:3000/public/getFileProdukHukum/produkhukum/${filename}`;
+  return `${process.env.NEXT_PUBLIC_API_URL}/public/getFileProdukHukum/produkhukum/${filename}`;
 };
+
 
 export default function ProdukHukumPublicPage() {
   const [produkHukumList, setProdukHukumList] = useState<ProdukHukum[]>([]);

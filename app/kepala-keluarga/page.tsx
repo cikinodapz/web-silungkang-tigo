@@ -79,8 +79,9 @@ interface FamilyCard {
 // ====== Utils ======
 const getFileUrl = (type: string, filePath: string) => {
   const filename = filePath.split("/").pop();
-  return `http://localhost:3000/uploads/${type}/${filename}`;
+  return `${process.env.NEXT_PUBLIC_API_URL}/uploads/${type}/${filename}`;
 };
+
 
 const getDusun = (k: KepalaKeluarga) =>
   (k.dusun && k.dusun.trim()) ||

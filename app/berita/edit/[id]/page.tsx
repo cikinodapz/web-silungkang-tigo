@@ -96,7 +96,9 @@ export default function EditBeritaPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const kategoriResponse = await fetchData("/berita/getAllKategoriBerita");
+        const kategoriResponse = await fetchData(
+          "/berita/getAllKategoriBerita"
+        );
         const kategoriData = Array.isArray(kategoriResponse)
           ? kategoriResponse
           : kategoriResponse.data || [];
@@ -132,10 +134,11 @@ export default function EditBeritaPage() {
     }
   }, [id, editor]);
 
+  // Ganti ini
   const getSampulUrl = (sampul: string) => {
     if (!sampul) return "/placeholder-image.jpg";
     const filename = sampul.split("/").pop();
-    return `http://localhost:3000/berita/getSampul/berita/${filename}`;
+    return `${process.env.NEXT_PUBLIC_API_URL}/berita/getSampul/berita/${filename}`;
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -143,7 +146,8 @@ export default function EditBeritaPage() {
     if (files) {
       const newFiles = Array.from(files).slice(
         0,
-        3 - (existingSampul.length - filesToRemove.length + selectedFiles.length)
+        3 -
+          (existingSampul.length - filesToRemove.length + selectedFiles.length)
       );
       if (
         newFiles.length +
@@ -217,7 +221,9 @@ export default function EditBeritaPage() {
       // Send existingSampul as an array of paths to keep
       formDataToSend.append(
         "existingSampul",
-        JSON.stringify(existingSampul.filter((path) => !filesToRemove.includes(path)))
+        JSON.stringify(
+          existingSampul.filter((path) => !filesToRemove.includes(path))
+        )
       );
 
       // Send filesToRemove as an array of paths to delete
@@ -557,7 +563,8 @@ export default function EditBeritaPage() {
                               </div>
                             ))}
                         </div>
-                        {existingSampul.length - filesToRemove.length +
+                        {existingSampul.length -
+                          filesToRemove.length +
                           selectedFiles.length >
                           0 && (
                           <Badge className="mt-2 bg-blue-900 hover:bg-blue-800">
@@ -579,8 +586,8 @@ export default function EditBeritaPage() {
                       className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                     />
                     <p className="text-sm text-gray-500 mt-1">
-                      Pilih file baru untuk menambahkan sampul (maksimal 5 gambar
-                      total, termasuk gambar yang sudah ada).
+                      Pilih file baru untuk menambahkan sampul (maksimal 5
+                      gambar total, termasuk gambar yang sudah ada).
                     </p>
                   </div>
                   <div className="flex justify-end gap-2">

@@ -23,7 +23,7 @@ export function PublicFooter() {
                     Desa Silungkang Tigo
                   </span>
                   <span className="text-xs text-blue-100 font-medium">
-                    Kec. Silungkang, Kab. Sawahlunto
+                    Kec. Silungkang, Kota. Sawahlunto
                   </span>
                 </div>
               </div>

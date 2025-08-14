@@ -100,7 +100,7 @@ export default function BeritaPublicPage() {
   function getSampulUrl(sampul: string[]) {
     if (!sampul || sampul.length === 0) return "/placeholder.svg";
     const filename = sampul[0].split("/").pop();
-    return `http://localhost:3000/public/getSampul/berita/${filename}`;
+    return `${process.env.NEXT_PUBLIC_API_URL}/public/getSampul/berita/${filename}`;
   }
 
   // Get featured news (most recent)

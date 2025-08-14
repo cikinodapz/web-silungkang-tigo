@@ -57,8 +57,13 @@ export default function EditProdukHukumPage() {
   const params = useParams();
   const id = params.id as string;
 
-  // Base URL for the API
-  const API_BASE_URL = "http://localhost:3000";
+  // pake helper ringkas:
+  const getFileUrl = (path: string) => {
+    if (!path) return "";
+    if (/^https?:\/\//i.test(path)) return path; // kalau sudah full URL
+    const cleaned = path.replace(/^\/uploads/, "");
+    return `${process.env.NEXT_PUBLIC_API_URL}/produk-hukum/getFileProdukHukum${cleaned}`;
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -76,10 +81,7 @@ export default function EditProdukHukumPage() {
         setKategoriId(produkHukum.kategori?.id || "");
         setExistingFile(
           produkHukum.file_pendukung
-            ? `${API_BASE_URL}/produk-hukum/getFileProdukHukum${produkHukum.file_pendukung.replace(
-                /^\/uploads/,
-                ""
-              )}`
+            ? getFileUrl(produkHukum.file_pendukung)
             : null
         );
         setKategoriList(kategoriData);
@@ -149,7 +151,9 @@ export default function EditProdukHukumPage() {
       Swal.fire({
         icon: "error",
         title: "Gagal",
-        text: `Gagal memperbarui produk hukum: ${err.message || "Terjadi kesalahan"}`,
+        text: `Gagal memperbarui produk hukum: ${
+          err.message || "Terjadi kesalahan"
+        }`,
       });
     } finally {
       setIsLoading(false);

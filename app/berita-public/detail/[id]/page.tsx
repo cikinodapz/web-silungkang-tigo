@@ -83,7 +83,7 @@ export default function BeritaDetailPage() {
   function getSampulUrl(sampul: string[]) {
     if (!sampul || sampul.length === 0) return "/placeholder.svg";
     const filename = sampul[0].split("/").pop();
-    return `http://localhost:3000/public/getSampul/berita/${filename}`;
+    return `${process.env.NEXT_PUBLIC_API_URL}/public/getSampul/berita/${filename}`;
   }
 
   // Get all image URLs for gallery
@@ -91,7 +91,7 @@ export default function BeritaDetailPage() {
     if (!sampul || sampul.length === 0) return ["/placeholder.svg"];
     return sampul.map((path) => {
       const filename = path.split("/").pop();
-      return `http://localhost:3000/public/getSampul/berita/${filename}`;
+      return `${process.env.NEXT_PUBLIC_API_URL}/public/getSampul/berita/${filename}`;
     });
   }
 

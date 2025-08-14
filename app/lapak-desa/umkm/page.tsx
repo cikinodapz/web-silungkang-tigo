@@ -125,7 +125,7 @@ export default function UMKMListPage() {
 
   const getFotoUrl = (foto: string) => {
     const filename = foto.split("/").pop();
-    return `http://localhost:3000/lapak-desa/foto-umkm/umkm/${filename}`;
+    return `${process.env.NEXT_PUBLIC_API_URL}/lapak-desa/foto-umkm/umkm/${filename}`;
   };
 
   return (
@@ -248,7 +248,9 @@ export default function UMKMListPage() {
                                 size="sm"
                                 className="hover:bg-blue-100 text-blue-900 border-blue-200"
                                 onClick={() =>
-                                  router.push(`/lapak-desa/umkm/edit/${record.id}`)
+                                  router.push(
+                                    `/lapak-desa/umkm/edit/${record.id}`
+                                  )
                                 }
                               >
                                 <Edit className="h-4 w-4" />

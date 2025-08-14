@@ -16,8 +16,21 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Search,
+  Plus,
+  Edit,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { fetchData } from "@/lib/api";
 import Swal from "sweetalert2";
 
@@ -54,12 +67,16 @@ export default function ProdukListPage() {
       try {
         // Fetch UMKM list
         const umkmResponse = await fetchData("/lapak-desa/umkm");
-        const umkmData = Array.isArray(umkmResponse) ? umkmResponse : umkmResponse.data || [];
+        const umkmData = Array.isArray(umkmResponse)
+          ? umkmResponse
+          : umkmResponse.data || [];
         setUmkmList(umkmData);
 
         // Fetch products
         const produkResponse = await fetchData("/lapak-desa/produk");
-        const produkData = Array.isArray(produkResponse) ? produkResponse : produkResponse.data || [];
+        const produkData = Array.isArray(produkResponse)
+          ? produkResponse
+          : produkResponse.data || [];
         console.log("Fetched produk:", produkData);
         setProdukList(produkData);
       } catch (err: any) {
@@ -133,13 +150,8 @@ export default function ProdukListPage() {
   };
 
   const getFotoUrl = (foto: string) => {
-    try {
-      const filename = foto.split("/").pop();
-      if (!filename) throw new Error("Invalid photo path");
-      return `http://localhost:3000/lapak-desa/foto-produk/produk/${filename}`;
-    } catch {
-      return "/placeholder-image.jpg";
-    }
+    const filename = foto.split("/").pop();
+    return `${process.env.NEXT_PUBLIC_API_URL}/lapak-desa/foto-produk/produk/${filename}`;
   };
 
   return (
@@ -152,8 +164,12 @@ export default function ProdukListPage() {
               <div className="flex items-center gap-4">
                 <SidebarTrigger className="text-blue-900 hover:bg-blue-100 transition-colors p-2 rounded-md" />
                 <div>
-                  <h1 className="text-2xl font-semibold text-blue-900">Data Produk</h1>
-                  <p className="text-sm text-gray-600">Kelola produk UMKM desa</p>
+                  <h1 className="text-2xl font-semibold text-blue-900">
+                    Data Produk
+                  </h1>
+                  <p className="text-sm text-gray-600">
+                    Kelola produk UMKM desa
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -203,10 +219,14 @@ export default function ProdukListPage() {
               </div>
             )}
             {isLoading && (
-              <div className="text-center text-gray-600 animate-pulse">Memuat...</div>
+              <div className="text-center text-gray-600 animate-pulse">
+                Memuat...
+              </div>
             )}
             {!isLoading && filteredProduk.length === 0 && !error && (
-              <div className="text-center text-gray-600">Tidak ada data produk.</div>
+              <div className="text-center text-gray-600">
+                Tidak ada data produk.
+              </div>
             )}
 
             <Card className="border-0 bg-white/80 shadow-lg">
@@ -224,7 +244,9 @@ export default function ProdukListPage() {
                         <th className="px-6 py-4 font-semibold">UMKM</th>
                         <th className="px-6 py-4 font-semibold">Foto</th>
                         <th className="px-6 py-4 font-semibold">Link Produk</th>
-                        <th className="px-6 py-4 font-semibold text-right">Aksi</th>
+                        <th className="px-6 py-4 font-semibold text-right">
+                          Aksi
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -233,9 +255,15 @@ export default function ProdukListPage() {
                           key={produk.id}
                           className="border-b border-gray-100 hover:bg-blue-50/50 transition-all"
                         >
-                          <td className="px-6 py-4 font-medium">{produk.nama_produk}</td>
-                          <td className="px-6 py-4">{produk.deskripsi_produk}</td>
-                          <td className="px-6 py-4">{produk.umkm?.nama_umkm}</td>
+                          <td className="px-6 py-4 font-medium">
+                            {produk.nama_produk}
+                          </td>
+                          <td className="px-6 py-4">
+                            {produk.deskripsi_produk}
+                          </td>
+                          <td className="px-6 py-4">
+                            {produk.umkm?.nama_umkm}
+                          </td>
                           <td className="px-6 py-4">
                             {produk.foto_produk ? (
                               <img
@@ -243,11 +271,14 @@ export default function ProdukListPage() {
                                 alt={produk.nama_produk}
                                 className="w-16 h-16 object-cover rounded-md"
                                 onError={(e) => {
-                                  e.currentTarget.src = "/placeholder-image.jpg";
+                                  e.currentTarget.src =
+                                    "/placeholder-image.jpg";
                                 }}
                               />
                             ) : (
-                              <span className="text-gray-400">Tidak ada foto</span>
+                              <span className="text-gray-400">
+                                Tidak ada foto
+                              </span>
                             )}
                           </td>
                           <td className="px-6 py-4">
@@ -271,7 +302,9 @@ export default function ProdukListPage() {
                                 size="sm"
                                 className="hover:bg-blue-100 text-blue-900 border-blue-200"
                                 onClick={() =>
-                                  router.push(`/lapak-desa/produk/edit/${produk.id}`)
+                                  router.push(
+                                    `/lapak-desa/produk/edit/${produk.id}`
+                                  )
                                 }
                               >
                                 <Edit className="h-4 w-4" />
