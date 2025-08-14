@@ -1,7 +1,7 @@
 "use client";
 
 import type * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
@@ -61,39 +61,24 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 
+// ====== CONFIG BASE URL ======
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL;
+const LOGIN_URL = "http://localhost:8000/login";
+
 // Menu data
 const data = {
   navMain: [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: LayoutDashboard,
-    },
-    {
-      title: "Akun Admin",
-      url: "/admin",
-      icon: Settings,
-    },
+    { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+    { title: "Akun Admin", url: "/admin", icon: Settings },
     {
       title: "Data Penduduk",
       url: "/data-penduduk",
       icon: Users,
       items: [
-        {
-          title: "Kartu Keluarga (KK)",
-          url: "/data-penduduk",
-          icon: Home,
-        },
-        {
-          title: "Kepala Keluarga",
-          url: "/kepala-keluarga",
-          icon: UserCheck,
-        },
-        {
-          title: "Anggota Keluarga",
-          url: "/anggota-keluarga",
-          icon: Users,
-        },
+        { title: "Kartu Keluarga (KK)", url: "/data-penduduk", icon: Home },
+        { title: "Kepala Keluarga", url: "/kepala-keluarga", icon: UserCheck },
+        { title: "Anggota Keluarga", url: "/anggota-keluarga", icon: Users },
       ],
     },
     {
@@ -101,65 +86,29 @@ const data = {
       url: "/mutasi-penduduk",
       icon: ArrowUpDown,
       items: [
-        {
-          title: "Lahir/Masuk",
-          url: "/lahir-masuk",
-          icon: UserPlus,
-        },
-        {
-          title: "Meninggal",
-          url: "/meninggal",
-          icon: UserMinus,
-        },
-        {
-          title: "Pindah/Keluar",
-          url: "/pindah-keluar",
-          icon: ArrowUpDown,
-        },
+        { title: "Lahir/Masuk", url: "/lahir-masuk", icon: UserPlus },
+        { title: "Meninggal", url: "/meninggal", icon: UserMinus },
+        { title: "Pindah/Keluar", url: "/pindah-keluar", icon: ArrowUpDown },
       ],
     },
-    {
-      title: "APBDes",
-      url: "/apbdes",
-      icon: DollarSign,
-    },
+    { title: "APBDes", url: "/apbdes", icon: DollarSign },
     {
       title: "Berita",
       url: "/berita",
       icon: Newspaper,
       items: [
-        {
-          title: "Kategori Berita",
-          url: "/berita/kategori-berita",
-          icon: Tags,
-        },
-        {
-          title: "Berita Desa",
-          url: "/berita",
-          icon: Newspaper,
-        },
+        { title: "Kategori Berita", url: "/berita/kategori-berita", icon: Tags },
+        { title: "Berita Desa", url: "/berita", icon: Newspaper },
       ],
     },
-    {
-      title: "Potensi Desa",
-      url: "/potensi-desa",
-      icon: Zap,
-    },
+    { title: "Potensi Desa", url: "/potensi-desa", icon: Zap },
     {
       title: "Lapak Desa",
       url: "/lapak-desa",
       icon: Store,
       items: [
-        {
-          title: "UMKM",
-          url: "/lapak-desa/umkm",
-          icon: Users,
-        },
-        {
-          title: "Produk",
-          url: "/lapak-desa/produk",
-          icon: Package,
-        },
+        { title: "UMKM", url: "/lapak-desa/umkm", icon: Users },
+        { title: "Produk", url: "/lapak-desa/produk", icon: Package },
       ],
     },
     {
@@ -167,11 +116,7 @@ const data = {
       url: "/produk-hukum",
       icon: FileText,
       items: [
-        {
-          title: "Kategori",
-          url: "/produk-hukum/kategori",
-          icon: FolderOpen,
-        },
+        { title: "Kategori", url: "/produk-hukum/kategori", icon: FolderOpen },
         {
           title: "Produk Hukum",
           url: "/produk-hukum/produk-hukum",
@@ -188,27 +133,56 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [openLogout, setOpenLogout] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
+  // ====== AUTH GUARD: redirect kalau tidak ada token/session ======
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const ensureAuth = async () => {
+      try {
+        // 1) Cek token di localStorage (kalau FE simpan token non-httpOnly)
+        const lsToken = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+        if (lsToken) return;
+
+        // 2) Kalau gak ada, cek sesi cookie httpOnly dengan ping endpoint proteksi
+        const res = await fetch(`${API_BASE}/kelola-kk/getDashboardSummary`, {
+          method: "GET",
+          credentials: "include", // penting untuk kirim cookie
+          headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
+        });
+
+        if (res.ok) return; // sesi valid
+
+        // 3) Kalau 401 atau non-OK -> paksa login
+        router.replace(LOGIN_URL);
+      } catch (e) {
+        // error jaringan juga anggap tidak autentik → redirect
+        router.replace(LOGIN_URL);
+      }
+    };
+
+    ensureAuth();
+    return () => controller.abort();
+  }, [router]);
+
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
-      const res = await fetch("http://localhost:3000/auth/logout", {
+      const res = await fetch(`${API_BASE}/auth/logout`, {
         method: "POST",
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       });
 
       if (!res.ok) {
         throw new Error("Logout gagal");
       }
 
-      // optionally clear local storage/session if you store tokens there
+      // bersihin token lokal kalau ada
       localStorage.removeItem("token");
 
       setOpenLogout(false);
-      // Redirect ke halaman utama
-      router.push("http://localhost:8000");
+      router.replace(LOGIN_URL);
     } catch (err) {
       console.error(err);
       alert("Gagal logout. Coba lagi ya.");
@@ -218,26 +192,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   };
 
   return (
-    <Sidebar
-      {...props}
-      className="border-r border-gray-100 bg-white/80 shadow-lg"
-    >
+    <Sidebar {...props} className="border-r border-gray-100 bg-white/80 shadow-lg">
       <SidebarHeader className="border-b border-gray-200/50 bg-gradient-to-r from-blue-900 to-cyan-700">
         <div className="flex items-center gap-3 px-4 py-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 shadow-inner overflow-hidden">
-            <img
-              src="/logo.png"
-              alt="Desa Digital Logo"
-              className="h-10 w-10 object-contain"
-            />
+            <img src="/logo.png" alt="Desa Digital Logo" className="h-10 w-10 object-contain" />
           </div>
           <div className="flex flex-col">
-            <span className="text-lg font-bold text-white tracking-tight">
-              Desa Digital
-            </span>
-            <span className="text-xs text-white/80 font-medium">
-              Sistem Informasi Terpadu
-            </span>
+            <span className="text-lg font-bold text-white tracking-tight">Desa Digital</span>
+            <span className="text-xs text-white/80 font-medium">Sistem Informasi Terpadu</span>
           </div>
         </div>
       </SidebarHeader>
@@ -314,23 +277,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     "transition-all duration-150"
                                   )}
                                 >
-                                  <a
-                                    href={subItem.url}
-                                    className="flex items-center gap-2"
-                                  >
+                                  <a href={subItem.url} className="flex items-center gap-2">
                                     <subItem.icon
                                       className={cn(
                                         "h-3.5 w-3.5 text-gray-500 group-hover:text-blue-900",
                                         (pathname === subItem.url ||
-                                          pathname.startsWith(
-                                            subItem.url + "/"
-                                          )) &&
+                                          pathname.startsWith(subItem.url + "/")) &&
                                           "text-blue-900"
                                       )}
                                     />
-                                    <span className="text-sm">
-                                      {subItem.title}
-                                    </span>
+                                    <span className="text-sm">{subItem.title}</span>
                                   </a>
                                 </SidebarMenuSubButton>
                               </SidebarMenuSubItem>
@@ -343,8 +299,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         asChild
                         className={cn(
                           "group hover:bg-gradient-to-r hover:from-blue-100 hover:to-cyan-100 hover:scale-[1.02] transition-all duration-200",
-                          (pathname === item.url ||
-                            pathname.startsWith(item.url + "/")) &&
+                          (pathname === item.url || pathname.startsWith(item.url + "/")) &&
                             "bg-gradient-to-r from-blue-200 to-cyan-200 text-blue-900 font-semibold",
                           "px-4 py-2.5 my-0.5 mx-2 rounded-lg"
                         )}
@@ -353,16 +308,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                           <item.icon
                             className={cn(
                               "h-4 w-4 text-gray-500 group-hover:text-blue-900",
-                              (pathname === item.url ||
-                                pathname.startsWith(item.url + "/")) &&
+                              (pathname === item.url || pathname.startsWith(item.url + "/")) &&
                                 "text-blue-900"
                             )}
                           />
                           <span
                             className={cn(
                               "text-sm font-medium text-gray-600 group-hover:text-blue-900",
-                              (pathname === item.url ||
-                                pathname.startsWith(item.url + "/")) &&
+                              (pathname === item.url || pathname.startsWith(item.url + "/")) &&
                                 "text-blue-900"
                             )}
                           >
@@ -382,22 +335,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter className="border-t border-gray-200/50 bg-white/80">
         <div className="p-3">
           <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50/50 border border-gray-200/50 transition-all hover:bg-gradient-to-r hover:from-blue-100 hover:to-cyan-100 hover:scale-[1.02]">
-            {/* <div className="h-9 w-9 rounded-full bg-gradient-to-r from-blue-900 to-cyan-700 flex items-center justify-center text-white text-sm font-semibold shadow-sm">
-              AD
-            </div> */}
-            {/* <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-blue-900 truncate">
-                Admin Desa
-              </p>
-              <p className="text-xs text-gray-600 truncate">admin@desa.id</p>
-            </div> */}
-
-            {/* Settings (existing) */}
-            {/* <div className="text-gray-400">
-              <Settings className="h-4 w-4" />
-            </div> */}
-
-            {/* Logout with confirm dialog */}
             <AlertDialog open={openLogout} onOpenChange={setOpenLogout}>
               <AlertDialogTrigger asChild>
                 <Button
@@ -417,17 +354,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel disabled={isLoggingOut}>
-                    Batal
-                  </AlertDialogCancel>
+                  <AlertDialogCancel disabled={isLoggingOut}>Batal</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleLogout}
                     disabled={isLoggingOut}
                     className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
                   >
-                    {isLoggingOut && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
+                    {isLoggingOut && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Ya, Keluar
                   </AlertDialogAction>
                 </AlertDialogFooter>
