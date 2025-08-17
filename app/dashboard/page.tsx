@@ -169,7 +169,9 @@ const chartOptions: ChartOptions<"bar" | "doughnut"> = {
 };
 
 export default function DashboardPage() {
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+    null
+  );
   const [visitorStats, setVisitorStats] = useState<VisitorStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -198,10 +200,13 @@ export default function DashboardPage() {
 
     const loadVisitorStats = async () => {
       try {
-        const res = await fetch("http://localhost:3000/kelola-kk/stats", {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/kelola-kk/stats`,
+          {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          }
+        );
         const data = await res.json();
         if (res.ok) {
           setVisitorStats({

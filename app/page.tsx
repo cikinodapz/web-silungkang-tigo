@@ -81,15 +81,19 @@ const getSampulUrl = (sampul: any) => {
   return `${process.env.NEXT_PUBLIC_API_URL}/berita/getSampul/berita/${filename}`;
 };
 
+// === NEW: format angka uang TANPA pembulatan/abbreviations (full digits)
 const formatCurrency = (amount: number) => {
-  if (amount >= 1_000_000_000) return `${(amount / 1_000_000_000).toFixed(1)} Miliar`;
-  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)} Juta`;
-  if (amount >= 1_000) return `${(amount / 1_000).toFixed(1)} Ribu`;
-  return amount.toString();
+  const n = Number(amount);
+  if (!Number.isFinite(n)) return "0";
+  // IDR biasanya tanpa desimal. Kalau sumber datanya desimal, tambahkan opsi fraction di sini.
+  return n.toLocaleString("id-ID");
 };
 
 const formatDate = (dateString: string) =>
-  new Date(dateString).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" });
+  new Date(dateString).toLocaleString("id-ID", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 
 const jenisBadgeClass = (jenis: string) => {
   switch (jenis) {
@@ -180,7 +184,12 @@ export default function HomePage() {
 
   const [stats, setStats] = useState([
     { label: "Total Penduduk", value: "0", icon: Users, color: "bg-blue-500" },
-    { label: "Kepala Keluarga", value: "0", icon: Users, color: "bg-green-500" },
+    {
+      label: "Kepala Keluarga",
+      value: "0",
+      icon: Users,
+      color: "bg-green-500",
+    },
     { label: "Laki-laki", value: "0", icon: Users, color: "bg-purple-500" },
     { label: "Perempuan", value: "0", icon: Users, color: "bg-pink-500" },
   ]);
@@ -188,9 +197,19 @@ export default function HomePage() {
   const [apbdesData, setApbdesData] = useState<
     { category: string; amount: string; percentage: number; color: string }[]
   >([
-    { category: "Pendapatan", amount: "0", percentage: 0, color: "bg-green-500" },
+    {
+      category: "Pendapatan",
+      amount: "0",
+      percentage: 0,
+      color: "bg-green-500",
+    },
     { category: "Belanja", amount: "0", percentage: 0, color: "bg-blue-500" },
-    { category: "Pembiayaan", amount: "0", percentage: 0, color: "bg-purple-500" },
+    {
+      category: "Pembiayaan",
+      amount: "0",
+      percentage: 0,
+      color: "bg-purple-500",
+    },
     { category: "Lainnya", amount: "0", percentage: 0, color: "bg-orange-500" },
   ]);
   const [totalApbdes, setTotalApbdes] = useState(0);
@@ -199,9 +218,9 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const title = "Selamat Datang di Desa Silungkang Tigo";
+  const title = "Selamat Datang di Website Resmi Desa Silungkang Tigo";
   const images = ["/landing1.jpg", "/landing2.jpg", "/landing3.jpg"];
-  const CATEGORY_ORDER = ["Pendapatan", "Belanja", "Pembiayaan"] as const;
+  // const CATEGORY_ORDER = ["Pendapatan", "Belanja", "Pembiayaan"] as const;
 
   const totalNewsPages = useMemo(
     () => Math.max(1, Math.ceil(news.length / itemsPerSlide)),
@@ -215,7 +234,7 @@ export default function HomePage() {
 
   const generateYearOptions = () => {
     const currentYear = new Date().getFullYear();
-    const years = [] as number[];
+    const years: number[] = [];
     for (let year = 2000; year <= currentYear; year++) years.push(year);
     return years.reverse();
   };
@@ -224,20 +243,44 @@ export default function HomePage() {
     const loadData = async () => {
       setIsLoading(true);
       try {
-        const populationResponse = await fetchData("/public/getPopulationStats");
+        const populationResponse = await fetchData(
+          "/public/getPopulationStats"
+        );
         const populationData: PopulationStats = populationResponse.data || {};
         setStats([
-          { label: "Total Penduduk", value: populationData.totalPenduduk?.toString() || "0", icon: Users, color: "bg-blue-500" },
-          { label: "Kepala Keluarga", value: populationData.totalKepalaKeluarga?.toString() || "0", icon: Users, color: "bg-green-500" },
-          { label: "Laki-laki", value: populationData.totalLakiLaki?.toString() || "0", icon: Users, color: "bg-purple-500" },
-          { label: "Perempuan", value: populationData.totalPerempuan?.toString() || "0", icon: Users, color: "bg-pink-500" },
+          {
+            label: "Total Penduduk",
+            value: populationData.totalPenduduk?.toString() || "0",
+            icon: Users,
+            color: "bg-blue-500",
+          },
+          {
+            label: "Kepala Keluarga",
+            value: populationData.totalKepalaKeluarga?.toString() || "0",
+            icon: Users,
+            color: "bg-green-500",
+          },
+          {
+            label: "Laki-laki",
+            value: populationData.totalLakiLaki?.toString() || "0",
+            icon: Users,
+            color: "bg-purple-500",
+          },
+          {
+            label: "Perempuan",
+            value: populationData.totalPerempuan?.toString() || "0",
+            icon: Users,
+            color: "bg-pink-500",
+          },
         ]);
 
         const newsResponse = await fetchData("/public/getAllBerita");
         setNews(Array.isArray(newsResponse.data) ? newsResponse.data : []);
 
         const apbdesResponse = await fetchData("/public/getAllAPBDes");
-        const apbdesFetched: APBDesItem[] = Array.isArray(apbdesResponse.data) ? apbdesResponse.data : [];
+        const apbdesFetched: APBDesItem[] = Array.isArray(apbdesResponse.data)
+          ? apbdesResponse.data
+          : [];
         setApbdesItems(apbdesFetched);
 
         const visitorResponse = await fetchData("/kelola-kk/track");
@@ -253,9 +296,14 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    const filteredItems = apbdesItems.filter((item) => item.tahun === selectedYear);
+    const filteredItems = apbdesItems.filter(
+      (item) => item.tahun === selectedYear
+    );
     if (filteredItems.length > 0) {
-      const totalDana = filteredItems.reduce((sum, item) => sum + item.jumlah_dana, 0);
+      const totalDana = filteredItems.reduce(
+        (sum, item) => sum + item.jumlah_dana,
+        0
+      );
       setTotalApbdes(totalDana);
 
       const groupedData = filteredItems.reduce((acc, item) => {
@@ -273,8 +321,14 @@ export default function HomePage() {
 
       const updatedApbdesData = categories.map((cat) => {
         const amount = groupedData[cat.jenis] || 0;
-        const percentage = totalDana > 0 ? Math.round((amount / totalDana) * 100) : 0;
-        return { category: cat.category, amount: formatCurrency(amount), percentage, color: cat.color };
+        const percentage =
+          totalDana > 0 ? Math.round((amount / totalDana) * 100) : 0;
+        return {
+          category: cat.category,
+          amount: formatCurrency(amount), // full digits
+          percentage,
+          color: cat.color,
+        };
       });
 
       const mainCategories = categories.map((c) => c.jenis);
@@ -283,10 +337,11 @@ export default function HomePage() {
         .reduce((sum, [, amount]) => sum + amount, 0);
 
       if (otherAmount > 0) {
-        const otherPercentage = totalDana > 0 ? Math.round((otherAmount / totalDana) * 100) : 0;
+        const otherPercentage =
+          totalDana > 0 ? Math.round((otherAmount / totalDana) * 100) : 0;
         updatedApbdesData.push({
           category: "Lainnya",
-          amount: formatCurrency(otherAmount),
+          amount: formatCurrency(otherAmount), // full digits
           percentage: otherPercentage,
           color: "bg-orange-500",
         });
@@ -295,7 +350,12 @@ export default function HomePage() {
       setApbdesData(updatedApbdesData);
     } else {
       setApbdesData([
-        { category: "Tidak ada data", amount: "0", percentage: 100, color: "bg-gray-400" },
+        {
+          category: "Tidak ada data",
+          amount: "0",
+          percentage: 100,
+          color: "bg-gray-400",
+        },
       ]);
       setTotalApbdes(0);
     }
@@ -341,11 +401,18 @@ export default function HomePage() {
   const visibleNews = news.slice(startIdx, startIdx + itemsPerSlide);
 
   const newsVariants = {
-    enter: (direction: number) => ({ x: direction > 0 ? 1000 : -1000, opacity: 0 }),
+    enter: (direction: number) => ({
+      x: direction > 0 ? 1000 : -1000,
+      opacity: 0,
+    }),
     center: { x: 0, opacity: 1 },
-    exit: (direction: number) => ({ x: direction < 0 ? 1000 : -1000, opacity: 0 }),
+    exit: (direction: number) => ({
+      x: direction < 0 ? 1000 : -1000,
+      opacity: 0,
+    }),
   } as const;
 
+  const CATEGORY_ORDER: readonly string[] = ["Pendapatan", "Belanja", "Pembiayaan"];
   const filteredApbdes = apbdesItems
     .filter((it) => it.tahun === selectedYear)
     .sort((a, b) => {
@@ -362,7 +429,8 @@ export default function HomePage() {
 
       if (ra !== rb) return ra - rb; // 1) kelompok kategori dulu
 
-      if (ra === CATEGORY_ORDER.length) { // 2) sama-sama "lainnya" -> nama A–Z
+      if (ra === CATEGORY_ORDER.length) {
+        // 2) sama-sama "lainnya" -> nama A–Z
         const byName = safeJenisA.localeCompare(safeJenisB);
         if (byName !== 0) return byName;
       }
@@ -382,7 +450,10 @@ export default function HomePage() {
       <section className="relative h-screen py-28 md:py-40 px-4 text-white overflow-hidden flex items-center justify-center">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000"
-          style={{ backgroundImage: `url(${images[currentImageIndex]})`, opacity: 1 }}
+          style={{
+            backgroundImage: `url(${images[currentImageIndex]})`,
+            opacity: 1,
+          }}
         />
         <div className="absolute inset-0 bg-black/40" />
         <div className="absolute inset-0 overflow-hidden">
@@ -394,15 +465,16 @@ export default function HomePage() {
               {displayedTitle}
               <span className="typewriter-cursor">|</span>
             </h1>
-            <p className="text-lg md:text-xl lg:text-2xl mb-8 text-blue-100 font-medium drop-shadow-md animate-slide-up animation-delay-200">
-              Desa Modern dengan Teknologi Digital Terdepan
-            </p>
           </div>
         </div>
         <div className="absolute -bottom-1 left-0 right-0 h-32 bg-gradient-to-t from-slate-50 to-transparent" />
       </section>
 
-      {isLoading && <div className="text-center text-gray-600 animate-pulse py-12">Memuat...</div>}
+      {isLoading && (
+        <div className="text-center text-gray-600 animate-pulse py-12">
+          Memuat...
+        </div>
+      )}
       {error && (
         <div className="bg-red-50 text-red-600 text-sm p-4 rounded-lg text-center animate-in fade-in mx-auto max-w-2xl my-8">
           {error}
@@ -414,20 +486,30 @@ export default function HomePage() {
           {/* DATA PENDUDUK */}
           <section className="mb-16">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-[#073046] mb-4">Data Penduduk</h2>
+              <h2 className="text-3xl font-bold text-[#073046] mb-4">
+                Data Penduduk
+              </h2>
               <p className="text-slate-600 max-w-2xl mx-auto">
-                Informasi terkini mengenai jumlah penduduk dan demografi Desa Silungkang Tigo
+                Informasi terkini mengenai jumlah penduduk dan demografi Desa
+                Silungkang Tigo
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {stats.map((stat, index) => (
-                <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <Card
+                  key={index}
+                  className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                >
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-slate-600 mb-1">{stat.label}</p>
-                        <p className="text-3xl font-bold text-[#073046]">{stat.value}</p>
+                        <p className="text-sm font-medium text-slate-600 mb-1">
+                          {stat.label}
+                        </p>
+                        <p className="text-3xl font-bold text-[#073046]">
+                          {stat.value}
+                        </p>
                       </div>
                       <div className={`p-3 rounded-full ${stat.color}`}>
                         <stat.icon className="h-6 w-6 text-white" />
@@ -447,7 +529,9 @@ export default function HomePage() {
                   <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#073046] mb-2 sm:mb-3 tracking-tight">
                     Berita Terkini
                   </h2>
-                  <p className="text-slate-600 text-sm sm:text-base md:text-lg">Informasi dan kegiatan terbaru dari desa</p>
+                  <p className="text-slate-600 text-sm sm:text-base md:text-lg">
+                    Informasi dan kegiatan terbaru dari desa
+                  </p>
                 </div>
                 <Link href="/berita-public">
                   <Button
@@ -483,17 +567,26 @@ export default function HomePage() {
                       initial="enter"
                       animate="center"
                       exit="exit"
-                      transition={{ x: { type: "spring", stiffness: 400, damping: 35 }, opacity: { duration: 0.25 } }}
+                      transition={{
+                        x: { type: "spring", stiffness: 400, damping: 35 },
+                        opacity: { duration: 0.25 },
+                      }}
                       className="absolute inset-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 p-2 sm:p-4"
                     >
                       {visibleNews.length === 0 ? (
-                        <div className="col-span-full flex items-center justify-center text-slate-500">Belum ada berita.</div>
+                        <div className="col-span-full flex items-center justify-center text-slate-500">
+                          Belum ada berita.
+                        </div>
                       ) : (
                         visibleNews.map((article) => (
                           <motion.div
                             key={article.id}
                             whileHover={{ scale: 1.03, y: -4 }}
-                            transition={{ type: "spring", stiffness: 500, damping: 20 }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 500,
+                              damping: 20,
+                            }}
                           >
                             <Link href={`/berita-public/detail/${article.id}`}>
                               <Card className="border-2 border-gray-200 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 bg-white h-full overflow-hidden">
@@ -503,7 +596,10 @@ export default function HomePage() {
                                     alt={article.judul}
                                     className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                                     onError={(e) => {
-                                      (e.currentTarget as HTMLImageElement).src = "/placeholder.svg?height=200&width=300";
+                                      (
+                                        e.currentTarget as HTMLImageElement
+                                      ).src =
+                                        "/placeholder.svg?height=200&width=300";
                                     }}
                                   />
                                 </div>
@@ -517,7 +613,9 @@ export default function HomePage() {
                                   <div className="flex items-center justify-between text-xs text-slate-500">
                                     <div className="flex items-center gap-2">
                                       <Calendar className="h-4 w-4" />
-                                      {new Date(article.createdAt).toLocaleDateString("id-ID", {
+                                      {new Date(
+                                        article.createdAt
+                                      ).toLocaleDateString("id-ID", {
                                         day: "numeric",
                                         month: "long",
                                         year: "numeric",
@@ -594,18 +692,24 @@ export default function HomePage() {
           {/* LOKASI */}
           <section className="mb-16">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-[#073046] mb-2">Lokasi Desa</h2>
-              <p className="text-slate-600">Peta wilayah Desa Silungkang Tigo</p>
+              <h2 className="text-3xl font-bold text-[#073046] mb-2">
+                Lokasi Desa
+              </h2>
+              <p className="text-slate-600">
+                Peta wilayah Desa Silungkang Tigo
+              </p>
             </div>
 
             <div className="relative rounded-xl overflow-hidden shadow-xl border border-slate-200 h-[500px]">
               <div className="absolute inset-0 bg-slate-100 flex items-center justify-center">
                 <div className="text-center p-6">
                   <MapPin className="h-12 w-12 mx-auto text-slate-400 mb-4" />
-                  <p className="text-slate-500 mb-4">Memuat peta lokasi Desa Silungkang Tigo...</p>
+                  <p className="text-slate-500 mb-4">
+                    Memuat peta lokasi Desa Silungkang Tigo...
+                  </p>
                   <Button asChild>
                     <Link
-                      href="https://maps.app.goo.gl/k2XWCFF4u5PMwZ8k9"
+                      href="https://maps.app.goo.gl/vzaSRfMH8mmkFBHc9"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="bg-[#073046] hover:bg-[#0a4a66]"
@@ -618,34 +722,23 @@ export default function HomePage() {
 
               <iframe
                 className="absolute inset-0 w-full h-full"
-                src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.563623576321!2d100.781125!3d-0.6833!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMMKwNDEnNTkuOSJTIDEwMMKwNDcnMDEuOSJF!5e0!3m2!1sen!2sid!4v1620000000000!5m2!1sen!2sid`}
+                src="https://www.google.com/maps?q=-0.7206638,100.7658654&z=16&output=embed"
                 loading="lazy"
                 allowFullScreen
-                title="Peta Lokasi Desa Silungkang Tigo"
+                title="Peta Lokasi Kantor Desa Silungkang Tigo"
               />
-              {/* <div className="absolute bottom-6 left-6 right-6 bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg max-w-md border border-slate-200">
-                <h3 className="font-bold text-2xl text-[#073046] mb-2">Desa Silungkang Tigo</h3>
-                <p className="text-md text-slate-600 mb-3">Kecamatan Silungkang, Kabupaten Sawahlunto, Sumatera Barat</p>
-                <div className="flex items-center gap-2 text-sm text-slate-500">
-                  <MapPin className="h-4 w-4" />
-                  <span>Koordinat: -0.6833°, 100.7833°</span>
-                </div>
-                <div className="mt-4">
-                  <Button asChild size="sm" className="bg-[#073046] hover:bg-[#0a4a66]">
-                    <Link href="https://maps.app.goo.gl/k2XWCFF4u5PMwZ8k9" target="_blank" rel="noopener noreferrer">
-                      Dapatkan Petunjuk Arah
-                    </Link>
-                  </Button>
-                </div>
-              </div> */}
             </div>
           </section>
 
           {/* APBDES */}
           <section className="mb-16">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-[#073046] mb-2">APBDes {selectedYear}</h2>
-              <p className="text-slate-600">Anggaran Pendapatan dan Belanja Desa</p>
+              <h2 className="text-3xl font-bold text-[#073046] mb-2">
+                APBDes {selectedYear}
+              </h2>
+              <p className="text-slate-600">
+                Anggaran Pendapatan dan Belanja Desa
+              </p>
               <div className="mt-4">
                 <select
                   value={selectedYear}
@@ -675,23 +768,38 @@ export default function HomePage() {
                     {apbdesData.map((item, index) => (
                       <div key={index} className="space-y-2">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium text-slate-700">{item.category}</span>
-                          <span className="text-sm font-bold text-[#073046]">Rp {item.amount}</span>
+                          <span className="text-sm font-medium text-slate-700">
+                            {item.category}
+                          </span>
+                          <span className="text-sm font-bold text-[#073046]">
+                            Rp {item.amount}
+                          </span>
                         </div>
                         <div className="w-full bg-slate-200 rounded-full h-2">
                           <div
                             className={`h-2 rounded-full ${item.color} transition-all duration-500`}
-                            style={{ width: `${Math.min(100, Math.max(0, item.percentage))}%` }}
+                            style={{
+                              width: `${Math.min(
+                                100,
+                                Math.max(0, item.percentage)
+                              )}%`,
+                            }}
                           />
                         </div>
-                        <div className="text-xs text-slate-500 text-right">{item.percentage}%</div>
+                        <div className="text-xs text-slate-500 text-right">
+                          {item.percentage}%
+                        </div>
                       </div>
                     ))}
                   </div>
                   <div className="mt-6 pt-4 border-t border-slate-200">
                     <div className="flex justify-between items-center">
-                      <span className="font-bold text-slate-700">Total Anggaran:</span>
-                      <span className="font-bold text-lg text-[#073046]">Rp {formatCurrency(totalApbdes)}</span>
+                      <span className="font-bold text-slate-700">
+                        Total Anggaran:
+                      </span>
+                      <span className="font-bold text-lg text-[#073046]">
+                        Rp {formatCurrency(totalApbdes)}
+                      </span>
                     </div>
                   </div>
                 </CardContent>
@@ -718,8 +826,12 @@ export default function HomePage() {
                           {/* pusat nilai */}
                           <div className="absolute inset-0 flex items-center justify-center">
                             <div className="text-center">
-                              <div className="text-xs text-slate-500">Total Anggaran</div>
-                              <div className="font-bold text-[#073046] text-base">Rp {formatCurrency(totalApbdes)}</div>
+                              <div className="text-xs text-slate-500">
+                                Total Anggaran
+                              </div>
+                              <div className="font-bold text-[#073046] text-base">
+                                Rp {formatCurrency(totalApbdes)}
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -728,7 +840,9 @@ export default function HomePage() {
                         <div className="flex flex-wrap justify-center gap-4 mt-6">
                           {apbdesData.map((item, idx) => (
                             <div key={idx} className="flex items-center gap-2">
-                              <span className={`inline-block w-3 h-3 rounded-full ${item.color}`} />
+                              <span
+                                className={`inline-block w-3 h-3 rounded-full ${item.color}`}
+                              />
                               <span className="text-sm text-slate-700">
                                 {item.category} • {item.percentage}%
                               </span>
@@ -760,28 +874,47 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent className="p-0">
                   {filteredApbdes.length === 0 ? (
-                    <div className="p-6 text-slate-600">Belum ada rincian APBDes untuk tahun {selectedYear}.</div>
+                    <div className="p-6 text-slate-600">
+                      Belum ada rincian APBDes untuk tahun {selectedYear}.
+                    </div>
                   ) : (
                     <ul className="divide-y divide-slate-200">
                       {filteredApbdes.map((item) => {
-                        const share = totalApbdes > 0 ? Math.round((item.jumlah_dana / totalApbdes) * 100) : 0;
+                        const share =
+                          totalApbdes > 0
+                            ? Math.round((item.jumlah_dana / totalApbdes) * 100)
+                            : 0;
                         return (
-                          <li key={item.id} className="p-4 md:p-5 hover:bg-slate-50 transition-colors">
+                          <li
+                            key={item.id}
+                            className="p-4 md:p-5 hover:bg-slate-50 transition-colors"
+                          >
                             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                               <div className="min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <p className="font-semibold text-[#073046] text-base md:text-lg truncate">{item.pendanaan || "-"}</p>
-                                  <Badge variant="outline" className={`border ${jenisBadgeClass(item.jenis_apbd)}`}>
+                                  <p className="font-semibold text-[#073046] text-base md:text-lg truncate">
+                                    {item.pendanaan || "-"}
+                                  </p>
+                                  <Badge
+                                    variant="outline"
+                                    className={`border ${jenisBadgeClass(
+                                      item.jenis_apbd
+                                    )}`}
+                                  >
                                     {item.jenis_apbd || "Lainnya"}
                                   </Badge>
                                 </div>
                                 {item.keterangan ? (
-                                  <p className="text-xs md:text-sm text-slate-600 mt-1 line-clamp-2">{item.keterangan}</p>
+                                  <p className="text-xs md:text-sm text-slate-600 mt-1 line-clamp-2">
+                                    {item.keterangan}
+                                  </p>
                                 ) : null}
                                 <div className="mt-2">
                                   <div className="w-full bg-slate-200 rounded-full h-1.5">
                                     <div
-                                      className={`h-1.5 rounded-full ${jenisProgressClass(item.jenis_apbd)}`}
+                                      className={`h-1.5 rounded-full ${jenisProgressClass(
+                                        item.jenis_apbd
+                                      )}`}
                                       style={{ width: `${share}%` }}
                                     />
                                   </div>
@@ -792,8 +925,9 @@ export default function HomePage() {
                                 </div>
                               </div>
                               <div className="text-right shrink-0">
-                                <p className="font-bold text-[#073046]">Rp {formatCurrency(item.jumlah_dana)}</p>
-                                {/* <p className="text-[11px] text-slate-500">Update: {formatDate(item.updatedAt)}</p> */}
+                                <p className="font-bold text-[#073046]">
+                                  Rp {formatCurrency(item.jumlah_dana)}
+                                </p>
                               </div>
                             </div>
                           </li>
@@ -811,36 +945,111 @@ export default function HomePage() {
 
       <style jsx global>{`
         @keyframes slideUp {
-          0% { opacity: 0; transform: translateY(20px); }
-          100% { opacity: 1; transform: translateY(0); }
+          0% {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
-        .animate-slide-up { opacity: 0; animation: slideUp 0.8s ease-out forwards; }
-        .animation-delay-200 { animation-delay: 0.2s; }
-        .animation-delay-400 { animation-delay: 0.4s; }
-        .typewriter-cursor { display: inline-block; margin-left: 2px; animation: blink 1s step-end infinite; }
-        @keyframes blink { from, to { opacity: 1; } 50% { opacity: 0; } }
+        .animate-slide-up {
+          opacity: 0;
+          animation: slideUp 0.8s ease-out forwards;
+        }
+        .animation-delay-200 {
+          animation-delay: 0.2s;
+        }
+        .animation-delay-400 {
+          animation-delay: 0.4s;
+        }
+        .typewriter-cursor {
+          display: inline-block;
+          margin-left: 2px;
+          animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+          from,
+          to {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0;
+          }
+        }
 
         .hyperspeed-lines {
-          position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-          background: linear-gradient(90deg, transparent 0%, rgba(59,130,246,0.03) 45%, rgba(59,130,246,0.08) 50%, rgba(59,130,246,0.03) 55%, transparent 100%);
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(59, 130, 246, 0.03) 45%,
+            rgba(59, 130, 246, 0.08) 50%,
+            rgba(59, 130, 246, 0.03) 55%,
+            transparent 100%
+          );
           background-size: 200px 100%;
           animation: hyperspeed 3s linear infinite;
         }
         .hyperspeed-lines::before {
-          content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-          background: repeating-linear-gradient(90deg, transparent, transparent 98px, rgba(255,255,255,0.02) 100px, rgba(255,255,255,0.02) 102px);
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 98px,
+            rgba(255, 255, 255, 0.02) 100px,
+            rgba(255, 255, 255, 0.02) 102px
+          );
           animation: hyperspeed-lines 2s linear infinite;
         }
-        @keyframes hyperspeed { 0% { transform: translateX(-200px); } 100% { transform: translateX(100vw); } }
-        @keyframes hyperspeed-lines { 0% { transform: translateX(-100px); } 100% { transform: translateX(100vw); } }
+        @keyframes hyperspeed {
+          0% {
+            transform: translateX(-200px);
+          }
+          100% {
+            transform: translateX(100vw);
+          }
+        }
+        @keyframes hyperspeed-lines {
+          0% {
+            transform: translateX(-100px);
+          }
+          100% {
+            transform: translateX(100vw);
+          }
+        }
 
-        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        .line-clamp-3 {
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
 
         /* Donut hole (mask) — dukung chromium dan webkit */
         .donut-mask {
-          -webkit-mask: radial-gradient(circle at center, transparent 56%, black 57%);
-                  mask: radial-gradient(circle at center, transparent 56%, black 57%);
+          -webkit-mask: radial-gradient(
+            circle at center,
+            transparent 56%,
+            black 57%
+          );
+          mask: radial-gradient(circle at center, transparent 56%, black 57%);
         }
       `}</style>
     </div>

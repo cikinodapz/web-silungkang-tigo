@@ -69,7 +69,7 @@ export function PublicFooter() {
                 </div>
                 <div className="flex items-start gap-2">
                   <Mail className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  <span>admin@silungkangtigo.desa.id</span>
+                  <span>desasilungkangtigo@gmail.com</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Clock className="h-4 w-4 mt-0.5 flex-shrink-0" />
@@ -139,7 +139,7 @@ export function PublicFooter() {
       {/* Copyright Section */}
       <div className="w-full bg-[#052838] text-blue-100 py-4">
         <div className="container mx-auto px-4 text-center text-sm">
-          <p>© {new Date().getFullYear()} Desa Silungkang Tigo. All rights reserved.</p>
+          <p>©kknUnand2025. All rights reserved.</p>
         </div>
       </div>
     </footer>

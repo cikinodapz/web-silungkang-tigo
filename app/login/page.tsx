@@ -10,6 +10,7 @@ import { Mountain, User, Lock, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { fetchData } from "@/lib/api"
+import Swal from "sweetalert2"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -23,23 +24,53 @@ export default function LoginPage() {
     setIsLoading(true)
     setError("")
 
+    // Validasi simple biar user dapet feedback cepat
+    if (!email || !password) {
+      setIsLoading(false)
+      await Swal.fire({
+        icon: "warning",
+        title: "Input belum lengkap",
+        text: "Email dan password wajib diisi.",
+        confirmButtonText: "OK",
+      })
+      return
+    }
+
     try {
       const response = await fetchData("/auth/login", {
         method: "POST",
-        data: {
-          email,
-          password,
-        },
+        data: { email, password },
       })
 
+      // Simpan token
       localStorage.setItem("token", response.token)
+
+      // Toast sukses lalu redirect
+      await Swal.fire({
+        icon: "success",
+        title: "Berhasil masuk",
+        text: "Selamat datang kembali 👋",
+        toast: true,
+        position: "top-end",
+        timer: 1600,
+        showConfirmButton: false,
+      })
+
       router.push("/dashboard")
-    } catch (err) {
+    } catch (err: any) {
       const errorMessage =
-        err && typeof err === "object" && "message" in err
-          ? (err as { message?: string }).message
-          : undefined
-      setError(`Login gagal: ${errorMessage || 'Email atau password salah'}`)
+        err?.response?.data?.message || // kalau fetchData pakai axios di dalamnya
+        err?.message ||
+        "Email atau password salah"
+
+      setError(`Login gagal: ${errorMessage}`)
+
+      await Swal.fire({
+        icon: "error",
+        title: "Login gagal",
+        text: errorMessage,
+        confirmButtonText: "Coba lagi",
+      })
       console.error(err)
     } finally {
       setIsLoading(false)
@@ -78,12 +109,13 @@ export default function LoginPage() {
               {error && (
                 <div className="text-red-500 text-sm text-center">{error}</div>
               )}
+
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-slate-700">
                   Email
                 </Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4" />
                   <Input
                     id="email"
                     type="email"
@@ -91,6 +123,8 @@ export default function LoginPage() {
                     className="pl-10 border-slate-200 focus:border-[#073046] focus:ring-[#073046]"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
+                    autoFocus
                     required
                   />
                 </div>
@@ -101,7 +135,7 @@ export default function LoginPage() {
                   Password
                 </Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4" />
                   <Input
                     id="password"
                     type="password"
@@ -109,6 +143,7 @@ export default function LoginPage() {
                     className="pl-10 border-slate-200 focus:border-[#073046] focus:ring-[#073046]"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
                     required
                   />
                 </div>
@@ -126,7 +161,7 @@ export default function LoginPage() {
 
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-[#073046] to-[#0a4a66] hover:from-[#0a4a66] to-[#0d5a7a] text-white py-3"
+                className="w-full bg-gradient-to-r from-[#073046] to-[#0a4a66] hover:from-[#0a4a66] hover:to-[#0d5a7a] text-white py-3"
                 disabled={isLoading}
               >
                 {isLoading ? "Memproses..." : "Masuk ke Dashboard"}

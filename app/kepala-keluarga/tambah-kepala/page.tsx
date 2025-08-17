@@ -301,7 +301,7 @@ export default function TambahKepalaKeluargaPage() {
                           <SelectValue placeholder="Pilih Jenis Kelamin" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Laki Laki">Laki Laki</SelectItem>
+                          <SelectItem value="Laki-Laki">Laki-Laki</SelectItem>
                           <SelectItem value="Perempuan">Perempuan</SelectItem>
                         </SelectContent>
                       </Select>
