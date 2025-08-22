@@ -7,7 +7,13 @@ import { PublicFooter } from "@/components/public-footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Calendar, ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
+import {
+  Search,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  MessageCircle,
+} from "lucide-react";
 import { fetchData } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -41,10 +47,23 @@ const getFotoUrl = (foto: string | null, type: "umkm" | "produk") => {
   return `${process.env.NEXT_PUBLIC_API_URL}/public/foto-${type}/${type}/${filename}`;
 };
 
-
 const cleanContent = (text: string, maxLength: number) => {
-  return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
+  if (!text) return "";
+  const trimmed = text.replace(/\s+/g, " ").trim();
+  return trimmed.length > maxLength
+    ? trimmed.substring(0, maxLength) + "..."
+    : trimmed;
 };
+
+const truncate = (text: string, max: number) =>
+  text.length > max ? text.slice(0, max - 1) + "…" : text;
+
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 
 export default function UMKMPublicPage() {
   const [umkmList, setUmkmList] = useState<UMKM[]>([]);
@@ -86,7 +105,6 @@ export default function UMKMPublicPage() {
   const handleNextPage = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
-
   const handlePrevPage = () => {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
@@ -142,6 +160,8 @@ export default function UMKMPublicPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
       <PublicHeader />
+
+      {/* Hero */}
       <section className="relative py-20 px-4 bg-gradient-to-r from-[#073046] to-[#0a4a66] text-white overflow-hidden">
         <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
         <div className="container mx-auto relative z-10">
@@ -160,14 +180,15 @@ export default function UMKMPublicPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              Dukung usaha mikro, kecil, dan menengah lokal dengan menjelajahi produk unggulan kami.
+              Dukung usaha mikro, kecil, dan menengah lokal dengan menjelajahi
+              produk unggulan kami.
             </motion.p>
           </div>
         </div>
       </section>
 
       <div className="container mx-auto px-4 py-16">
-        {/* Search Section */}
+        {/* Search */}
         <section className="mb-12">
           <motion.div
             className="flex flex-col md:flex-row justify-center items-center gap-6 bg-white/80 p-6 rounded-xl shadow-sm"
@@ -176,7 +197,7 @@ export default function UMKMPublicPage() {
             transition={{ duration: 0.6 }}
           >
             <div className="relative w-full md:w-2/5">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
               <Input
                 placeholder="Cari UMKM atau deskripsi..."
                 value={searchQuery}
@@ -188,80 +209,89 @@ export default function UMKMPublicPage() {
           </motion.div>
         </section>
 
-        {/* UMKM List */}
+        {/* List UMKM */}
         <section>
           <AnimatePresence mode="wait">
             {currentItems.length > 0 ? (
               <motion.div
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                key="umkm-list"
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.4 }}
-                key="umkm-list"
               >
                 {currentItems.map((umkm, index) => (
                   <motion.div
                     key={umkm.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      delay: index * 0.1,
-                      duration: 0.5,
-                    }}
-                    whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                    transition={{ delay: index * 0.06, duration: 0.45 }}
+                    whileHover={{ y: -3, transition: { duration: 0.2 } }}
                   >
                     <Card
-                      className="border-0 shadow-md hover:shadow-lg transition-all duration-300 rounded-xl bg-white/95 overflow-hidden cursor-pointer h-[450px] flex flex-col"
-                      onClick={() => router.push(`/lapak-public/detail/${umkm.id}`)}
+                      className="group border-0 shadow-md hover:shadow-lg transition-all duration-300 rounded-xl bg-white/95 overflow-hidden cursor-pointer h-full flex flex-col"
+                      onClick={() =>
+                        router.push(`/lapak-public/detail/${umkm.id}`)
+                      }
                     >
-                      <CardHeader className="p-0 flex-shrink-0">
+                      {/* Gambar */}
+                      <CardHeader className="p-0">
                         <div className="relative h-48">
                           <motion.img
                             src={getFotoUrl(umkm.foto_umkm, "umkm")}
                             alt={umkm.nama_umkm}
                             className="w-full h-full object-cover"
+                            loading="lazy"
+                            decoding="async"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            transition={{ duration: 0.8 }}
+                            transition={{ duration: 0.6 }}
                             onError={(e) => {
-                              e.currentTarget.src = "/placeholder.svg?height=400&width=600";
+                              e.currentTarget.src =
+                                "/placeholder.svg?height=400&width=600";
                             }}
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         </div>
                       </CardHeader>
-                      <CardContent className="p-6 flex flex-col flex-grow">
-                        <CardTitle className="text-xl font-semibold text-[#073046] mb-2 line-clamp-1">
+
+                      {/* Konten */}
+                      <CardContent className="p-6 flex flex-col flex-1 min-h-[260px]">
+                        {/* Judul: clamp + reserve height */}
+                        <CardTitle className="text-xl font-semibold text-[#073046] mb-1 line-clamp-2">
                           {umkm.nama_umkm}
                         </CardTitle>
-                        <p className="text-sm text-slate-600 mb-4 line-clamp-2 flex-grow-0">
-                          {cleanContent(umkm.deskripsi_umkm, 100)}
+                        <p className="text-sm text-slate-600 mb-2 line-clamp-3">
+                          {cleanContent(umkm.deskripsi_umkm, 220)}
                         </p>
-                        <div className="flex items-center text-sm text-slate-500 mb-4 flex-shrink-0">
-                          <Calendar className="h-4 w-4 mr-2" />
-                          {new Date(umkm.createdAt).toLocaleDateString("id-ID", {
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric",
-                          })}
+
+                        {/* Tanggal */}
+                        <div className="flex items-center text-sm text-slate-500 mb-3">
+                          <Calendar className="h-4 w-4 mr-2 shrink-0" />
+                          <span>{formatDate(umkm.createdAt)}</span>
                         </div>
-                        <div className="flex flex-wrap gap-2 mb-4 flex-shrink-0">
-                          {umkm.produk.slice(0, 2).map((produk) => (
+
+                        {/* Produk chips: max 2 + truncate tiap chip, tinggi tetap */}
+                        <div className="flex flex-wrap gap-2 mb-4 min-h-[28px]">
+                          {(umkm.produk ?? []).slice(0, 2).map((produk) => (
                             <span
                               key={produk.id}
-                              className="inline-block bg-[#073046]/10 text-[#073046] px-2 py-1 rounded-md text-xs"
+                              className="inline-block max-w-[9.5rem] bg-[#073046]/10 text-[#073046] px-2 py-1 rounded-md text-xs truncate"
+                              title={produk.nama_produk}
                             >
-                              {produk.nama_produk}
+                              {truncate(produk.nama_produk, 28)}
                             </span>
                           ))}
-                          {umkm.produk.length > 2 && (
+                          {(umkm.produk?.length ?? 0) > 2 && (
                             <span className="inline-block bg-[#073046]/10 text-[#073046] px-2 py-1 rounded-md text-xs">
-                              +{umkm.produk.length - 2} lainnya
+                              +{(umkm.produk?.length ?? 0) - 2} lainnya
                             </span>
                           )}
                         </div>
-                        <div className="flex gap-4 mt-auto">
+
+                        {/* Tombol (tetap di bawah) */}
+                        <div className="mt-auto flex gap-4">
                           <motion.div
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
@@ -278,6 +308,7 @@ export default function UMKMPublicPage() {
                               Detail UMKM
                             </Button>
                           </motion.div>
+
                           <motion.div
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
@@ -288,7 +319,14 @@ export default function UMKMPublicPage() {
                               className="w-full border-[#073046]/30 text-[#073046] hover:bg-[#073046] hover:text-white transition-all duration-300 rounded-lg text-base"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                window.open(`https://wa.me/${umkm.kontak_wa}`, "_blank");
+                                const number = (umkm.kontak_wa || "").replace(
+                                  /\D/g,
+                                  ""
+                                );
+                                window.open(
+                                  `https://wa.me/${number}`,
+                                  "_blank"
+                                );
                               }}
                               aria-label={`Hubungi ${umkm.nama_umkm} via WhatsApp`}
                             >
@@ -304,19 +342,16 @@ export default function UMKMPublicPage() {
               </motion.div>
             ) : (
               <motion.div
+                key="no-results"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.4 }}
-                key="no-results"
               >
                 <div className="rounded-xl border bg-white/95 shadow-sm p-16 text-center">
                   <motion.div
                     className="text-slate-400 mb-6"
-                    animate={{
-                      rotate: [0, 10, -10, 0],
-                      y: [0, -5, 0],
-                    }}
+                    animate={{ rotate: [0, 10, -10, 0], y: [0, -5, 0] }}
                     transition={{ repeat: Infinity, duration: 2 }}
                   >
                     <Search className="h-16 w-16 mx-auto" />
@@ -332,14 +367,18 @@ export default function UMKMPublicPage() {
             )}
           </AnimatePresence>
 
+          {/* Pagination */}
           {totalPages > 1 && (
             <motion.div
               className="flex justify-between items-center mt-12"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.5, duration: 0.6 }}
+              transition={{ delay: 0.2, duration: 0.6 }}
             >
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
                 <Button
                   variant="default"
                   size="lg"
@@ -354,17 +393,24 @@ export default function UMKMPublicPage() {
                   Sebelumnya
                 </Button>
               </motion.div>
+
               <span className="text-base font-medium text-[#073046]">
                 Halaman {currentPage} dari {totalPages}
               </span>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
                 <Button
                   variant="default"
                   size="lg"
                   onClick={handleNextPage}
                   disabled={currentPage === totalPages}
                   className={`bg-gradient-to-r from-[#073046] to-[#0a4a66] hover:from-[#0a4a66] hover:to-[#073046] shadow-md hover:shadow-lg transition-all duration-300 rounded-lg ${
-                    currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""
+                    currentPage === totalPages
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
                   }`}
                   aria-label="Halaman berikutnya"
                 >
@@ -376,6 +422,7 @@ export default function UMKMPublicPage() {
           )}
         </section>
       </div>
+
       <PublicFooter />
     </div>
   );

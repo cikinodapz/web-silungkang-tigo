@@ -234,20 +234,27 @@ export default function UMKMDetailPublicPage() {
                         <p className="text-sm text-gray-200 mb-4 line-clamp-2">
                           {cleanContent(produk.deskripsi_produk, 100)}
                         </p>
-                        <motion.div
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <Button
-                            variant="outline"
-                            className="w-full bg-white/10 border-white/30 text-white hover:bg-white hover:text-[#073046] transition-all duration-300 rounded-lg text-base"
-                            onClick={() => window.open(produk.link_produk, "_blank")}
-                            aria-label={`Kunjungi link produk ${produk.nama_produk}`}
+
+                        {produk.link_produk && produk.link_produk.trim() !== "" ? (
+                          <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
                           >
-                            <ExternalLink className="h-5 w-5 mr-2" />
-                            Lihat Produk
-                          </Button>
-                        </motion.div>
+                            <Button
+                              variant="outline"
+                              className="w-full bg-white/10 border-white/30 text-white hover:bg-white hover:text-[#073046] transition-all duration-300 rounded-lg text-base"
+                              onClick={() => window.open(produk.link_produk, "_blank")}
+                              aria-label={`Kunjungi link produk ${produk.nama_produk}`}
+                            >
+                              <ExternalLink className="h-5 w-5 mr-2" />
+                              Lihat Produk
+                            </Button>
+                          </motion.div>
+                        ) : (
+                          <p className="text-sm text-red-300 font-medium">
+                            Link produk belum tersedia
+                          </p>
+                        )}
                       </div>
                     </div>
                   </Card>
