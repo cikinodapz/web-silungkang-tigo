@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   motion,
   type Variants,
-  easeOut, // <-- pakai easing function, bukan string
+  easeOut, // pakai easing bawaan framer-motion
 } from "framer-motion";
 import Image from "next/image";
 import { PublicHeader } from "@/components/public-header";
@@ -12,7 +12,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { MapPin, Calendar, Target, Users } from "lucide-react";
+import {
+  MapPin,
+  Calendar,
+  Target,
+  Users,
+  CheckCircle2,
+} from "lucide-react";
 
 // ===== Animations (typed) =====
 const fadeIn: Variants = {
@@ -40,22 +46,31 @@ const cardHover = {
   transition: { duration: 0.3 },
 };
 
-// ===== Data Foto Aparatur =====
+// ===== Data Foto Aparatur (Urutan Jabatan) =====
 const staffFiles = [
-  "NELLY EFFITA, S.Pd (KEPALA DESA SILUNGKANG TIGO) PERIODE 2023 - 2031.png",
-  "GYOVANNI, S.AP - SEKRETARIS DESA.jpg",
-  "FERINOF - KEPALA DUSUN STASIUN.jpg",
-  "FERI HARYANTO - PETUGAS ADMINISTRASI.jpg",
-  "RANNY FARHANI - PETUGAS ADMINISTRASI.jpg",
-  "UBAIDILLAH - KEPALA DUSUN PASAR BARU.jpg",
-  "UCOK SIMBRO - KEPALA DUSUN PASAR USANG.jpg",
+  "NELLY EFFITA, S.Pd - KEPALA DESA.png", // Kepala Desa
+  "GYOVANNI, S.AP - SEKRETARIS DESA.jpg", // Sekretaris Desa
+
+  // Kasi (Kepala Seksi)
   "ZUBER - KASI PEMERINTAHAN.jpg",
-  "MUHAMMAD - KEPALA DUSUN LUBUAK NAN GODANG.jpg",
-  "NARSI-PETUGAS ADMINISTRASI.png",
   "ELSA OKTAVIA - KASI PELAYANAN.jpg",
   "AGUNG PRAYETNO, S.Kom - KASI KESEJAHTERAAN.jpg",
+
+  // Kaur (Kepala Urusan)
   "BERLIANDO UTAMA - KAUR PERENCANAAN.jpg",
   "DEDE SAPUTRA, S.Kom - KAUR KEUANGAN.jpg",
+  "Helfi yona S, Kom - KAUR TU & Umum.png",
+
+  // Kepala Dusun
+  "FERINOF - KEPALA DUSUN STASIUN.jpg",
+  "UBAIDILLAH - KEPALA DUSUN PASAR BARU.jpg",
+  "UCOK SIMBRO - KEPALA DUSUN PASAR USANG.jpg",
+  "MUHAMMAD - KEPALA DUSUN LUBUAK NAN GODANG.jpg",
+
+  // Petugas Administrasi / Staf
+  "FERI HARYANTO - PETUGAS ADMINISTRASI.jpg",
+  "RANNY FARHANI - PETUGAS ADMINISTRASI.jpg",
+  "NARSI-PETUGAS ADMINISTRASI.png",
   "EKA YESTI - PETUGAS ADMINISTRASI.jpg",
 ];
 
@@ -69,8 +84,25 @@ const staff = staffFiles.map((file) => ({
 const STRUCTURE_IMAGE = "Struktur Desa.jpg";
 const structureSrc = `/${encodeURIComponent(STRUCTURE_IMAGE)}`;
 
+// ===== Foto Kepala Desa untuk Visi–Misi (PASTIKAN ADA DI /public) =====
+const HEAD_IMAGE_FILE =
+  "NELLY_EFFITA__S.Pd_-_KEPALA_DESA_SILUNGKANG_TIGO-removebg-preview.png";
+const headImageSrc = `/${encodeURIComponent(HEAD_IMAGE_FILE)}`;
+
 export default function ProfilePage() {
   const [open, setOpen] = useState(false); // lightbox bagan
+
+  // daftar misi (bisa diubah dari CMS/data nantinya)
+  const missions = [
+    "Pelayanan publik prima",
+    "Transparansi & kemandirian",
+    "Pembangunan merata & tepat guna",
+    "Lingkungan bersih, rapi, sehat",
+    "Perekonomian berbasis potensi desa",
+    "Kesejahteraan masyarakat meningkat",
+    "Peningkatan SDM & penggalian SDA",
+    "Lingkungan Islami & berakhlakul karimah",
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
@@ -94,7 +126,8 @@ export default function ProfilePage() {
               Desa Wisata Silungkang Tigo
             </h1>
             <p className="text-xl text-blue-100">
-              Menyelami warisan budaya Minangkabau di tengah pesona alam Bukit Barisan
+              Menyelami warisan budaya Minangkabau di tengah pesona alam Bukit
+              Barisan
             </p>
           </motion.div>
         </div>
@@ -104,8 +137,16 @@ export default function ProfilePage() {
         <Tabs defaultValue="profil" className="w-full">
           <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 mb-8">
             {["profil", "sejarah", "visi-misi", "aparatur"].map((tab) => (
-              <TabsTrigger key={tab} value={tab} className="flex items-center gap-2" asChild>
-                <motion.div whileHover={{ scale: 1.05, color: "#073046" }} transition={{ duration: 0.2 }}>
+              <TabsTrigger
+                key={tab}
+                value={tab}
+                className="flex items-center gap-2"
+                asChild
+              >
+                <motion.div
+                  whileHover={{ scale: 1.05, color: "#073046" }}
+                  transition={{ duration: 0.2 }}
+                >
                   {tab === "profil" && <MapPin className="h-4 w-4" />}
                   {tab === "sejarah" && <Calendar className="h-4 w-4" />}
                   {tab === "visi-misi" && <Target className="h-4 w-4" />}
@@ -118,7 +159,11 @@ export default function ProfilePage() {
 
           {/* ===== PROFIL ===== */}
           <TabsContent value="profil" className="space-y-6">
-            <motion.div variants={tabContentVariants} initial="hidden" animate="visible">
+            <motion.div
+              variants={tabContentVariants}
+              initial="hidden"
+              animate="visible"
+            >
               <Card className="border-0 shadow-lg">
                 <CardHeader className="bg-gradient-to-r from-[#073046] to-[#0a4a66] text-white">
                   <CardTitle className="flex items-center gap-2">
@@ -130,31 +175,77 @@ export default function ProfilePage() {
                   <div className="prose max-w-none">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                       <div className="lg:col-span-2 space-y-6">
-                        <motion.div variants={fadeIn} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-                          <h3 className="text-xl font-bold text-[#073046] mb-3">Gambaran Umum</h3>
+                        <motion.div
+                          variants={fadeIn}
+                          initial="hidden"
+                          whileInView="visible"
+                          viewport={{ once: true }}
+                        >
+                          <h3 className="text-xl font-bold text-[#073046] mb-3">
+                            Gambaran Umum
+                          </h3>
                           <p className="text-slate-600 leading-relaxed">
-                            Desa Silungkang Tigo terletak di Kecamatan Silungkang, Kota Sawahlunto, Sumatra Barat,
-                            pada ketinggian 153 mdpl dengan luas 6,57 km². Berbatasan dengan Lembah Segar (utara),
-                            IX Koto Sungai Lasi (selatan & barat), dan Kupitan (timur). Jarak 3 km ke kantor kecamatan,
-                            10 km ke pusat kota, 82 km ke Padang.
+                            Desa Silungkang Tigo terletak di Kecamatan
+                            Silungkang, Kota Sawahlunto, Sumatra Barat, pada
+                            ketinggian 153 mdpl dengan luas 6,57 km². Berbatasan
+                            dengan Lembah Segar (utara), IX Koto Sungai Lasi
+                            (selatan & barat), dan Kupitan (timur). Jarak 3 km
+                            ke kantor kecamatan, 10 km ke pusat kota, 82 km ke
+                            Padang.
                           </p>
                           <p className="text-slate-600 leading-relaxed">
-                            Terdiri dari lima dusun: Stasiun, Bukik Kuniang, Pasar Baru, Pasar Usang, dan Lubuak Nan
-                            Godang. Perkiraan penduduk 2.358 jiwa (2017), suhu 22–33°C, dilalui Sungai Batang Lasi.
+                            Terdiri dari lima dusun: Stasiun, Bukik Kuniang,
+                            Pasar Baru, Pasar Usang, dan Lubuak Nan Godang.
+                            Perkiraan penduduk 2.358 jiwa (2017), suhu 22–33°C,
+                            dilalui Sungai Batang Lasi.
                           </p>
                         </motion.div>
                       </div>
 
-                      <motion.div className="space-y-6" variants={fadeIn} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+                      <motion.div
+                        className="space-y-6"
+                        variants={fadeIn}
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true }}
+                      >
                         <motion.div whileHover={cardHover}>
                           <Card className="border border-slate-200">
                             <CardContent className="p-6">
-                              <h4 className="font-bold text-[#073046] mb-4">Data Geografis</h4>
+                              <h4 className="font-bold text-[#073046] mb-4">
+                                Data Geografis
+                              </h4>
                               <div className="space-y-3 text-sm">
-                                <div className="flex justify-between"><span className="text-slate-600">Luas Wilayah</span><span className="font-semibold">6,57 km²</span></div>
-                                <div className="flex justify-between"><span className="text-slate-600">Ketinggian</span><span className="font-semibold">153 mdpl</span></div>
-                                <div className="flex justify-between"><span className="text-slate-600">Suhu Udara</span><span className="font-semibold">22–33°C</span></div>
-                                <div className="flex justify-between"><span className="text-slate-600">Penduduk</span><span className="font-semibold">±2.358 jiwa (2017)</span></div>
+                                <div className="flex justify-between">
+                                  <span className="text-slate-600">
+                                    Luas Wilayah
+                                  </span>
+                                  <span className="font-semibold">
+                                    6,57 km²
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-slate-600">
+                                    Ketinggian
+                                  </span>
+                                  <span className="font-semibold">
+                                    153 mdpl
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-slate-600">
+                                    Suhu Udara
+                                  </span>
+                                  <span className="font-semibold">22–33°C</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-slate-600">
+                                    Penduduk
+                                  </span>
+                                  <span className="font-semibold">
+                                    ±2.358 jiwa (2017)
+                                  </span>
+                                </div>
                               </div>
                             </CardContent>
                           </Card>
@@ -169,7 +260,11 @@ export default function ProfilePage() {
 
           {/* ===== SEJARAH ===== */}
           <TabsContent value="sejarah" className="space-y-6">
-            <motion.div variants={tabContentVariants} initial="hidden" animate="visible">
+            <motion.div
+              variants={tabContentVariants}
+              initial="hidden"
+              animate="visible"
+            >
               <Card className="border-0 shadow-lg">
                 <CardHeader className="bg-gradient-to-r from-[#073046] to-[#0a4a66] text-white">
                   <CardTitle className="flex items-center gap-2">
@@ -181,32 +276,60 @@ export default function ProfilePage() {
                   <div className="prose max-w-none">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                       <div className="lg:col-span-2 space-y-6">
-                        <motion.div variants={fadeIn} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-                          <h3 className="text-xl font-bold text-[#073046] mb-3">Asal Usul Nama</h3>
+                        <motion.div
+                          variants={fadeIn}
+                          initial="hidden"
+                          whileInView="visible"
+                          viewport={{ once: true }}
+                        >
+                          <h3 className="text-xl font-bold text-[#073046] mb-3">
+                            Asal Usul Nama
+                          </h3>
                           <p className="text-slate-600 leading-relaxed">
-                            “Silungkang” diduga dari kata “lungkang” (cekungan) dalam Minangkabau atau dari istilah
-                            Sanskerta; hipotesis ini masih perlu kajian.
+                            “Silungkang” diduga dari kata “lungkang” (cekungan)
+                            dalam Minangkabau atau dari istilah Sanskerta;
+                            hipotesis ini masih perlu kajian.
                           </p>
                         </motion.div>
-                        <motion.div variants={fadeIn} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-                          <h3 className="text-xl font-bold text-[#073046] mb-3">Warisan Sejarah</h3>
+                        <motion.div
+                          variants={fadeIn}
+                          initial="hidden"
+                          whileInView="visible"
+                          viewport={{ once: true }}
+                        >
+                          <h3 className="text-xl font-bold text-[#073046] mb-3">
+                            Warisan Sejarah
+                          </h3>
                           <p className="text-slate-600 leading-relaxed">
-                            Terhubung dengan sejarah tambang Sawahlunto; Dusun Stasiun terkait jaringan kereta tua.
+                            Terhubung dengan sejarah tambang Sawahlunto; Dusun
+                            Stasiun terkait jaringan kereta tua.
                           </p>
                         </motion.div>
                       </div>
 
-                      <motion.div className="space-y-6" variants={fadeIn} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+                      <motion.div
+                        className="space-y-6"
+                        variants={fadeIn}
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true }}
+                      >
                         <motion.div whileHover={cardHover}>
                           <Card className="border border-slate-200">
                             <CardContent className="p-6">
-                              <h4 className="font-bold text-[#073046] mb-4">Tradisi Budaya</h4>
+                              <h4 className="font-bold text-[#073046] mb-4">
+                                Tradisi Budaya
+                              </h4>
                               <div className="space-y-4">
                                 <div className="flex gap-3">
                                   <div className="w-2 h-2 rounded-full bg-[#073046] mt-2 flex-shrink-0" />
                                   <div>
-                                    <p className="font-semibold text-sm">Wirid Pidato Adat</p>
-                                    <p className="text-xs text-slate-600">Silungkang Rabona Tak Tum Bin</p>
+                                    <p className="font-semibold text-sm">
+                                      Wirid Pidato Adat
+                                    </p>
+                                    <p className="text-xs text-slate-600">
+                                      Silungkang Rabona Tak Tum Bin
+                                    </p>
                                   </div>
                                 </div>
                               </div>
@@ -221,9 +344,13 @@ export default function ProfilePage() {
             </motion.div>
           </TabsContent>
 
-          {/* ===== VISI-MISI ===== */}
+          {/* ===== VISI-MISI (REWORK) ===== */}
           <TabsContent value="visi-misi" className="space-y-6">
-            <motion.div variants={tabContentVariants} initial="hidden" animate="visible">
+            <motion.div
+              variants={tabContentVariants}
+              initial="hidden"
+              animate="visible"
+            >
               <Card className="border-0 shadow-lg">
                 <CardHeader className="bg-gradient-to-r from-[#073046] to-[#0a4a66] text-white">
                   <CardTitle className="flex items-center gap-2">
@@ -231,41 +358,130 @@ export default function ProfilePage() {
                     Visi & Misi Desa Silungkang Tigo
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-8">
+
+                <CardContent className="p-6 lg:p-8">
+                  {/* Layout baru: sidebar foto (sticky) + konten visi-misi */}
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div>
-                      <motion.div variants={fadeIn} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-                        <h3 className="text-xl font-bold text-[#073046] mb-3">Visi</h3>
-                        <div className="rounded-xl border border-slate-200 p-5 bg-gradient-to-br from-white to-slate-50">
-                          <p className="text-slate-700 leading-relaxed italic">
-                            “Terwujudnya tata kelola pemerintahan desa yang baik dan bersih…”
-                          </p>
+                    {/* Sidebar Foto Kepala Desa */}
+                    <motion.aside
+                      variants={fadeIn}
+                      initial="hidden"
+                      whileInView="visible"
+                      viewport={{ once: true }}
+                      className="lg:col-span-1"
+                    >
+                      <div className="lg:sticky lg:top-24">
+                        <div className="relative w-full aspect-[3/4] rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                          <Image
+                            src={headImageSrc}
+                            alt="Kepala Desa Silungkang Tigo"
+                            fill
+                            className="object-contain p-4"
+                            priority
+                          />
                         </div>
-                      </motion.div>
-                    </div>
-                    <div className="lg:col-span-2">
-                      <motion.div variants={fadeIn} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-                        <h3 className="text-xl font-bold text-[#073046] mb-3">Misi</h3>
-                        <ul className="space-y-3">
-                          {[
-                            "Pelayanan publik prima",
-                            "Transparansi & kemandirian",
-                            "Pembangunan merata & tepat guna",
-                            "Lingkungan bersih, rapi, sehat",
-                            "Perekonomian berbasis potensi desa",
-                            "Kesejahteraan masyarakat meningkat",
-                            "Peningkatan SDM & penggalian SDA",
-                            "Lingkungan Islami & berakhlakul karimah",
-                          ].map((item, i) => (
-                            <li key={i} className="flex items-start gap-3">
-                              <Badge variant="secondary" className="mt-0.5">
-                                {i + 1}
-                              </Badge>
-                              <span className="text-slate-700 leading-relaxed">{item}</span>
-                            </li>
+                        <figcaption className="mt-3 text-center">
+                          <p className="text-sm font-semibold text-slate-800 tracking-wide">
+                            NELLY EFFITA, S.Pd
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            Kepala Desa Silungkang Tigo • 2023–2029
+                          </p>
+                        </figcaption>
+                      </div>
+                    </motion.aside>
+
+                    {/* Konten Visi & Misi */}
+                    <div className="lg:col-span-2 space-y-8">
+                      {/* Visi */}
+                      <motion.section
+                        variants={fadeIn}
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true }}
+                      >
+                        {/* gradient frame */}
+                        <div className="rounded-2xl p-[1.5px] bg-gradient-to-r from-[#0a4a66] via-[#0d5b7d] to-[#0a4a66]">
+                          <div className="rounded-2xl bg-white">
+                            <div className="p-6 sm:p-7">
+                              <h3 className="text-xl font-bold text-[#073046] mb-3">
+                                Visi
+                              </h3>
+                              <blockquote className="relative">
+                                <p className="text-slate-700 leading-relaxed italic">
+                                  “Terwujudnya tata kelola pemerintahan desa
+                                  yang baik dan bersih…”
+                                </p>
+                                <span className="absolute -top-2 -left-2 text-4xl text-slate-200 select-none">
+                                  “
+                                </span>
+                              </blockquote>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.section>
+
+                      {/* Misi */}
+                      <motion.section
+                        variants={fadeIn}
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true }}
+                      >
+                        <h3 className="text-xl font-bold text-[#073046] mb-4">
+                          Misi
+                        </h3>
+
+                        {/* Chip ringkas di atas (opsional, feel profesional) */}
+                        {/* <div className="flex flex-wrap gap-2 mb-4">
+                          {missions.slice(0, 7).map((m, i) => (
+                            <Badge
+                              key={i}
+                              variant="secondary"
+                              className="bg-slate-100 text-slate-700"
+                            >
+                              {m}
+                            </Badge>
                           ))}
-                        </ul>
-                      </motion.div>
+                        </div> */}
+
+                        {/* Grid kartu misi */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {missions.map((item, i) => (
+                            <motion.div
+                              key={i}
+                              whileHover={{ y: -3 }}
+                              transition={{
+                                type: "spring",
+                                stiffness: 220,
+                                damping: 18,
+                              }}
+                            >
+                              <div className="h-full rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                                <div className="flex items-start gap-3">
+                                  <div className="mt-0.5">
+                                    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                      <Badge
+                                        variant="secondary"
+                                        className="h-5 w-5 p-0 flex items-center justify-center text-[11px]"
+                                      >
+                                        {i + 1}
+                                      </Badge>
+                                      <p className="font-medium text-slate-800">
+                                        {item}
+                                      </p>
+                                    </div>
+                                    {/* Deskripsi bisa ditambahkan per poin di sini (opsional) */}
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </motion.section>
                     </div>
                   </div>
                 </CardContent>
@@ -275,7 +491,12 @@ export default function ProfilePage() {
 
           {/* ===== APARATUR + BAGAN STRUKTUR ===== */}
           <TabsContent value="aparatur" className="space-y-6">
-            <motion.div variants={tabContentVariants} initial="hidden" animate="visible" className="space-y-6">
+            <motion.div
+              variants={tabContentVariants}
+              initial="hidden"
+              animate="visible"
+              className="space-y-6"
+            >
               {/* Bagan Struktur */}
               <Card className="border-0 shadow-lg overflow-hidden">
                 <CardHeader className="bg-gradient-to-r from-[#073046] to-[#0a4a66] text-white">
@@ -300,7 +521,9 @@ export default function ProfilePage() {
                         priority
                       />
                     </div>
-                    <p className="text-xs text-slate-500 mt-2">*Klik gambar untuk melihat ukuran penuh.</p>
+                    <p className="text-xs text-slate-500 mt-2">
+                      *Klik gambar untuk melihat ukuran penuh.
+                    </p>
                   </button>
                 </CardContent>
               </Card>
@@ -319,7 +542,11 @@ export default function ProfilePage() {
                       <motion.div
                         key={src}
                         whileHover={{ y: -4 }}
-                        transition={{ type: "spring", stiffness: 200, damping: 18 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 200,
+                          damping: 18,
+                        }}
                       >
                         <Card className="overflow-hidden border-slate-200">
                           <div className="relative w-full h-72 bg-slate-100">
@@ -332,7 +559,9 @@ export default function ProfilePage() {
                               priority={name.includes("KEPALA DESA")}
                             />
                             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3">
-                              <p className="text-white text-sm font-semibold line-clamp-2">{name}</p>
+                              <p className="text-white text-sm font-semibold line-clamp-2">
+                                {name}
+                              </p>
                             </div>
                           </div>
                           <CardContent className="p-4">
