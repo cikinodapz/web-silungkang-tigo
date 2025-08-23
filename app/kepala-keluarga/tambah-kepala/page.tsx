@@ -115,8 +115,8 @@ export default function TambahKepalaKeluargaPage() {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    // Allow only numbers for nik and no_akta_kelahiran
-    if ((name === "nik" || name === "no_akta_kelahiran") && value !== "" && !/^\d*$/.test(value)) {
+    // Allow only numbers for nik only
+    if (name === "nik" && value !== "" && !/^\d*$/.test(value)) {
       return;
     }
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -284,8 +284,7 @@ export default function TambahKepalaKeluargaPage() {
                       <Input
                         id="no_akta_kelahiran"
                         name="no_akta_kelahiran"
-                        type="number"
-                        pattern="\d*"
+                        type="text"
                         value={formData.no_akta_kelahiran}
                         onChange={handleInputChange}
                       />
